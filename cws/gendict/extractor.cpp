@@ -1,16 +1,38 @@
-/*
- * extractor.cpp
- *
- *  Created on: 2012-7-10
- *      Author: root
- */
 
 #include "extractor.hpp"
+#include <fstream>
+#include <exception>
+#include "../../staging/urlcode.hpp"
 
 namespace jebe {
 namespace cws {
 
-void Extractor::scan(const CString str, String::size_type len)
+void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
+{
+	uint32_t processed = 0;
+	std::ifstream ifile(file.c_str());
+	std::auto_ptr<std::stringbuf> buf(new std::stringbuf());
+	try
+	{
+		while (ifile.get(*buf))
+		{
+			processed += buf->str().size();
+			if (max_chars != 0 && processed > max_chars)
+			{
+				break;
+			}
+			std::string s = staging::URLDecode(buf->str());
+			CS_SAY(s);
+		}
+		ifile.close();
+	}
+	catch (std::exception& e)
+	{
+		CS_DIE("error occured while reading file " << file << ": " << e.what());
+	}
+}
+
+void Extractor::scan(const CharType* const str, String::size_type len)
 {
 	String::size_type i = 0, chkPoint = 0;
 	bool hasChs = false;
@@ -41,13 +63,13 @@ void Extractor::scan(const CString str, String::size_type len)
 }
 
 template<uint8_t plen>
-void Extractor::scanSentence(const CString str, String::size_type len,
-		boost::unordered_map<Phrase<plen>, atimes_t>& phmap)
+void Extractor::scanSentence(const CharType* const str, String::size_type len,
+		boost::unordered_map<Phrase<plen>, atimes_t, PhraseHash<plen, _JEBE_BUCKET_BITS> >& phmap)
 {
 	typedef Phrase<plen> Ph;
 	for (String::size_type i = 0, end = len - plen; i < end; ++i)
 	{
-		Ph ph(str + i, plen);
+		Ph ph(str + i);
 		if (CS_BUNLIKELY(phmap.find(ph) == phmap.end()))
 		{
 			phmap[ph] = 1;

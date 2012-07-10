@@ -2,11 +2,12 @@
 #pragma once
 
 #include "../../staging/staging.hpp"
-#include <string>
+//#include <string>
 #include <vector>
 #include <bitset>
 #include <string.h>
 #include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 #include "../../staging/hash.hpp"
 #include "../../staging/array.hpp"
 
@@ -15,7 +16,6 @@ namespace cws {
 
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
-typedef CharType* CString;
 typedef std::wstring String;
 
 template<uint8_t length>
@@ -23,20 +23,21 @@ class Phrase
 {
 public:
 	static const uint8_t len = length;
-	typedef wchar_t StrType[len];
+	typedef CharType StrType[length];
 
 protected:
 	StrType str;
 
 public:
-	Phrase(const CharType* str_, uint8_t length_)
+	Phrase(const CharType* const str_)
 	{
-		strncpy(str_, str, length_);
+		memcpy(str, str_, length * sizeof(CharType));
 	}
 
-	// half-hash
+	// half-hash. one day, boost::preprocessor ...
 	uint32_t hfhash() const
 	{
+		return 1;
 		typedef uint32_t mask_t;
 		if (sizeof(CharType) == sizeof(mask_t))
 		{
@@ -63,7 +64,7 @@ public:
 		{
 			mask_t mask = 0;
 			char* res = reinterpret_cast<char*>(&mask);
-			char* str_ = reinterpret_cast<char*>(str);
+			const char* str_ = reinterpret_cast<const char*>(str);
 			for (uint8_t i = 0, end = length * sizeof(CharType); i < end; ++i)
 			{
 				res[i & 3] ^= str_[i];
@@ -71,18 +72,73 @@ public:
 			return mask;
 		}
 	}
+
+	bool eq(const Phrase<length>& rph) const
+	{
+		switch (length)
+		{
+		case 2:
+			return str[0] == rph.str[0]
+				 && str[1] == rph.str[1];
+		case 3:
+			return str[0] == rph.str[0]
+				 && str[1] == rph.str[1]
+				 && str[2] == rph.str[2];
+		case 4:
+			return str[0] == rph.str[0]
+				 && str[1] == rph.str[1]
+				 && str[2] == rph.str[2]
+				 && str[3] == rph.str[3];
+		case 5:
+			return str[0] == rph.str[0]
+				 && str[1] == rph.str[1]
+				 && str[2] == rph.str[2]
+				 && str[3] == rph.str[3]
+				 && str[4] == rph.str[4];
+		default:
+			for (uint8_t i = 0; i < length; ++i)
+			{
+				if (str[i] != rph.str[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+	}
 };
 
+template<uint8_t length>
+bool operator==(const Phrase<length>& lph, const Phrase<length>& rph)
+{
+	return lph.eq(rph);
+}
+
+template<uint8_t plen, uint8_t bits>
+class PhraseHash
+{
+public:
+	typedef Phrase<plen> Ph;
+	typedef staging::BitsHash<bits> BHasher;
+
+	static BHasher hasher;
+
+	uint32_t operator()(const Ph& ph) const
+	{
+		return hasher(ph.hfhash());
+	}
+};
 
 //typedef std::wstring String;
 typedef Phrase<2> Ph2;
 typedef Phrase<3> Ph3;
 typedef Phrase<4> Ph4;
 typedef Phrase<5> Ph5;
-typedef boost::unordered_map<Ph2, atimes_t> Ph2Map;
-typedef boost::unordered_map<Ph3, atimes_t> Ph3Map;
-typedef boost::unordered_map<Ph4, atimes_t> Ph4Map;
-typedef boost::unordered_map<Ph5, atimes_t> Ph5Map;
+#define _JEBE_BUCKET_BITS 20
+typedef boost::unordered_map<Ph2, atimes_t, PhraseHash<2, _JEBE_BUCKET_BITS> > Ph2Map;
+typedef boost::unordered_map<Ph3, atimes_t, PhraseHash<3, _JEBE_BUCKET_BITS> > Ph3Map;
+typedef boost::unordered_map<Ph4, atimes_t, PhraseHash<4, _JEBE_BUCKET_BITS> > Ph4Map;
+typedef boost::unordered_map<Ph5, atimes_t, PhraseHash<5, _JEBE_BUCKET_BITS> > Ph5Map;
 
 class Extractor
 {
@@ -96,12 +152,13 @@ protected:
 	Ph5Map ph5map;
 
 public:
-	void extract(const String& str);
-	void scan(const CString str, String::size_type len);
+	void extract(const boost::filesystem::path& file, uint32_t max_chars = 0);
+
+	void scan(const CharType* const str, String::size_type len);
 
 	template<uint8_t plen>
-	void scanSentence(const CString str, String::size_type len,
-			boost::unordered_map<Phrase<plen>, atimes_t>& phmap);
+	void scanSentence(const CharType* const str, String::size_type len,
+			boost::unordered_map<Phrase<plen>, atimes_t, PhraseHash<plen, _JEBE_BUCKET_BITS> >& phmap);
 
 	bool isGb2312(CharType c) const
 	{
