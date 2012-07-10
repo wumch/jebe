@@ -1,5 +1,6 @@
 
 #include "StrSeg.hpp"
+#include "../staging/urlcode.hpp"
 
 namespace jebe {
 namespace cws {

@@ -1,0 +1,59 @@
+
+#include "config.hpp"
+//#include <LuaPlus/LuaPlus.h>
+
+namespace jebe {
+namespace cws {
+
+void Config::load(const char* config_file)
+{
+//    LuaPlus::LuaStateOwner state;
+//    state->DoFile(config_file);
+//
+//    host.assign(state->GetGlobal("host").GetString());
+//    port = state->GetGlobal("port").GetInteger();
+//    pidfile.assign(state->GetGlobal("pidfile").GetString());
+//    patten_file.assign(state->GetGlobal("patten_file").GetString());
+//    reuse_address = state->GetGlobal("reuse_address").GetBoolean();
+//    receive_buffer_size = state->GetGlobal("receive_buffer_size").GetInteger();
+//    send_buffer_size = state->GetGlobal("send_buffer_size").GetInteger();
+//    timeout = state->GetGlobal("timeout").GetInteger();
+//    tcp_nodelay = state->GetGlobal("tcp_nodelay").GetBoolean();
+
+host = "0.0.0.0";
+port = 10087;
+pidfile = "/var/run/tokenizer.pid";
+patten_file = "tests/words.txt";
+reuse_address = true;
+receive_buffer_size = 65536;
+send_buffer_size = 65536;
+timeout = 3000;
+tcp_nodelay = false;
+worker_cout = 1;
+header_max_len = 1024;
+body_max_len = 64000;
+max_match = 1 << 30;
+max_connections = 10000;
+max_write_times = 100;
+replacement = '*';
+max_len = header_max_len + body_max_len;
+
+//    worker_cout = state->GetGlobal("worker_count").GetInteger();
+//    header_max_len = state->GetGlobal("header_max_len").GetInteger();
+//    body_max_len = state->GetGlobal("body_max_len").GetInteger();
+//    max_match = state->GetGlobal("max_match").GetInteger();
+//    max_connections = state->GetGlobal("max_connections").GetInteger();
+//    max_write_times = state->GetGlobal("max_write_times").GetInteger();
+//
+//    replacement = state->GetGlobal("replacement").GetString()[0];
+//
+//    max_len = header_max_len + body_max_len;
+}
+
+namespace G {
+const char* config_file = NULL;
+const Config* config = NULL;
+}
+
+}
+}
