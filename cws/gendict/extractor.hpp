@@ -50,6 +50,8 @@ public:
 		{
 			switch (length)
 			{
+			case 1:
+				return str[0];
 			case 2:
 				return str[0] ^ str[1];
 			case 3:
@@ -58,6 +60,8 @@ public:
 				return str[0] ^ str[1] ^ str[2] ^ str[3];
 			case 5:
 				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4];
+			case 6:
+				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5];
 			default:
 				mask_t mask = 0;
 				for (uint8_t i = 0; i < length; ++i)
@@ -85,42 +89,6 @@ public:
 		return match(str, rph.str);
 	}
 
-	template<uint8_t rstr_len>
-	bool __match(const CharType rstr[rstr_len]) const
-	{
-//		BOOST_STATIC_ASSERT(rstr_len >= length);
-		switch (length)
-		{
-		case 2:
-			return str[0] == rstr[0]
-				 && str[1] == rstr[1];
-		case 3:
-			return str[0] == rstr[0]
-				 && str[1] == rstr[1]
-				 && str[2] == rstr[2];
-		case 4:
-			return str[0] == rstr[0]
-				 && str[1] == rstr[1]
-				 && str[2] == rstr[2]
-				 && str[3] == rstr[3];
-		case 5:
-			return str[0] == rstr[0]
-				 && str[1] == rstr[1]
-				 && str[2] == rstr[2]
-				 && str[3] == rstr[3]
-				 && str[4] == rstr[4];
-		default:
-			for (uint8_t i = 0; i < length; ++i)
-			{
-				if (str[i] != rstr[i])
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-	}
-
 	bool hasPrefix(const Phrase<length - 1>& p) const
 	{
 		return match(p.str, str);
@@ -141,6 +109,8 @@ bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 //		BOOST_STATIC_ASSERT(rstr_len >= length);
 	switch (len_1)
 	{
+	case 1:
+		return prefix[0] == rstr[0];
 	case 2:
 		return prefix[0] == rstr[0]
 			 && prefix[1] == rstr[1];
@@ -159,6 +129,13 @@ bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 			 && prefix[2] == rstr[2]
 			 && prefix[3] == rstr[3]
 			 && prefix[4] == rstr[4];
+	case 6:
+		return prefix[0] == rstr[0]
+			 && prefix[1] == rstr[1]
+			 && prefix[2] == rstr[2]
+			 && prefix[3] == rstr[3]
+			 && prefix[4] == rstr[4]
+			 && prefix[5] == rstr[5];
 	default:
 		for (uint8_t i = 0; i < len_1; ++i)
 		{
@@ -177,12 +154,6 @@ bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 	return match<len, len>(lph.str, rph.str);
 }
 
-//template<uint8_t len_1, uint8_t len_2>
-//bool operator==(const Phrase<len_1>& lph, const Phrase<len_2>& rph)
-//{
-//	return match<len_1, len_2>(lph.str, rph.str);
-//}
-
 template<uint8_t plen, uint8_t bits>
 class PhraseHash
 {
@@ -198,15 +169,16 @@ public:
 	}
 };
 
-//typedef std::wstring String;
-typedef Phrase<2u> Ph2;
-typedef Phrase<3u> Ph3;
-typedef Phrase<4u> Ph4;
-typedef Phrase<5u> Ph5;
-typedef boost::unordered_map<Ph2, atimes_t, PhraseHash<2u, _JEBE_BUCKET_BITS> > Ph2Map;
-typedef boost::unordered_map<Ph3, atimes_t, PhraseHash<3u, _JEBE_BUCKET_BITS> > Ph3Map;
-typedef boost::unordered_map<Ph4, atimes_t, PhraseHash<4u, _JEBE_BUCKET_BITS> > Ph4Map;
-typedef boost::unordered_map<Ph5, atimes_t, PhraseHash<5u, _JEBE_BUCKET_BITS> > Ph5Map;
+typedef Phrase<1> Ph1;
+typedef Phrase<2> Ph2;
+typedef Phrase<3> Ph3;
+typedef Phrase<4> Ph4;
+typedef Phrase<5> Ph5;
+typedef Phrase<6> Ph6;
+//typedef boost::unordered_map<Ph2, atimes_t, PhraseHash<2u, _JEBE_BUCKET_BITS> > Ph2Map;
+//typedef boost::unordered_map<Ph3, atimes_t, PhraseHash<3u, _JEBE_BUCKET_BITS> > Ph3Map;
+//typedef boost::unordered_map<Ph4, atimes_t, PhraseHash<4u, _JEBE_BUCKET_BITS> > Ph4Map;
+//typedef boost::unordered_map<Ph5, atimes_t, PhraseHash<5u, _JEBE_BUCKET_BITS> > Ph5Map;
 
 class Extractor
 {
@@ -214,15 +186,19 @@ protected:
 	static const int32_t gb_char_max = 65536;
 	std::bitset<gb_char_max> gb2312;
 
-	Ph2Map ph2map;
-	Ph3Map ph3map;
-	Ph4Map ph4map;
-	Ph5Map ph5map;
+	Ph1::MapType map1;
+	Ph2::MapType map2;
+	Ph3::MapType map3;
+	Ph4::MapType map4;
+	Ph5::MapType map5;
+	Ph6::MapType map6;
 
 public:
 	void extract(const boost::filesystem::path& file, uint32_t max_chars = 0);
 
 	void scan(const CharType* const str, String::size_type len);
+
+	void addSentence_(const CharType* const str, String::size_type len);
 
 	template<uint8_t plen>
 	void scanSentence(const CharType* const str, String::size_type len,
@@ -230,7 +206,7 @@ public:
 
 	bool isGb2312(CharType c) const
 	{
-		return c < gb_char_max && gb2312[c];
+		return c >= 0 && c < gb_char_max && gb2312[c];
 	}
 
 	void display();
@@ -244,27 +220,36 @@ public:
 class Analyzer
 {
 protected:
-	const Ph2Map& map2;
-	const Ph3Map& map3;
-	const Ph4Map& map4;
-	const Ph5Map& map5;
+	Ph1::MapType& map1;
+	Ph2::MapType& map2;
+	Ph3::MapType& map3;
+	Ph4::MapType& map4;
+	Ph5::MapType& map5;
+	Ph6::MapType& map6;
 
-	static const double entropyThreshold = .5;
+	static const double entropyThreshold = 0.5;
 	static const double joinThreshold = 30;
 
 public:
-	Analyzer(const Ph2Map& map2_, const Ph3Map& map3_, const Ph4Map& map4_, const Ph5Map& map5_)
-		: map2(map2_), map3(map3_), map4(map4_), map5(map5_)
+	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_, Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_)
+		: map1(map1_), map2(map2_), map3(map3_), map4(map4_), map5(map5_), map6(map6_)
 	{
 	}
 
 	void analysis();
+
+	void clean(std::size_t min_atimes);
+
+	template<uint8_t plen>
+	void clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes);
 
 	template<uint8_t plen>
 	uint32_t count(const Phrase<plen>& ph) const
 	{
 		switch (plen)
 		{
+		case 1:
+			return map1[ph];
 		case 2:
 			return map2[ph];
 		case 3:
@@ -273,6 +258,8 @@ public:
 			return map4[ph];
 		case 5:
 			return map5[ph];
+		case 6:
+			return map6[ph];
 		default:
 			return 0;
 		}

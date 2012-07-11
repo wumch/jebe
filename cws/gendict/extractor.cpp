@@ -11,12 +11,36 @@ namespace cws {
 
 void Analyzer::analysis()
 {
-
+	clean(2);
 }
+
+void Analyzer::clean(std::size_t min_atimes)
+{
+	clean_<1>(map1, min_atimes);
+	clean_<2>(map2, min_atimes);
+	clean_<3>(map3, min_atimes);
+	clean_<4>(map4, min_atimes);
+	clean_<5>(map5, min_atimes);
+	clean_<6>(map6, min_atimes);
+}
+
+template<uint8_t plen>
+void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes)
+{
+	typedef typename Phrase<plen>::MapType MapType;
+	for (typename MapType::iterator it = map.begin(); it != map.end(); ++it)
+	{
+		if (it->second < min_atimes)
+		{
+			map.erase(it);
+		}
+	}
+}
+
 
 void Extractor::extract()
 {
-	Analyzer azer(ph2map, ph3map, ph4map, ph5map);
+	Analyzer azer(map1, map2, map3, map4, map5, map6);
 	azer.analysis();
 }
 
@@ -134,6 +158,11 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 		CS_DIE("error occured while reading file " << file << ": " << e.what());
 	}
 
+	delete[] buf;
+	delete[] mbs;
+	delete[] ws;
+	delete[] mem;
+
 	extract();
 }
 
@@ -156,10 +185,7 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 			if (hasChs)
 			{
 				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-				scanSentence(str + chkPoint, i - chkPoint, ph2map);
-				scanSentence(str + chkPoint, i - chkPoint, ph3map);
-				scanSentence(str + chkPoint, i - chkPoint, ph4map);
-				scanSentence(str + chkPoint, i - chkPoint, ph5map);
+				addSentence_(str + chkPoint, i - chkPoint);
 
 				hasChs = false;
 			}
@@ -171,13 +197,19 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 	if (hasChs)
 	{
 		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-		scanSentence(str + chkPoint, i - chkPoint, ph2map);
-		scanSentence(str + chkPoint, i - chkPoint, ph3map);
-		scanSentence(str + chkPoint, i - chkPoint, ph4map);
-		scanSentence(str + chkPoint, i - chkPoint, ph5map);
-
+		addSentence_(str + chkPoint, i - chkPoint);
 		hasChs = false;
 	}
+}
+
+void Extractor::addSentence_(const CharType* const str, String::size_type len)
+{
+	scanSentence(str, len, map1);
+	scanSentence(str, len, map2);
+	scanSentence(str, len, map3);
+	scanSentence(str, len, map4);
+	scanSentence(str, len, map5);
+	scanSentence(str, len, map6);
 }
 
 template<uint8_t plen>
@@ -205,24 +237,34 @@ void Extractor::scanSentence(const CharType* const str, String::size_type len,
 
 void Extractor::display()
 {
-	for (Ph2Map::iterator it = ph2map.begin(); it != ph2map.end(); ++it)
+	for (Ph1::MapType::iterator it = map1.begin(); it != map1.end(); ++it)
+	{
+		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph2::MapType::iterator it = map2.begin(); it != map2.end(); ++it)
 	{
 		CS_SAY("phrase2: [" << it->first.c_str() << "]: " << it->second);
 	}
 
-	for (Ph3Map::iterator it = ph3map.begin(); it != ph3map.end(); ++it)
+	for (Ph3::MapType::iterator it = map3.begin(); it != map3.end(); ++it)
 	{
 		CS_SAY("phrase3: [" << it->first.c_str() << "]: " << it->second);
 	}
 
-	for (Ph4Map::iterator it = ph4map.begin(); it != ph4map.end(); ++it)
+	for (Ph4::MapType::iterator it = map4.begin(); it != map4.end(); ++it)
 	{
 		CS_SAY("phrase4: [" << it->first.c_str() << "]: " << it->second);
 	}
 
-	for (Ph5Map::iterator it = ph5map.begin(); it != ph5map.end(); ++it)
+	for (Ph5::MapType::iterator it = map5.begin(); it != map5.end(); ++it)
 	{
 		CS_SAY("phrase5: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph6::MapType::iterator it = map6.begin(); it != map6.end(); ++it)
+	{
+		CS_SAY("phrase6: [" << it->first.c_str() << "]: " << it->second);
 	}
 }
 
@@ -239,8 +281,8 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	{
 		gb2312[gb[i]] = true;
 	}
-	delete [] mbgb;
-	delete [] gb;
+	delete[] mbgb;
+	delete[] gb;
 }
 
 Extractor::~Extractor() {
