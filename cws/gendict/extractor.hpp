@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include "../../staging/staging.hpp"
+#include "staging.hpp"
 //#include <string>
 #include <vector>
 #include <bitset>
 #include <string.h>
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
-#include "../../staging/hash.hpp"
-#include "../../staging/array.hpp"
+#include "hash.hpp"
+#include "array.hpp"
 
 namespace jebe {
 namespace cws {
@@ -25,7 +25,6 @@ public:
 	static const uint8_t len = length;
 	typedef CharType StrType[length];
 
-protected:
 	StrType str;
 
 public:
@@ -106,6 +105,14 @@ public:
 			return true;
 		}
 	}
+
+	// NOTE: debug only
+	CharType* c_str() const
+	{
+		CharType* cstr = new CharType[length + 1];
+		std::memcpy(cstr, str, length * sizeof(CharType));
+		return cstr;
+	}
 };
 
 template<uint8_t length>
@@ -165,8 +172,53 @@ public:
 		return c < gb_char_max && gb2312[c];
 	}
 
-	Extractor();
+	void display();
+
+	void extract();
+
+	Extractor(const boost::filesystem::path& gbfile);
 	virtual ~Extractor();
+};
+
+class Analyzer
+{
+protected:
+	const Ph2Map& map2;
+	const Ph3Map& map3;
+	const Ph4Map& map4;
+	const Ph5Map& map5;
+
+	static const unsigned double entropyThreshold = .5;
+	static const unsigned double joinThreshold = 30;
+
+public:
+	Analyzer(const Ph2Map& map2_, const Ph3Map& map3_, const Ph4Map& map4_, const Ph5Map& map5_)
+		: map2(map2_), map3(map3_), map4(map4_), map5(map5_)
+	{
+
+	}
+
+	void analysis();
+
+	template<uint8_t plen>
+	uint32_t count(const Phrase<plen>& ph) const
+	{
+		switch (plen)
+		{
+		case 2:
+			return map2[ph];
+		case 3:
+			return map3[ph];
+		case 4:
+			return map4[ph];
+		case 5:
+			return map5[ph];
+		default:
+			return 0;
+		}
+	}
+
+	bool wordJudge() const;
 };
 
 } /* namespace cws */

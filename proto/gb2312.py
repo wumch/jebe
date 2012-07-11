@@ -4,4 +4,5 @@ chars = u'吖阿啊锕嗄哎哀唉埃挨锿捱皑癌嗳矮蔼霭艾爱砹隘嗌�
 charmap = [True if unichr(i) in chars else False for i in xrange(0, 65536)]
 
 if __name__ == '__main__':
-    print ord(chars[1])
+    print chars.encode('utf-8')
+
