@@ -9,13 +9,18 @@
 namespace jebe {
 namespace cws {
 
+void Analyzer::analysis()
+{
+
+}
+
 void Extractor::extract()
 {
 	Analyzer azer(ph2map, ph3map, ph4map, ph5map);
 	azer.analysis();
 }
 
-#define _PROCESS_STEP (4 << 20)
+#define _PROCESS_STEP (22)
 void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 {
 	uint32_t processed = 0;
@@ -23,25 +28,28 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 	std::ifstream ifile(file.c_str());
 
 	const std::size_t
-		bufsize = _PROCESS_STEP * sizeof(char),
-		mbssize = (_PROCESS_STEP << 2) * sizeof(char),
-		wssize = (_PROCESS_STEP << 2) * sizeof(wchar_t),
-		memsize = (_PROCESS_STEP << 2) * sizeof(wchar_t);
+		bufsize = (_PROCESS_STEP + 1) * sizeof(char),
+		mbssize = ((_PROCESS_STEP << 2) + 1) * sizeof(char),
+		wssize = ((_PROCESS_STEP << 2) + 1) * sizeof(wchar_t),
+		memsize = ((_PROCESS_STEP << 2) + 1) * sizeof(wchar_t);
 
-	char* const buf = new char[bufsize];
-	char* const mbs = new char[mbssize];
-	wchar_t* const ws = new wchar_t[wssize];
+	char* const buf = new char[bufsize / sizeof(char)];
+	char* const mbs = new char[mbssize / sizeof(char)];
+	wchar_t* const ws = new wchar_t[wssize / sizeof(wchar_t)];
+	char* const mem = new char[memsize / sizeof(char)];
 
-	char* const mem = new char[memsize];
-	memset(buf, 0, _PROCESS_STEP * sizeof(char));
+	memset(buf, 0, bufsize);
+	memset(mbs, 0, mbssize);
+	memset(ws, 0, wssize);
 
-	std::size_t converted = 0, mbs_consumed = 0;
+	std::size_t converted = 0, mbs_consumed = 0, mbs_len = 0;
 	ssize_t readed = 0, mbs_remains = 0;
 
 	try
 	{
 		while ((readed = ifile.readsome(buf + buf_remains, _PROCESS_STEP - buf_remains)))
 		{
+			memset(mem, 0, memsize);
 			processed += readed;
 			if (max_chars != 0 && processed > max_chars)
 			{
@@ -49,8 +57,12 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 			}
 
 			last_buf_remains = buf_remains;
-			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains);
-//			std::wcout << "buf_remains: " << buf_remains << std::endl;
+			CS_SAY("strlen(mbs): " << strlen(mbs));
+			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains, &mbs_len);
+			CS_SAY("strlen(mbs): " << strlen(mbs));
+//			CS_SAY(mbs);
+			std::wcout << "[" << mbs << "]" << std::endl;
+			CS_SAY("buf_remains: " << buf_remains << std::endl);
 			if (buf_remains)
 			{
 				std::memcpy(mem, buf + (readed + last_buf_remains - buf_remains), buf_remains);
@@ -63,11 +75,13 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 			}
 
 			memset(ws, 0, wssize);
-			converted = staging::mbswcs::mb2wc(mbs, ws);
+			CS_SAY("mbs_len: " << mbs_len << ", strlen(mbs): " << strlen(mbs));
+			converted = staging::mbswcs::mb2wc(mbs, ws, mbs_len - 1);
+			mbs_len = 0;
 
 			if (converted == static_cast<size_t>(-1))
 			{
-//				std::wcout << "convert failed, converted " << converted << std::endl;
+				CS_SAY("convert failed, converted " << converted);
 				converted = 0;
 				mbs_remains = strlen(mbs);
 			}
@@ -76,7 +90,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 				if (converted > 0)
 				{
 #if CS_DEBUG > 1
-					std::wcout << ws;
+					CS_SAY("ws: " << ws);
 #endif
 					scan(ws, converted);
 
@@ -87,7 +101,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 					}
 
 					mbs_remains = strlen(mbs) - mbs_consumed;
-//					std::wcout << "converted: " << converted << ", mbs_consumed: " << mbs_consumed << ", mbs_remains: " << mbs_remains << std::endl;
+					CS_SAY("converted: " << converted << ", mbs_consumed: " << mbs_consumed << ", mbs_remains: " << mbs_remains);
 
 					if (mbs_remains > 0)
 					{
@@ -107,6 +121,10 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 						CS_DIE("mbs_remains < 0, converted = " << converted << ", strlen(mbs) = " << strlen(mbs));
 					}
 				}
+				else
+				{
+					mbs_remains = strlen(mbs);
+				}
 			}
 		}
 		ifile.close();
@@ -121,7 +139,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 
 void Extractor::scan(const CharType* const str, String::size_type len)
 {
-	std::wcout << str << std::endl;
+	CS_SAY(str);
 	String::size_type i = 0, chkPoint = 0;
 	bool hasChs = false;
 	while (i < len)
@@ -137,7 +155,7 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 		{
 			if (hasChs)
 			{
-//				std::wcout << "i: " << i  << ", chkPoint: " << chkPoint << std::endl;
+				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
 				scanSentence(str + chkPoint, i - chkPoint, ph2map);
 				scanSentence(str + chkPoint, i - chkPoint, ph3map);
 				scanSentence(str + chkPoint, i - chkPoint, ph4map);
@@ -152,7 +170,7 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 
 	if (hasChs)
 	{
-//		std::wcout << "i: " << i  << ", chkPoint: " << chkPoint << std::endl;
+		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
 		scanSentence(str + chkPoint, i - chkPoint, ph2map);
 		scanSentence(str + chkPoint, i - chkPoint, ph3map);
 		scanSentence(str + chkPoint, i - chkPoint, ph4map);
@@ -189,22 +207,22 @@ void Extractor::display()
 {
 	for (Ph2Map::iterator it = ph2map.begin(); it != ph2map.end(); ++it)
 	{
-		std::wcout << "phrase2: [" << it->first.c_str() << "]: " << it->second << std::endl;
+		CS_SAY("phrase2: [" << it->first.c_str() << "]: " << it->second);
 	}
 
 	for (Ph3Map::iterator it = ph3map.begin(); it != ph3map.end(); ++it)
 	{
-		std::wcout << "phrase3: [" << it->first.c_str() << "]: " << it->second << std::endl;
+		CS_SAY("phrase3: [" << it->first.c_str() << "]: " << it->second);
 	}
 
 	for (Ph4Map::iterator it = ph4map.begin(); it != ph4map.end(); ++it)
 	{
-		std::wcout << "phrase4: [" << it->first.c_str() << "]: " << it->second << std::endl;
+		CS_SAY("phrase4: [" << it->first.c_str() << "]: " << it->second);
 	}
 
 	for (Ph5Map::iterator it = ph5map.begin(); it != ph5map.end(); ++it)
 	{
-		std::wcout << "phrase5: [" << it->first.c_str() << "]: " << it->second  << std::endl;
+		CS_SAY("phrase5: [" << it->first.c_str() << "]: " << it->second);
 	}
 }
 
@@ -215,8 +233,8 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	char* mbgb = new char[_GB2312_CHAR_NUM * 3 + 1];
 	CharType* gb = new CharType[_GB2312_CHAR_NUM + 1];
 	std::size_t len = ifile.readsome(mbgb, _GB2312_CHAR_NUM * 3);
-	staging::mbswcs::mb2wc(mbgb, gb);
-	std::wcout << len << std::endl;
+	staging::mbswcs::mb2wc(mbgb, gb, len);
+	CS_SAY(len);
 	for (uint16_t i = 0; i < _GB2312_CHAR_NUM; ++i)
 	{
 		gb2312[gb[i]] = true;
