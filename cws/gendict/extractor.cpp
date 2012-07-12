@@ -52,7 +52,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 {
 	uint32_t processed = 0;
 	std::size_t buf_remains = 0, last_buf_remains = 0;
-	std::ifstream ifile(file.c_str());
+	std::ifstream ifile(file.string().c_str());
 
 	const std::size_t
 		bufsize = (_PROCESS_STEP + 1) * sizeof(char),
@@ -88,17 +88,17 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains, &mbs_len);
 			CS_SAY("strlen(mbs): " << strlen(mbs));
 //			CS_SAY(mbs);
-			std::wcout << "[" << mbs << "]" << std::endl;
+			CS_SAY("[" << mbs << "]");
 			CS_SAY("buf_remains: " << buf_remains << std::endl);
 			if (buf_remains)
 			{
-				std::memcpy(mem, buf + (readed + last_buf_remains - buf_remains), buf_remains);
-				std::memset(buf, 0, bufsize);
-				std::memcpy(buf, mem, buf_remains);
+				memcpy(mem, buf + (readed + last_buf_remains - buf_remains), buf_remains);
+				memset(buf, 0, bufsize);
+				memcpy(buf, mem, buf_remains);
 			}
 			else
 			{
-				std::memset(buf, 0, bufsize);
+				memset(buf, 0, bufsize);
 			}
 
 			memset(ws, 0, wssize);
@@ -132,16 +132,16 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 
 					if (mbs_remains > 0)
 					{
-						std::memset(mem, 0, memsize);
-						std::memcpy(mem, mbs + mbs_consumed, mbs_remains);
-						std::memset(mbs, 0, mbssize);
-						std::memcpy(mbs, mem, mbs_remains);
-						std::memset(mem, 0, memsize);
+						memset(mem, 0, memsize);
+						memcpy(mem, mbs + mbs_consumed, mbs_remains);
+						memset(mbs, 0, mbssize);
+						memcpy(mbs, mem, mbs_remains);
+						memset(mem, 0, memsize);
 					}
 					else if (mbs_remains == 0)
 					{
-						std::memset(mbs, 0, mbssize);
-						std::memset(mem, 0, memsize);
+						memset(mbs, 0, mbssize);
+						memset(mem, 0, memsize);
 					}
 					else
 					{
@@ -274,7 +274,7 @@ void Extractor::display()
 #define _GB2312_CHAR_NUM 6763
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 {
-	std::ifstream ifile(gbfile.c_str(), std::ios_base::in | std::ios_base::binary);
+	std::ifstream ifile(gbfile.string().c_str(), std::ios_base::in | std::ios_base::binary);
 	char* mbgb = new char[_GB2312_CHAR_NUM * 3 + 1];
 	CharType* gb = new CharType[_GB2312_CHAR_NUM + 1];
 	std::size_t len = ifile.readsome(mbgb, _GB2312_CHAR_NUM * 3);

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <bitset>
 #include <list>
+#include <iostream>
 #include <string.h>
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
@@ -74,7 +75,7 @@ public:
 public:
 	explicit Phrase(const CharType* const str_)
 	{
-		std::memcpy(str, str_, length * sizeof(CharType));
+		memcpy(str, str_, length * sizeof(CharType));
 	}
 
 	// half-hash. one day, boost::preprocessor ...
@@ -138,8 +139,8 @@ public:
 	CharType* c_str() const
 	{
 		CharType* cstr = new CharType[length + 1];
-		std::memset(cstr, 0, (length + 1) * sizeof(CharType));
-		std::memcpy(cstr, str, length * sizeof(CharType));
+		memset(cstr, 0, (length + 1) * sizeof(CharType));
+		memcpy(cstr, str, length * sizeof(CharType));
 		return cstr;
 	}
 };
