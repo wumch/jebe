@@ -32,11 +32,15 @@ template<uint8_t plen>
 void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes)
 {
 	typedef typename Phrase<plen>::MapType MapType;
-	for (typename MapType::iterator it = map.begin(); it != map.end(); ++it)
+	for (typename MapType::iterator it = map.begin(); it != map.end(); )
 	{
 		if (it->second < min_atimes)
 		{
 			map.erase(it);
+		}
+		else
+		{
+			++it;
 		}
 	}
 }

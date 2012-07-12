@@ -13,14 +13,14 @@ Portal::Portal(const char* config_file)
     G::config_file = config_file;
     G::config = Config::getInstance();
     master = new Master(Config::getInstance()->worker_cout);
-    signals = new BA::signal_set(master->get_io());
+//    signals = new BA::signal_set(master->get_io());
     std::set_terminate(Portal::terminate);
 }
 
 void Portal::signals_init()
 {
-    signals->add(SIGHUP);
-    signals->async_wait(boost::bind(&Portal::handle_signals, this));
+//    signals->add(SIGHUP);
+//    signals->async_wait(boost::bind(&Portal::handle_signals, this));
 }
 
 void Portal::handle_signals()
@@ -38,7 +38,7 @@ void Portal::stop()
 void Portal::run()
 {
     store_pid();
-    signals_init();
+//    signals_init();
     master->run();
     clean_pid();
 }
