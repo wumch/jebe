@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/extractor
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -15,10 +15,10 @@ ifeq ($(COMPILER), G++)
     OBJ = o
   endif
   ifeq ($(DEBUG), 1)
-  COPT = -O0 -g3 -rdynamic -pipe -Wall
+  COPT = -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
   LDOPT = -g -rdynamic
   else
-  COPT = -march=core2 -O3 -fomit-frame-pointer -pipe
+  COPT = -march=core2 -O3 -fomit-frame-pointer -pipe -m64 -fno-threadsafe-statics -fno-rtti -fvisibility-inlines-hidden
   LDOPT = $(COPT)
   endif
   CCMD = g++

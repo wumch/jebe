@@ -299,7 +299,8 @@ protected:
 
 	std::size_t totalAtimes;
 
-	std::list<std::wstring> words;
+	typedef std::list<std::wstring> Words;
+	Words words;
 
 	static const double entropyThreshold = 0.5;
 	static const double joinThreshold = 10;
@@ -312,6 +313,14 @@ public:
 		  map4(map4_), map5(map5_), map6(map6_),
 		  totalAtimes(0)
 	{
+	}
+
+	void dump() const
+	{
+		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
+		{
+			CS_STDOUT << *it << std::endl;
+		}
 	}
 
 	void extractWords()

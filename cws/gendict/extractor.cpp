@@ -16,6 +16,7 @@ void Analyzer::analysis()
 	map6.clear();
 	caltureTotalAtimes();
 	extractWords();
+	dump();
 }
 
 void Analyzer::clean(std::size_t min_atimes)
@@ -36,7 +37,7 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 	{
 		if (it->second < min_atimes)
 		{
-			map.erase(it);
+			it = map.erase(it);
 		}
 		else
 		{
@@ -51,7 +52,7 @@ void Extractor::extract()
 	azer.analysis();
 }
 
-#define _PROCESS_STEP (22)
+#define _PROCESS_STEP (10000)
 void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 {
 	uint32_t processed = 0;
@@ -59,10 +60,13 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 	std::ifstream ifile(file.string().c_str());
 
 	const std::size_t
-		bufsize = (_PROCESS_STEP + 1) * sizeof(char),
-		mbssize = ((_PROCESS_STEP << 2) + 1) * sizeof(char),
-		wssize = ((_PROCESS_STEP << 2) + 1) * sizeof(wchar_t),
-		memsize = ((_PROCESS_STEP << 2) + 1) * sizeof(wchar_t);
+		bufsize = ((_PROCESS_STEP) + 1) * sizeof(char),
+		mbssize = ((_PROCESS_STEP) * 2 + 1) * sizeof(char),
+		wssize = (mbssize / sizeof(char)) * sizeof(wchar_t),
+		memsize = wssize;
+
+	CS_SAY("bufsize:" << bufsize << ", mbssize:" << mbssize << ", wssize:" << wssize << ",memsize:" << memsize);
+//	CS_DIE("dieing");
 
 	char* const buf = new char[bufsize / sizeof(char)];
 	char* const mbs = new char[mbssize / sizeof(char)];
@@ -80,6 +84,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 	{
 		while ((readed = ifile.readsome(buf + buf_remains, _PROCESS_STEP - buf_remains)))
 		{
+//			CS_DIE("readed: " << readed << ", bufremains: " << buf_remains);
 			memset(mem, 0, memsize);
 			processed += readed;
 			if (max_chars != 0 && processed > max_chars)

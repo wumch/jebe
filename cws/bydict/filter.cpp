@@ -20,7 +20,8 @@ void Filter::find(const AtomList atoms, const ContentLen len,
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
     bool begin_from_root = true;
 #endif
-    for (Cursor i = len - 1, offset = i - 1, wcur = 0; -1 < i; --i)
+    Cursor wcur = 0;
+    for (Cursor i = len - 1, offset = i - 1; -1 < i; --i)
     {
         if ((node = node->children[atoms[i]]))
         {
@@ -61,6 +62,7 @@ void Filter::find(const AtomList atoms, const ContentLen len,
             i = offset--;
         }
     }
+    res[wcur - 1] = 0;
 }
 
 void Ftree::build(const std::string& fname)

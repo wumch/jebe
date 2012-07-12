@@ -2,8 +2,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include <boost/asio/signal_set.hpp>
-#include <boost/signals.hpp>
+//#include <boost/asio/signal_set.hpp>
+//#include <boost/signals.hpp>
 #include "predef.hpp"
 #include "master.hpp"
 #include "shareinfo.hpp"
