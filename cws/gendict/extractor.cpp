@@ -37,7 +37,6 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 	}
 }
 
-
 void Extractor::extract()
 {
 	Analyzer azer(map1, map2, map3, map4, map5, map6);

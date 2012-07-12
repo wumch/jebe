@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <bitset>
+#include <list>
 #include <string.h>
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
@@ -19,6 +20,7 @@ typedef wchar_t	CharType;
 typedef std::wstring String;
 
 #define _JEBE_BUCKET_BITS 20
+
 template<uint8_t plen, uint8_t bits>
 class PhraseHash;
 
@@ -30,6 +32,11 @@ class Phrase
 //	template<uint8_t len_1, uint8_t len_2> friend bool operator==(const Phrase<len_1>& lph, const Phrase<len_2>& rph);
 public:
 	typedef boost::unordered_map<Phrase<length>, atimes_t, PhraseHash<length, _JEBE_BUCKET_BITS> > MapType;
+
+	typedef Phrase<1> Suffix;
+	typedef std::pair<Suffix, atimes_t> Pad;
+	typedef std::list<Pad> PadList;
+	typedef boost::unordered_map<Phrase<length>, PadList> PadMap;
 
 	static const uint8_t len = length;
 	typedef CharType StrType[length];
@@ -217,6 +224,12 @@ public:
 	virtual ~Extractor();
 };
 
+//template<uint8_t prefix_len>
+//bool padEq(const typename Phrase<prefix_len>::Pad& p1, const typename Phrase<prefix_len>::Pad& p2)
+//{
+//	return match<prefix_len, prefix_len>(p1.first.str, p2.first.str);	// Phrase
+//}
+
 class Analyzer
 {
 protected:
@@ -227,16 +240,56 @@ protected:
 	Ph5::MapType& map5;
 	Ph6::MapType& map6;
 
+	Ph1::PadMap pad1;
+	Ph2::PadMap pad2;
+	Ph3::PadMap pad3;
+	Ph4::PadMap pad4;
+	Ph5::PadMap pad5;
+
 	static const double entropyThreshold = 0.5;
 	static const double joinThreshold = 30;
 
 public:
-	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_, Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_)
+	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_,
+			Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_)
 		: map1(map1_), map2(map2_), map3(map3_), map4(map4_), map5(map5_), map6(map6_)
 	{
 	}
 
 	void analysis();
+
+	template<uint8_t prefix_len>
+	void buildPadMap(typename Phrase<prefix_len>::PadMap& padmap, const typename Phrase<prefix_len + 1>::MapType& map)
+	{
+		typedef Phrase<prefix_len> PrefixType;
+		typedef typename PrefixType::Suffix SuffixType;
+		typedef typename Phrase<prefix_len + 1>::MapType MapType;
+
+		typedef typename PrefixType::PadList PadListType;
+		typedef typename PrefixType::PadMap PadMapType;
+
+		for (typename MapType::iterator it = map.begin(); it != map.end(); ++it)
+		{
+			PrefixType prefix(it->first);
+			SuffixType suffix(it->first + prefix_len);
+
+			if (padmap.find(prefix) == padmap.end())
+			{
+				padmap[prefix] = PadListType();
+			}
+
+			PadListType& plist = padmap[prefix];
+			typename PadListType::iterator padit = std::find_if(plist.begin(), plist.end(), std::bind2nd(std::equal_to<SuffixType>(), suffix));
+			if (padit == plist.end())
+			{
+				plist.push_back(typename PrefixType::Pad(suffix, 1));
+			}
+			else
+			{
+				++(*padit)->second;
+			}
+		}
+	}
 
 	void clean(std::size_t min_atimes);
 
@@ -273,7 +326,6 @@ public:
 			const typename Phrase<plen + 1>::MapType& suffixMap
 			) const
 	{
-
 	}
 };
 
