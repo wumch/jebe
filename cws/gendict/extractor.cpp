@@ -3,6 +3,7 @@
 #include <fstream>
 #include <exception>
 #include <cstdlib>
+#include <boost/checked_delete.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 
@@ -91,7 +92,6 @@ void Analyzer::analysis()
 	map6.clear();
 	caltureTotalAtimes();
 	extractWords();
-//	dump();
 }
 
 void Analyzer::clean(std::size_t min_atimes)
@@ -127,16 +127,14 @@ void Extractor::extract(const boost::filesystem::path& outfile)
 	Analyzer azer(map1, map2, map3, map4, map5, map6, map7);
 	azer.analysis();
 
-	std::ofstream ofile(outfile.string().c_str());
+	std::wofstream ofile(outfile.string().c_str());
+	ofile.imbue(std::locale(""));
 	Analyzer::Words& words = azer.getWords();
-	char mbs[24];
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
-		memset(mbs, 0, 24);
-		staging::mbswcs::wc2mb(it->c_str(), mbs, it->size());
-		CS_SAY("wcs: [" << *it << "], mbs: [" << mbs << "]");
-		ofile << mbs << std::endl;
+		ofile << it->c_str() << std::endl;
 	}
+	ofile.close();
 }
 
 void Extractor::extract(const boost::filesystem::path& contentfile,
@@ -271,8 +269,10 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	{
 		gb2312[gb[i]] = true;
 	}
-	delete[] mbgb;
-	delete[] gb;
+//	delete[] mbgb;
+	boost::checked_array_delete(mbgb);
+	boost::checked_array_delete(gb);
+//	delete[] gb;
 }
 
 void Extractor::fetchContent(const boost::filesystem::path& contentfile,
@@ -392,10 +392,14 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 		CS_DIE("error occured while reading contentfile " << contentfile << ": " << e.what());
 	}
 
-	delete[] buf;
-	delete[] mbs;
-	delete[] ws;
-	delete[] mem;
+//	delete[] buf;
+//	delete[] mbs;
+//	delete[] ws;
+//	delete[] mem;
+	boost::checked_array_delete(buf);
+	boost::checked_array_delete(mbs);
+	boost::checked_array_delete(ws);
+	boost::checked_array_delete(mem);
 }
 
 } /* namespace cws */

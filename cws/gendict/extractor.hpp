@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string.h>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <boost/filesystem.hpp>
 #include "hash.hpp"
 #include "array.hpp"
@@ -19,26 +20,26 @@ namespace jebe {
 namespace cws {
 
 #define _JEBE_PROCESS_STEP (100)
-#define _JEBE_WORD_MIN_ATIMES (3)
+#define _JEBE_WORD_MIN_ATIMES (5)
 
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
 typedef std::wstring String;
 
-template<uint8_t plen> class MapHashBits { public: enum { bits = 22 }; };
+template<uint8_t plen> class MapHashBits { public: enum { bits = 24 }; };
 template<> class MapHashBits<1> { public: enum { bits = 12 }; };
 template<> class MapHashBits<4> { public: enum { bits = 21 }; };
 template<> class MapHashBits<5> { public: enum { bits = 20 }; };
 template<> class MapHashBits<6> { public: enum { bits = 18 }; };
-template<> class MapHashBits<7> { public: enum { bits = 16 }; };
+template<> class MapHashBits<7> { public: enum { bits = 15 }; };
 
 template<uint8_t plen> class PadHashBits { public: enum { bits = 20 }; };
 template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
-template<> class PadHashBits<2> { public: enum { bits = 20 }; };
-template<> class PadHashBits<3> { public: enum { bits = 18 }; };
-template<> class PadHashBits<4> { public: enum { bits = 16 }; };
-template<> class PadHashBits<5> { public: enum { bits = 12 }; };
-template<> class PadHashBits<6> { public: enum { bits = 10 }; };
+template<> class PadHashBits<2> { public: enum { bits = 22 }; };
+template<> class PadHashBits<3> { public: enum { bits = 20 }; };
+template<> class PadHashBits<4> { public: enum { bits = 18 }; };
+template<> class PadHashBits<5> { public: enum { bits = 16 }; };
+template<> class PadHashBits<6> { public: enum { bits = 14 }; };
 
 template<uint8_t plen, uint8_t bits>
 class PhraseHash;
@@ -321,7 +322,7 @@ public:
 class Analyzer
 {
 public:
-	typedef std::set<String> Words;
+	typedef boost::unordered_set<String> Words;
 
 protected:
 	typedef staging::Array<atimes_t, Extractor::gb_char_max> SuffixMap;
@@ -367,14 +368,6 @@ public:
 		return words;
 	}
 
-	void dump() const
-	{
-		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
-		{
-			CS_STDOUT << *it << std::endl;
-		}
-	}
-
 	void extractWords()
 	{
 		extractWords_<2>(map2, map1, pad1);
@@ -397,7 +390,7 @@ public:
 		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
 			res = isWord<plen>(it->first, map, prefixmap, padmap);
-			if (res)
+			if (res != no)
 			{
 				words.insert(it->first);
 				if (res == should_cover)
@@ -486,28 +479,6 @@ public:
 
 	template<uint8_t plen>
 	void clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes);
-
-	template<uint8_t plen>
-	uint32_t count(const Phrase<plen>& ph) const
-	{
-		switch (plen)
-		{
-//		case 1:
-//			return map1.find(p)->second;
-//		case 2:
-//			return map2[ph];
-//		case 3:
-//			return map3[ph];
-//		case 4:
-//			return map4[ph];
-//		case 5:
-//			return map5[ph];
-//		case 6:
-//			return map6[ph];
-		default:
-			return 0;
-		}
-	}
 
 	bool wordJudge() const;
 
