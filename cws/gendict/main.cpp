@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 		maxchars = boost::lexical_cast<uint64_t>(argv[4]);
 	}
 
-	staging::mbswcs::setlocale();
+	staging::mbswcs::setlocale("zh_CN.UTF-8");
 	jebe::cws::Extractor extractor(gbfile);
 	extractor.extract(contentfile, outfile, maxchars);
 }

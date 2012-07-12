@@ -10,10 +10,10 @@ namespace jebe {
 namespace cws {
 
 template<uint8_t plen>
-bool Analyzer::isWord(const Phrase<plen>& phrase,
+Analyzer::WordExamineRes Analyzer::isWord(const Phrase<plen>& phrase,
 		typename Phrase<plen>::MapType& map,
 		typename Phrase<plen - 1>::MapType& prefixmap,
-		typename Phrase<plen>::PadMap& padmap
+		typename Phrase<plen - 1>::PadMap& padmap
 		) const
 {
 	typedef Phrase<plen - 1> PhraseType;
@@ -33,27 +33,52 @@ bool Analyzer::isWord(const Phrase<plen>& phrase,
 	double overRate = joinprobActual / joinprobPred;
 	// so, one a bit fast and explicit edition: */
 	double atimes = map[phrase];
-	double overRate = std::log(atimes) * atimes / prefixmap[prefix] * totalAtimes / map1[suffix];
-	if (overRate > joinThresholdStop)
+	double overRate = std::sqrt(atimes) * atimes / prefixmap[prefix] * totalAtimes / smap[suffix];
+
+	if (overRate < joinThresholdLower)
 	{
-		CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
-						<< ", map[phrase]: " << map[phrase]
-						<< ", prefixmap[prefix]: " << prefixmap[prefix]
-						<< ", map1[suffix]: " << map1[suffix]
-						);
-		return true;
+		return no;
 	}
 
-	if (overRate > joinThreshold)
+	PadListType& plist = padmap[prefix];
+	if (plist->size() == 1)
+	{
+		return should_cover;
+	}
+
+	double entropy = 0., rate = 0.;
+	for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+	{
+		entropy = 0;
+		rate = static_cast<double>(it->second) / plist.sum;
+		entropy -= rate * std::log(rate);
+	}
+
+	CS_SAY(phrase << " entropy: " << entropy);
+	return entropy > entropyThreshold ? yes : should_cover;
+
+	if (overRate > joinThresholdUpper)
+	{
+		CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
+			<< ", map[phrase]: " << map[phrase]
+			<< ", prefixmap[prefix]: " << prefixmap[prefix]
+			<< ", map1[suffix]: " << smap[suffix]
+		);
+		return should_cover;
+	}
+
+	if (overRate > joinThresholdLower)
 	{
 		CS_SAY("can be a word: [" << phrase.c_str() << "]");
 	}
+
 	CS_SAY("can be a word: [" << phrase.c_str() << "], overRate: " << overRate
-			<< ", map[phrase]: " << map[phrase]
-			<< ", prefixmap[prefix]: " << prefixmap[prefix]
-			<< ", map1[suffix]: " << map1[suffix]
-			);
-	return false;
+		<< ", map[phrase]: " << map[phrase]
+		<< ", prefixmap[prefix]: " << prefixmap[prefix]
+		<< ", map1[suffix]: " << smap[suffix]
+	);
+
+	return yes;
 
 //		std::log(joinfreq);
 }
@@ -61,11 +86,12 @@ bool Analyzer::isWord(const Phrase<plen>& phrase,
 void Analyzer::analysis()
 {
 	clean(_JEBE_WORD_MIN_ATIMES);
+	buildSuffixMap();
 	buildPadMap();
 	map6.clear();
 	caltureTotalAtimes();
 	extractWords();
-	dump();
+//	dump();
 }
 
 void Analyzer::clean(std::size_t min_atimes)
@@ -76,6 +102,7 @@ void Analyzer::clean(std::size_t min_atimes)
 	clean_<4>(map4, min_atimes);
 	clean_<5>(map5, min_atimes);
 	clean_<6>(map6, min_atimes);
+	clean_<7>(map7, min_atimes);
 }
 
 template<uint8_t plen>
@@ -95,17 +122,28 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 	}
 }
 
-void Extractor::extract()
+void Extractor::extract(const boost::filesystem::path& outfile)
 {
-	Analyzer azer(map1, map2, map3, map4, map5, map6);
+	Analyzer azer(map1, map2, map3, map4, map5, map6, map7);
 	azer.analysis();
+
+	std::ofstream ofile(outfile.string().c_str());
+	Analyzer::Words& words = azer.getWords();
+	char mbs[24];
+	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
+	{
+		memset(mbs, 0, 24);
+		staging::mbswcs::wc2mb(it->c_str(), mbs, it->size());
+		CS_SAY("wcs: [" << *it << "], mbs: [" << mbs << "]");
+		ofile << mbs << std::endl;
+	}
 }
 
 void Extractor::extract(const boost::filesystem::path& contentfile,
 		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
 	fetchContent(contentfile, outfile, maxchars);
-	extract();
+	extract(outfile);
 }
 
 void Extractor::scan(const CharType* const str, String::size_type len)
@@ -152,6 +190,7 @@ void Extractor::addSentence_(const CharType* const str, String::size_type len)
 	scanSentence<4>(str, len, map4);
 	scanSentence<5>(str, len, map5);
 	scanSentence<6>(str, len, map6);
+	scanSentence<7>(str, len, map7);
 }
 
 template<uint8_t plen>
@@ -212,18 +251,23 @@ void Extractor::display()
 	{
 		CS_SAY("phrase6: [" << it->first.c_str() << "]: " << it->second);
 	}
+
+	for (Ph7::MapType::iterator it = map7.begin(); it != map7.end(); ++it)
+	{
+		CS_SAY("phrase7: [" << it->first.c_str() << "]: " << it->second);
+	}
 }
 
-#define _GB2312_CHAR_NUM 6763
+#define _JEBE_GB2312_CHAR_NUM 6763
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 {
 	std::ifstream ifile(gbfile.string().c_str(), std::ios_base::in | std::ios_base::binary);
-	char* mbgb = new char[_GB2312_CHAR_NUM * 3 + 1];
-	CharType* gb = new CharType[_GB2312_CHAR_NUM + 1];
-	std::size_t len = ifile.readsome(mbgb, _GB2312_CHAR_NUM * 3);
+	char* mbgb = new char[_JEBE_GB2312_CHAR_NUM * 3 + 1];
+	CharType* gb = new CharType[_JEBE_GB2312_CHAR_NUM + 1];
+	std::size_t len = ifile.readsome(mbgb, _JEBE_GB2312_CHAR_NUM * 3);
 	staging::mbswcs::mb2wc(mbgb, gb, len);
 	CS_SAY(len);
-	for (uint16_t i = 0; i < _GB2312_CHAR_NUM; ++i)
+	for (uint16_t i = 0; i < _JEBE_GB2312_CHAR_NUM; ++i)
 	{
 		gb2312[gb[i]] = true;
 	}

@@ -10,6 +10,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
 #include "hash.hpp"
+#include "array.hpp"
 #ifndef WIN32
 #	include <limits.h>
 #endif
@@ -17,8 +18,8 @@
 namespace jebe {
 namespace cws {
 
-#define _JEBE_PROCESS_STEP (10003)
-#define _JEBE_WORD_MIN_ATIMES (4)
+#define _JEBE_PROCESS_STEP (100)
+#define _JEBE_WORD_MIN_ATIMES (3)
 
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
@@ -26,6 +27,10 @@ typedef std::wstring String;
 
 template<uint8_t plen> class MapHashBits { public: enum { bits = 22 }; };
 template<> class MapHashBits<1> { public: enum { bits = 12 }; };
+template<> class MapHashBits<4> { public: enum { bits = 21 }; };
+template<> class MapHashBits<5> { public: enum { bits = 20 }; };
+template<> class MapHashBits<6> { public: enum { bits = 18 }; };
+template<> class MapHashBits<7> { public: enum { bits = 16 }; };
 
 template<uint8_t plen> class PadHashBits { public: enum { bits = 20 }; };
 template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
@@ -33,6 +38,7 @@ template<> class PadHashBits<2> { public: enum { bits = 20 }; };
 template<> class PadHashBits<3> { public: enum { bits = 18 }; };
 template<> class PadHashBits<4> { public: enum { bits = 16 }; };
 template<> class PadHashBits<5> { public: enum { bits = 12 }; };
+template<> class PadHashBits<6> { public: enum { bits = 10 }; };
 
 template<uint8_t plen, uint8_t bits>
 class PhraseHash;
@@ -109,6 +115,8 @@ public:
 				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4];
 			case 6:
 				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5];
+			case 7:
+				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5] ^ str[6];
 			default:
 				mask_t mask = 0;
 				for (uint8_t i = 0; i < length; ++i)
@@ -144,6 +152,11 @@ public:
 	operator String() const
 	{
 		return String(c_str());
+	}
+
+	operator uint16_t() const
+	{
+		return *reinterpret_cast<const uint64_t*>(str);
 	}
 
 	// NOTE: debug only
@@ -189,6 +202,14 @@ bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 			 && prefix[3] == rstr[3]
 			 && prefix[4] == rstr[4]
 			 && prefix[5] == rstr[5];
+	case 7:
+		return prefix[0] == rstr[0]
+			 && prefix[1] == rstr[1]
+			 && prefix[2] == rstr[2]
+			 && prefix[3] == rstr[3]
+			 && prefix[4] == rstr[4]
+			 && prefix[5] == rstr[5]
+			 && prefix[6] == rstr[6];
 	default:
 		for (uint8_t i = 0; i < len_1; ++i)
 		{
@@ -229,11 +250,14 @@ typedef Phrase<3> Ph3;
 typedef Phrase<4> Ph4;
 typedef Phrase<5> Ph5;
 typedef Phrase<6> Ph6;
+typedef Phrase<7> Ph7;
 
 class Extractor
 {
-protected:
+public:
 	static const int32_t gb_char_max = 65536;
+
+protected:
 	std::bitset<gb_char_max> gb2312;
 
 	Ph1::MapType map1;
@@ -242,6 +266,7 @@ protected:
 	Ph4::MapType map4;
 	Ph5::MapType map5;
 	Ph6::MapType map6;
+	Ph7::MapType map7;
 
 public:
 	void extract(const boost::filesystem::path& contentfile,
@@ -255,7 +280,7 @@ protected:
 	void fetchContent(const boost::filesystem::path& contentfile,
 			const boost::filesystem::path& outfile, uint32_t max_chars);
 
-	void extract();
+	void extract(const boost::filesystem::path& outfile);
 
 	void scan(const CharType* const str, String::size_type len);
 
@@ -295,36 +320,51 @@ public:
 
 class Analyzer
 {
+public:
+	typedef std::set<String> Words;
+
 protected:
+	typedef staging::Array<atimes_t, Extractor::gb_char_max> SuffixMap;
+	SuffixMap smap;
+
 	Ph1::MapType& map1;
 	Ph2::MapType& map2;
 	Ph3::MapType& map3;
 	Ph4::MapType& map4;
 	Ph5::MapType& map5;
 	Ph6::MapType& map6;
+	Ph7::MapType& map7;
 
 	Ph1::PadMap pad1;		// pad1 -> atimes = map1[prefix] or sum(suffix.atimes) ? should be sum(..).
 	Ph2::PadMap pad2;
 	Ph3::PadMap pad3;
 	Ph4::PadMap pad4;
 	Ph5::PadMap pad5;
+	Ph6::PadMap pad6;
 
 	std::size_t totalAtimes;
 
-	typedef std::list<std::wstring> Words;
 	Words words;
 
-	static const double entropyThreshold = 0.5;
-	static const double joinThreshold = 10;
-	static const double joinThresholdStop = 100;
+	static const double entropyThreshold = .2;
+	static const double joinThresholdLower = 10.;
+	static const double joinThresholdUpper = 300.;
+
+	enum WordExamineRes { no = 0, yes, should_cover, };
 
 public:
 	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_,
-			Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_)
+			Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_, Ph7::MapType& map7_)
 		: map1(map1_), map2(map2_), map3(map3_),
-		  map4(map4_), map5(map5_), map6(map6_),
+		  map4(map4_), map5(map5_), map6(map6_), map7(map7_),
 		  totalAtimes(0)
 	{
+		buildSuffixMap();
+	}
+
+	Words& getWords()
+	{
+		return words;
 	}
 
 	void dump() const
@@ -337,35 +377,42 @@ public:
 
 	void extractWords()
 	{
-		extractWords_<2>(map2, map1, pad2);
-		extractWords_<3>(map3, map2, pad3);
-		extractWords_<4>(map4, map3, pad4);
-		extractWords_<5>(map5, map4, pad5);
+		extractWords_<2>(map2, map1, pad1);
+		extractWords_<3>(map3, map2, pad2);
+		extractWords_<4>(map4, map3, pad3);
+		extractWords_<5>(map5, map4, pad4);
+		extractWords_<6>(map6, map5, pad5);
 		CS_SAY("character-total-atimes: " << totalAtimes);
 	}
 
 	template<uint8_t plen>
 	void extractWords_(typename Phrase<plen>::MapType& map,
 			typename Phrase<plen - 1>::MapType& prefixmap,
-			typename Phrase<plen>::PadMap& padmap
+			typename Phrase<plen - 1>::PadMap& padmap
 			)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
 
+		WordExamineRes res = no;
 		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			if (isWord<plen>(it->first, map, prefixmap, padmap))
+			res = isWord<plen>(it->first, map, prefixmap, padmap);
+			if (res)
 			{
-				words.push_back(it->first);
+				words.insert(it->first);
+				if (res == should_cover)
+				{
+					words.erase(Phrase<plen - 1>(it->first.str));
+				}
 			}
 		}
 	}
 
 	template<uint8_t plen>
-	bool isWord(const Phrase<plen>& phrase,
+	Analyzer::WordExamineRes isWord(const Phrase<plen>& phrase,
 			typename Phrase<plen>::MapType& map,
 			typename Phrase<plen - 1>::MapType& prefixmap,
-			typename Phrase<plen>::PadMap& padmap
+			typename Phrase<plen - 1>::PadMap& padmap
 			) const;
 
 	void analysis();
@@ -385,6 +432,7 @@ public:
 		buildPadMap_<3>(pad3, map4);
 		buildPadMap_<4>(pad4, map5);
 		buildPadMap_<5>(pad5, map6);
+		buildPadMap_<6>(pad6, map7);
 	}
 
 	template<uint8_t prefix_len>
@@ -420,6 +468,17 @@ public:
 				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: " << suffix.c_str() << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
+		}
+	}
+
+	void buildSuffixMap()
+	{
+		typedef Phrase<1> PhraseType;
+		typedef PhraseType::Suffix::MapType MapType;
+		smap.fill(0);
+		for (MapType::const_iterator it = map1.begin(); it != map1.end(); ++it)
+		{
+			smap[it->first] = it->second;
 		}
 	}
 
