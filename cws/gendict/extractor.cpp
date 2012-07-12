@@ -9,9 +9,58 @@
 namespace jebe {
 namespace cws {
 
+template<uint8_t plen>
+bool Analyzer::isWord(const Phrase<plen>& phrase,
+		typename Phrase<plen>::MapType& map,
+		typename Phrase<plen - 1>::MapType& prefixmap,
+		typename Phrase<plen>::PadMap& padmap
+		) const
+{
+	typedef Phrase<plen - 1> PhraseType;
+	typedef typename PhraseType::MapType MapType;
+	typedef typename PhraseType::PadMap PadMapType;
+	typedef typename PhraseType::PadList PadListType;
+	typedef typename PhraseType::Suffix SuffixType;
+
+	PhraseType prefix(phrase.str);
+	SuffixType suffix(phrase.str + (plen - 1));
+
+//		PadListType& plist = padmap[prefix];
+	// both count(prefix) and  can not be 0, it is impossible.
+	/*
+	double joinprobActual = count(phrase) / count(prefix),
+			joinprobPred = count(suffix) / totalAtimes;
+	double overRate = joinprobActual / joinprobPred;
+	// so, one a bit fast and explicit edition: */
+	double atimes = map[phrase];
+	double overRate = std::log(atimes) * atimes / prefixmap[prefix] * totalAtimes / map1[suffix];
+	if (overRate > joinThresholdStop)
+	{
+		CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
+						<< ", map[phrase]: " << map[phrase]
+						<< ", prefixmap[prefix]: " << prefixmap[prefix]
+						<< ", map1[suffix]: " << map1[suffix]
+						);
+		return true;
+	}
+
+	if (overRate > joinThreshold)
+	{
+		CS_SAY("can be a word: [" << phrase.c_str() << "]");
+	}
+	CS_SAY("can be a word: [" << phrase.c_str() << "], overRate: " << overRate
+			<< ", map[phrase]: " << map[phrase]
+			<< ", prefixmap[prefix]: " << prefixmap[prefix]
+			<< ", map1[suffix]: " << map1[suffix]
+			);
+	return false;
+
+//		std::log(joinfreq);
+}
+
 void Analyzer::analysis()
 {
-	clean(3);
+	clean(_JEBE_WORD_MIN_ATIMES);
 	buildPadMap();
 	map6.clear();
 	caltureTotalAtimes();
@@ -52,21 +101,150 @@ void Extractor::extract()
 	azer.analysis();
 }
 
-#define _PROCESS_STEP (10000)
-void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
+void Extractor::extract(const boost::filesystem::path& contentfile,
+		const boost::filesystem::path& outfile, uint32_t maxchars)
+{
+	fetchContent(contentfile, outfile, maxchars);
+	extract();
+}
+
+void Extractor::scan(const CharType* const str, String::size_type len)
+{
+	CS_SAY(str);
+	String::size_type i = 0, chkPoint = 0;
+	bool hasChs = false;
+	while (i < len)
+	{
+		if (CS_BLIKELY(isGb2312(str[i])))
+		{
+			if (!hasChs)
+			{
+				hasChs = true;
+			}
+		}
+		else
+		{
+			if (hasChs)
+			{
+				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
+				addSentence_(str + chkPoint, i - chkPoint);
+
+				hasChs = false;
+			}
+			chkPoint = i + 1;
+		}
+		++i;
+	}
+
+	if (hasChs)
+	{
+		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
+		addSentence_(str + chkPoint, i - chkPoint);
+		hasChs = false;
+	}
+}
+
+void Extractor::addSentence_(const CharType* const str, String::size_type len)
+{
+	scanSentence<1>(str, len, map1);
+	scanSentence<2>(str, len, map2);
+	scanSentence<3>(str, len, map3);
+	scanSentence<4>(str, len, map4);
+	scanSentence<5>(str, len, map5);
+	scanSentence<6>(str, len, map6);
+}
+
+template<uint8_t plen>
+void Extractor::scanSentence(const CharType* const str, String::size_type len,
+		typename Phrase<plen>::MapType& map)
+{
+	if (CS_BUNLIKELY(len < plen))
+	{
+		return;
+	}
+
+	for (String::size_type i = 0, end = len - plen; i <= end; ++i)
+	{
+		typedef Phrase<plen> PhraseType;
+
+		PhraseType p(str + i);
+		typename Phrase<plen>::MapType::iterator it = map.find(p);
+
+		if (CS_BLIKELY(it != map.end()))
+		{
+			it->second++;
+		}
+		else
+		{
+			map[p] = 1;
+		}
+	}
+}
+
+void Extractor::display()
+{
+	for (Ph1::MapType::iterator it = map1.begin(); it != map1.end(); ++it)
+	{
+		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph2::MapType::iterator it = map2.begin(); it != map2.end(); ++it)
+	{
+		CS_SAY("phrase2: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph3::MapType::iterator it = map3.begin(); it != map3.end(); ++it)
+	{
+		CS_SAY("phrase3: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph4::MapType::iterator it = map4.begin(); it != map4.end(); ++it)
+	{
+		CS_SAY("phrase4: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph5::MapType::iterator it = map5.begin(); it != map5.end(); ++it)
+	{
+		CS_SAY("phrase5: [" << it->first.c_str() << "]: " << it->second);
+	}
+
+	for (Ph6::MapType::iterator it = map6.begin(); it != map6.end(); ++it)
+	{
+		CS_SAY("phrase6: [" << it->first.c_str() << "]: " << it->second);
+	}
+}
+
+#define _GB2312_CHAR_NUM 6763
+Extractor::Extractor(const boost::filesystem::path& gbfile)
+{
+	std::ifstream ifile(gbfile.string().c_str(), std::ios_base::in | std::ios_base::binary);
+	char* mbgb = new char[_GB2312_CHAR_NUM * 3 + 1];
+	CharType* gb = new CharType[_GB2312_CHAR_NUM + 1];
+	std::size_t len = ifile.readsome(mbgb, _GB2312_CHAR_NUM * 3);
+	staging::mbswcs::mb2wc(mbgb, gb, len);
+	CS_SAY(len);
+	for (uint16_t i = 0; i < _GB2312_CHAR_NUM; ++i)
+	{
+		gb2312[gb[i]] = true;
+	}
+	delete[] mbgb;
+	delete[] gb;
+}
+
+void Extractor::fetchContent(const boost::filesystem::path& contentfile,
+		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
 	uint32_t processed = 0;
 	std::size_t buf_remains = 0, last_buf_remains = 0;
-	std::ifstream ifile(file.string().c_str());
+	std::ifstream ifile(contentfile.string().c_str());
 
 	const std::size_t
-		bufsize = ((_PROCESS_STEP) + 1) * sizeof(char),
-		mbssize = ((_PROCESS_STEP) * 2 + 1) * sizeof(char),
+		bufsize = ((_JEBE_PROCESS_STEP) + 1) * sizeof(char),
+		mbssize = ((_JEBE_PROCESS_STEP) * 2 + 1) * sizeof(char),
 		wssize = (mbssize / sizeof(char)) * sizeof(wchar_t),
 		memsize = wssize;
 
 	CS_SAY("bufsize:" << bufsize << ", mbssize:" << mbssize << ", wssize:" << wssize << ",memsize:" << memsize);
-//	CS_DIE("dieing");
 
 	char* const buf = new char[bufsize / sizeof(char)];
 	char* const mbs = new char[mbssize / sizeof(char)];
@@ -82,12 +260,12 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 
 	try
 	{
-		while ((readed = ifile.readsome(buf + buf_remains, _PROCESS_STEP - buf_remains)))
+		while ((readed = ifile.readsome(buf + buf_remains, _JEBE_PROCESS_STEP - buf_remains)))
 		{
-//			CS_DIE("readed: " << readed << ", bufremains: " << buf_remains);
+			CS_SAY("readed: " << readed << ", bufremains: " << buf_remains);
 			memset(mem, 0, memsize);
 			processed += readed;
-			if (max_chars != 0 && processed > max_chars)
+			if (maxchars != 0 && processed > maxchars)
 			{
 				break;
 			}
@@ -96,7 +274,7 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 			CS_SAY("strlen(mbs): " << strlen(mbs));
 			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains, &mbs_len);
 			CS_SAY("strlen(mbs): " << strlen(mbs));
-//			CS_SAY(mbs);
+			CS_SAY(mbs);
 			CS_SAY("[" << mbs << "]");
 			CS_SAY("buf_remains: " << buf_remains << std::endl);
 			if (buf_remains)
@@ -167,138 +345,13 @@ void Extractor::extract(const boost::filesystem::path& file, uint32_t max_chars)
 	}
 	catch (std::exception& e)
 	{
-		CS_DIE("error occured while reading file " << file << ": " << e.what());
+		CS_DIE("error occured while reading contentfile " << contentfile << ": " << e.what());
 	}
 
 	delete[] buf;
 	delete[] mbs;
 	delete[] ws;
 	delete[] mem;
-
-	extract();
-}
-
-void Extractor::scan(const CharType* const str, String::size_type len)
-{
-	CS_SAY(str);
-	String::size_type i = 0, chkPoint = 0;
-	bool hasChs = false;
-	while (i < len)
-	{
-		if (CS_BLIKELY(isGb2312(str[i])))
-		{
-			if (!hasChs)
-			{
-				hasChs = true;
-			}
-		}
-		else
-		{
-			if (hasChs)
-			{
-				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-				addSentence_(str + chkPoint, i - chkPoint);
-
-				hasChs = false;
-			}
-			chkPoint = i + 1;
-		}
-		++i;
-	}
-
-	if (hasChs)
-	{
-		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-		addSentence_(str + chkPoint, i - chkPoint);
-		hasChs = false;
-	}
-}
-
-void Extractor::addSentence_(const CharType* const str, String::size_type len)
-{
-	scanSentence(str, len, map1);
-	scanSentence(str, len, map2);
-	scanSentence(str, len, map3);
-	scanSentence(str, len, map4);
-	scanSentence(str, len, map5);
-	scanSentence(str, len, map6);
-}
-
-template<uint8_t plen>
-void Extractor::scanSentence(const CharType* const str, String::size_type len,
-		boost::unordered_map<Phrase<plen>, atimes_t, PhraseHash<plen, _JEBE_BUCKET_BITS> >& phmap)
-{
-	if (len < plen)
-	{
-		return;
-	}
-	typedef Phrase<plen> Ph;
-	for (String::size_type i = 0, end = len - plen; i <= end; ++i)
-	{
-		Ph ph(str + i);
-		if (CS_BUNLIKELY(phmap.find(ph) == phmap.end()))
-		{
-			phmap[ph] = 1;
-		}
-		else
-		{
-			++phmap[ph];
-		}
-	}
-}
-
-void Extractor::display()
-{
-	for (Ph1::MapType::iterator it = map1.begin(); it != map1.end(); ++it)
-	{
-		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph2::MapType::iterator it = map2.begin(); it != map2.end(); ++it)
-	{
-		CS_SAY("phrase2: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph3::MapType::iterator it = map3.begin(); it != map3.end(); ++it)
-	{
-		CS_SAY("phrase3: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph4::MapType::iterator it = map4.begin(); it != map4.end(); ++it)
-	{
-		CS_SAY("phrase4: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph5::MapType::iterator it = map5.begin(); it != map5.end(); ++it)
-	{
-		CS_SAY("phrase5: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph6::MapType::iterator it = map6.begin(); it != map6.end(); ++it)
-	{
-		CS_SAY("phrase6: [" << it->first.c_str() << "]: " << it->second);
-	}
-}
-
-#define _GB2312_CHAR_NUM 6763
-Extractor::Extractor(const boost::filesystem::path& gbfile)
-{
-	std::ifstream ifile(gbfile.string().c_str(), std::ios_base::in | std::ios_base::binary);
-	char* mbgb = new char[_GB2312_CHAR_NUM * 3 + 1];
-	CharType* gb = new CharType[_GB2312_CHAR_NUM + 1];
-	std::size_t len = ifile.readsome(mbgb, _GB2312_CHAR_NUM * 3);
-	staging::mbswcs::mb2wc(mbgb, gb, len);
-	CS_SAY(len);
-	for (uint16_t i = 0; i < _GB2312_CHAR_NUM; ++i)
-	{
-		gb2312[gb[i]] = true;
-	}
-	delete[] mbgb;
-	delete[] gb;
-}
-
-Extractor::~Extractor() {
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace cws */

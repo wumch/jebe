@@ -18,7 +18,7 @@ ifeq ($(COMPILER), G++)
   COPT = -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
   LDOPT = -g -rdynamic
   else
-  COPT = -march=core2 -O3 -fomit-frame-pointer -pipe -m64 -fno-threadsafe-statics -fno-rtti -fvisibility-inlines-hidden
+  COPT = -march=core2 -O3 -fomit-frame-pointer -pipe -m64 -fno-threadsafe-statics -fno-rtti
   LDOPT = $(COPT)
   endif
   CCMD = g++

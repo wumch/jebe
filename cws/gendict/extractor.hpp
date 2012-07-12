@@ -2,7 +2,6 @@
 #pragma once
 
 #include "staging.hpp"
-#include <vector>
 #include <algorithm>
 #include <bitset>
 #include <list>
@@ -11,16 +10,29 @@
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
 #include "hash.hpp"
-#include "array.hpp"
+#ifndef WIN32
+#	include <limits.h>
+#endif
 
 namespace jebe {
 namespace cws {
+
+#define _JEBE_PROCESS_STEP (10003)
+#define _JEBE_WORD_MIN_ATIMES (4)
 
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
 typedef std::wstring String;
 
-#define _JEBE_BUCKET_BITS 20
+template<uint8_t plen> class MapHashBits { public: enum { bits = 22 }; };
+template<> class MapHashBits<1> { public: enum { bits = 12 }; };
+
+template<uint8_t plen> class PadHashBits { public: enum { bits = 20 }; };
+template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
+template<> class PadHashBits<2> { public: enum { bits = 20 }; };
+template<> class PadHashBits<3> { public: enum { bits = 18 }; };
+template<> class PadHashBits<4> { public: enum { bits = 16 }; };
+template<> class PadHashBits<5> { public: enum { bits = 12 }; };
 
 template<uint8_t plen, uint8_t bits>
 class PhraseHash;
@@ -29,11 +41,10 @@ template<uint8_t length>
 class Phrase
 {
 	template<uint8_t len> friend bool operator==(const Phrase<len>& lph, const Phrase<len>& rph);
-//	template<uint8_t len_1, uint8_t len_2> friend bool operator==(const Phrase<len_1>& lph, const Phrase<len_2>& rph);
 public:
 	typedef Phrase<length> P;
 
-	typedef boost::unordered_map<P, atimes_t, PhraseHash<length, _JEBE_BUCKET_BITS> > MapType;
+	typedef boost::unordered_map<P, atimes_t, PhraseHash<length, MapHashBits<length>::bits> > MapType;
 
 	typedef Phrase<1> Suffix;
 	typedef std::pair<Suffix, atimes_t> Pad;
@@ -64,7 +75,7 @@ public:
 	};
 
 	typedef SumedList<Pad> PadList;
-	typedef boost::unordered_map<P, PadList, PhraseHash<length, _JEBE_BUCKET_BITS> > PadMap;
+	typedef boost::unordered_map<P, PadList, PhraseHash<length, PadHashBits<length>::bits> > PadMap;
 
 	static const uint8_t len = length;
 	typedef CharType StrType[length];
@@ -78,7 +89,7 @@ public:
 		memcpy(str, str_, length * sizeof(CharType));
 	}
 
-	// half-hash. one day, boost::preprocessor ...
+	// half-hash. one day, meta-program or boost::preprocessor ...
 	uint32_t hfhash() const
 	{
 		typedef uint32_t mask_t;
@@ -199,6 +210,7 @@ bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 template<uint8_t plen, uint8_t bits>
 class PhraseHash
 {
+	BOOST_STATIC_ASSERT(bits <= (sizeof(std::size_t) * CHAR_BIT));
 public:
 	typedef Phrase<plen> Ph;
 	typedef staging::BitsHash<bits> BHasher;
@@ -217,10 +229,6 @@ typedef Phrase<3> Ph3;
 typedef Phrase<4> Ph4;
 typedef Phrase<5> Ph5;
 typedef Phrase<6> Ph6;
-//typedef boost::unordered_map<Ph2, atimes_t, PhraseHash<2u, _JEBE_BUCKET_BITS> > Ph2Map;
-//typedef boost::unordered_map<Ph3, atimes_t, PhraseHash<3u, _JEBE_BUCKET_BITS> > Ph3Map;
-//typedef boost::unordered_map<Ph4, atimes_t, PhraseHash<4u, _JEBE_BUCKET_BITS> > Ph4Map;
-//typedef boost::unordered_map<Ph5, atimes_t, PhraseHash<5u, _JEBE_BUCKET_BITS> > Ph5Map;
 
 class Extractor
 {
@@ -236,7 +244,18 @@ protected:
 	Ph6::MapType map6;
 
 public:
-	void extract(const boost::filesystem::path& file, uint32_t max_chars = 0);
+	void extract(const boost::filesystem::path& contentfile,
+			const boost::filesystem::path& outfile, uint32_t max_chars);
+
+	void display();
+
+	Extractor(const boost::filesystem::path& gbfile);
+
+protected:
+	void fetchContent(const boost::filesystem::path& contentfile,
+			const boost::filesystem::path& outfile, uint32_t max_chars);
+
+	void extract();
 
 	void scan(const CharType* const str, String::size_type len);
 
@@ -244,19 +263,12 @@ public:
 
 	template<uint8_t plen>
 	void scanSentence(const CharType* const str, String::size_type len,
-			boost::unordered_map<Phrase<plen>, atimes_t, PhraseHash<plen, _JEBE_BUCKET_BITS> >& phmap);
+			typename Phrase<plen>::MapType& map);
 
 	bool isGb2312(CharType c) const
 	{
 		return c >= 0 && c < gb_char_max && gb2312[c];
 	}
-
-	void display();
-
-	void extract();
-
-	Extractor(const boost::filesystem::path& gbfile);
-	virtual ~Extractor();
 };
 
 template<uint8_t prefix_len>
@@ -354,50 +366,7 @@ public:
 			typename Phrase<plen>::MapType& map,
 			typename Phrase<plen - 1>::MapType& prefixmap,
 			typename Phrase<plen>::PadMap& padmap
-//			typename Phrase<plen>::PadList& padlist
-			) const
-	{
-		typedef Phrase<plen - 1> PhraseType;
-		typedef typename PhraseType::MapType MapType;
-		typedef typename PhraseType::PadMap PadMapType;
-		typedef typename PhraseType::PadList PadListType;
-		typedef typename PhraseType::Suffix SuffixType;
-
-		PhraseType prefix(phrase.str);
-		SuffixType suffix(phrase.str + (plen - 1));
-
-//		PadListType& plist = padmap[prefix];
-		// both count(prefix) and  can not be 0, it is impossible.
-		/*
-		double joinprobActual = count(phrase) / count(prefix),
-				joinprobPred = count(suffix) / totalAtimes;
-		double overRate = joinprobActual / joinprobPred;
-		// so, an a bit fast and explicit edition: */
-		double atimes = map[phrase];
-		double overRate = std::log(atimes) * atimes / prefixmap[prefix] * totalAtimes / map1[suffix];
-		if (overRate > joinThresholdStop)
-		{
-			CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
-							<< ", map[phrase]: " << map[phrase]
-							<< ", prefixmap[prefix]: " << prefixmap[prefix]
-							<< ", map1[suffix]: " << map1[suffix]
-							);
-			return true;
-		}
-
-		if (overRate > joinThreshold)
-		{
-			CS_SAY("can be a word: [" << phrase.c_str() << "]");
-		}
-		CS_SAY("can be a word: [" << phrase.c_str() << "], overRate: " << overRate
-				<< ", map[phrase]: " << map[phrase]
-				<< ", prefixmap[prefix]: " << prefixmap[prefix]
-				<< ", map1[suffix]: " << map1[suffix]
-				);
-		return false;
-
-//		std::log(joinfreq);
-	}
+			) const;
 
 	void analysis();
 
