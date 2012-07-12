@@ -11,7 +11,11 @@ namespace cws {
 
 void Analyzer::analysis()
 {
-	clean(2);
+	clean(3);
+	buildPadMap();
+	map6.clear();
+	caltureTotalAtimes();
+	extractWords();
 }
 
 void Analyzer::clean(std::size_t min_atimes)

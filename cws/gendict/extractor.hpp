@@ -27,20 +27,48 @@ class PhraseHash;
 template<uint8_t length>
 class Phrase
 {
-
 	template<uint8_t len> friend bool operator==(const Phrase<len>& lph, const Phrase<len>& rph);
 //	template<uint8_t len_1, uint8_t len_2> friend bool operator==(const Phrase<len_1>& lph, const Phrase<len_2>& rph);
 public:
-	typedef boost::unordered_map<Phrase<length>, atimes_t, PhraseHash<length, _JEBE_BUCKET_BITS> > MapType;
+	typedef Phrase<length> P;
+
+	typedef boost::unordered_map<P, atimes_t, PhraseHash<length, _JEBE_BUCKET_BITS> > MapType;
 
 	typedef Phrase<1> Suffix;
 	typedef std::pair<Suffix, atimes_t> Pad;
-	typedef std::list<Pad> PadList;
-	typedef boost::unordered_map<Phrase<length>, PadList> PadMap;
+
+	template<typename T>
+	class SumedList
+	{
+	public:
+		std::size_t sum;
+		typedef std::list<T> List;
+		List list;
+
+		typedef typename List::iterator iterator;
+		typedef typename List::const_iterator const_iterator;
+
+		SumedList(): sum(0) {}
+
+		void append(const T& elem)
+		{
+			list.push_back(elem);
+			sum += elem.second;
+		}
+
+		List* operator->()
+		{
+			return &list;
+		}
+	};
+
+	typedef SumedList<Pad> PadList;
+	typedef boost::unordered_map<P, PadList, PhraseHash<length, _JEBE_BUCKET_BITS> > PadMap;
 
 	static const uint8_t len = length;
 	typedef CharType StrType[length];
 
+//protected:
 	StrType str;
 
 public:
@@ -91,7 +119,7 @@ public:
 		}
 	}
 
-	bool eq(const Phrase<length>& rph) const
+	bool eq(const P& rph) const
 	{
 		return match(str, rph.str);
 	}
@@ -101,10 +129,16 @@ public:
 		return match(p.str, str);
 	}
 
+	operator String() const
+	{
+		return String(c_str());
+	}
+
 	// NOTE: debug only
 	CharType* c_str() const
 	{
 		CharType* cstr = new CharType[length + 1];
+		std::memset(cstr, 0, (length + 1) * sizeof(CharType));
 		std::memcpy(cstr, str, length * sizeof(CharType));
 		return cstr;
 	}
@@ -113,7 +147,7 @@ public:
 template<uint8_t len_1, uint8_t len_2>
 bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 {
-//		BOOST_STATIC_ASSERT(rstr_len >= length);
+	BOOST_STATIC_ASSERT(len_1 <= len_2);
 	switch (len_1)
 	{
 	case 1:
@@ -224,11 +258,27 @@ public:
 	virtual ~Extractor();
 };
 
-//template<uint8_t prefix_len>
-//bool padEq(const typename Phrase<prefix_len>::Pad& p1, const typename Phrase<prefix_len>::Pad& p2)
-//{
-//	return match<prefix_len, prefix_len>(p1.first.str, p2.first.str);	// Phrase
-//}
+template<uint8_t prefix_len>
+bool padEq(const typename Phrase<prefix_len>::Pad& p1, const typename Phrase<prefix_len>::Pad& p2)
+{
+	return match<prefix_len, prefix_len>(p1.first.str, p2.first.str);	// Phrase
+}
+
+template<uint8_t plen>
+class PadEqual
+{
+private:
+	typedef Phrase<plen> P;
+	const P& phrase;
+
+public:
+	explicit PadEqual(const P& p): phrase(p) {}
+
+	bool operator()(const typename P::Pad& p) const
+	{
+		return p.first == phrase;
+	}
+};
 
 class Analyzer
 {
@@ -240,26 +290,126 @@ protected:
 	Ph5::MapType& map5;
 	Ph6::MapType& map6;
 
-	Ph1::PadMap pad1;
+	Ph1::PadMap pad1;		// pad1 -> atimes = map1[prefix] or sum(suffix.atimes) ? should be sum(..).
 	Ph2::PadMap pad2;
 	Ph3::PadMap pad3;
 	Ph4::PadMap pad4;
 	Ph5::PadMap pad5;
 
+	std::size_t totalAtimes;
+
+	std::list<std::wstring> words;
+
 	static const double entropyThreshold = 0.5;
-	static const double joinThreshold = 30;
+	static const double joinThreshold = 10;
+	static const double joinThresholdStop = 100;
 
 public:
 	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_,
 			Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_)
-		: map1(map1_), map2(map2_), map3(map3_), map4(map4_), map5(map5_), map6(map6_)
+		: map1(map1_), map2(map2_), map3(map3_),
+		  map4(map4_), map5(map5_), map6(map6_),
+		  totalAtimes(0)
 	{
+	}
+
+	void extractWords()
+	{
+		extractWords_<2>(map2, map1, pad2);
+		extractWords_<3>(map3, map2, pad3);
+		extractWords_<4>(map4, map3, pad4);
+		extractWords_<5>(map5, map4, pad5);
+		CS_SAY("character-total-atimes: " << totalAtimes);
+	}
+
+	template<uint8_t plen>
+	void extractWords_(typename Phrase<plen>::MapType& map,
+			typename Phrase<plen - 1>::MapType& prefixmap,
+			typename Phrase<plen>::PadMap& padmap
+			)
+	{
+		BOOST_STATIC_ASSERT(plen > 1);
+
+		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
+		{
+			if (isWord<plen>(it->first, map, prefixmap, padmap))
+			{
+				words.push_back(it->first);
+			}
+		}
+	}
+
+	template<uint8_t plen>
+	bool isWord(const Phrase<plen>& phrase,
+			typename Phrase<plen>::MapType& map,
+			typename Phrase<plen - 1>::MapType& prefixmap,
+			typename Phrase<plen>::PadMap& padmap
+//			typename Phrase<plen>::PadList& padlist
+			) const
+	{
+		typedef Phrase<plen - 1> PhraseType;
+		typedef typename PhraseType::MapType MapType;
+		typedef typename PhraseType::PadMap PadMapType;
+		typedef typename PhraseType::PadList PadListType;
+		typedef typename PhraseType::Suffix SuffixType;
+
+		PhraseType prefix(phrase.str);
+		SuffixType suffix(phrase.str + (plen - 1));
+
+//		PadListType& plist = padmap[prefix];
+		// both count(prefix) and  can not be 0, it is impossible.
+		/*
+		double joinprobActual = count(phrase) / count(prefix),
+				joinprobPred = count(suffix) / totalAtimes;
+		double overRate = joinprobActual / joinprobPred;
+		// so, an a bit fast and explicit edition: */
+		double atimes = map[phrase];
+		double overRate = std::log(atimes) * atimes / prefixmap[prefix] * totalAtimes / map1[suffix];
+		if (overRate > joinThresholdStop)
+		{
+			CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
+							<< ", map[phrase]: " << map[phrase]
+							<< ", prefixmap[prefix]: " << prefixmap[prefix]
+							<< ", map1[suffix]: " << map1[suffix]
+							);
+			return true;
+		}
+
+		if (overRate > joinThreshold)
+		{
+			CS_SAY("can be a word: [" << phrase.c_str() << "]");
+		}
+		CS_SAY("can be a word: [" << phrase.c_str() << "], overRate: " << overRate
+				<< ", map[phrase]: " << map[phrase]
+				<< ", prefixmap[prefix]: " << prefixmap[prefix]
+				<< ", map1[suffix]: " << map1[suffix]
+				);
+		return false;
+
+//		std::log(joinfreq);
 	}
 
 	void analysis();
 
+	void caltureTotalAtimes()
+	{
+		for (Ph1::MapType::const_iterator it = map1.begin(); it != map1.end(); ++it)
+		{
+			totalAtimes += it->second;
+		}
+	}
+
+	void buildPadMap()
+	{
+		buildPadMap_<1>(pad1, map2);
+		buildPadMap_<2>(pad2, map3);
+		buildPadMap_<3>(pad3, map4);
+		buildPadMap_<4>(pad4, map5);
+		buildPadMap_<5>(pad5, map6);
+	}
+
 	template<uint8_t prefix_len>
-	void buildPadMap(typename Phrase<prefix_len>::PadMap& padmap, const typename Phrase<prefix_len + 1>::MapType& map)
+	void buildPadMap_(typename Phrase<prefix_len>::PadMap& padmap, const typename Phrase<prefix_len + 1>::MapType& map)
 	{
 		typedef Phrase<prefix_len> PrefixType;
 		typedef typename PrefixType::Suffix SuffixType;
@@ -268,10 +418,10 @@ public:
 		typedef typename PrefixType::PadList PadListType;
 		typedef typename PrefixType::PadMap PadMapType;
 
-		for (typename MapType::iterator it = map.begin(); it != map.end(); ++it)
+		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			PrefixType prefix(it->first);
-			SuffixType suffix(it->first + prefix_len);
+			PrefixType prefix(it->first.str);
+			SuffixType suffix(it->first.str + prefix_len);
 
 			if (padmap.find(prefix) == padmap.end())
 			{
@@ -279,15 +429,18 @@ public:
 			}
 
 			PadListType& plist = padmap[prefix];
-			typename PadListType::iterator padit = std::find_if(plist.begin(), plist.end(), std::bind2nd(std::equal_to<SuffixType>(), suffix));
-			if (padit == plist.end())
+			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(suffix));
+			if (padit == plist->end())
 			{
-				plist.push_back(typename PrefixType::Pad(suffix, 1));
+				plist.append(typename PrefixType::Pad(suffix, it->second));
+				CS_SAY("first " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: [" << suffix.c_str() << "], atimes: " << it->second);
 			}
 			else
 			{
-				++(*padit)->second;
+				padit->second = it->second;
+				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: " << suffix.c_str() << "], atimes: " << it->second);
 			}
+			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
 		}
 	}
 
@@ -301,18 +454,18 @@ public:
 	{
 		switch (plen)
 		{
-		case 1:
-			return map1[ph];
-		case 2:
-			return map2[ph];
-		case 3:
-			return map3[ph];
-		case 4:
-			return map4[ph];
-		case 5:
-			return map5[ph];
-		case 6:
-			return map6[ph];
+//		case 1:
+//			return map1.find(p)->second;
+//		case 2:
+//			return map2[ph];
+//		case 3:
+//			return map3[ph];
+//		case 4:
+//			return map4[ph];
+//		case 5:
+//			return map5[ph];
+//		case 6:
+//			return map6[ph];
 		default:
 			return 0;
 		}

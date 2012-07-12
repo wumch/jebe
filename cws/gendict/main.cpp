@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
 	}
 
 	staging::mbswcs::setlocale();
-//	staging::mbswcs::setlocale("zh_CN.UTF-8");
+	staging::mbswcs::setlocale("zh_CN.UTF-8");
 	jebe::cws::Extractor extractor(gbfile);
 	extractor.extract(contentFile, max_chars);
-	extractor.display();
+//	extractor.display();
 }
