@@ -19,7 +19,7 @@
 namespace jebe {
 namespace cws {
 
-#define _JEBE_PROCESS_STEP (100)
+#define _JEBE_PROCESS_STEP (2 << 20)
 #define _JEBE_WORD_MIN_ATIMES (5)
 
 typedef uint32_t atimes_t;

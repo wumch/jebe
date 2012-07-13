@@ -1,9 +1,13 @@
 
 #include "extractor.hpp"
+#include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <exception>
 #include <cstdlib>
 #include <boost/checked_delete.hpp>
+#include <boost/iostreams/code_converter.hpp>
+#include <boost/iostreams/device/file.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 
@@ -127,7 +131,7 @@ void Extractor::extract(const boost::filesystem::path& outfile)
 	Analyzer azer(map1, map2, map3, map4, map5, map6, map7);
 	azer.analysis();
 
-	std::wofstream ofile(outfile.string().c_str());
+	std::wofstream ofile(outfile.string().c_str(), std::ios_base::trunc);
 	ofile.imbue(std::locale(""));
 	Analyzer::Words& words = azer.getWords();
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
@@ -259,23 +263,63 @@ void Extractor::display()
 #define _JEBE_GB2312_CHAR_NUM 6763
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 {
-	std::ifstream ifile(gbfile.string().c_str(), std::ios_base::in | std::ios_base::binary);
-	char* mbgb = new char[_JEBE_GB2312_CHAR_NUM * 3 + 1];
 	CharType* gb = new CharType[_JEBE_GB2312_CHAR_NUM + 1];
-	std::size_t len = ifile.readsome(mbgb, _JEBE_GB2312_CHAR_NUM * 3);
-	staging::mbswcs::mb2wc(mbgb, gb, len);
-	CS_SAY(len);
+	memset(gb, 0, (_JEBE_GB2312_CHAR_NUM + 1) * sizeof(CharType));
+
+	std::wifstream ifile(gbfile.string().c_str());
+	ifile.imbue(std::locale(""));
+
+	ssize_t readed = 0;
+	while (readed < _JEBE_GB2312_CHAR_NUM)
+	{
+		readed += ifile.readsome(gb + readed, _JEBE_GB2312_CHAR_NUM - readed);
+	}
+	CS_SAY("gb2312-file readed:" << readed);
+
 	for (uint16_t i = 0; i < _JEBE_GB2312_CHAR_NUM; ++i)
 	{
+		assert(gb[i] < gb_char_max);
 		gb2312[gb[i]] = true;
 	}
-//	delete[] mbgb;
-	boost::checked_array_delete(mbgb);
-	boost::checked_array_delete(gb);
-//	delete[] gb;
+
+	delete[] gb;
 }
 
 void Extractor::fetchContent(const boost::filesystem::path& contentfile,
+		const boost::filesystem::path& outfile, uint32_t maxchars)
+{
+	CharType* content = new CharType[_JEBE_PROCESS_STEP + 1];
+
+	std::wfstream file(contentfile.string().c_str(), std::ios_base::in);
+	CS_SAY("imbue");
+	file.imbue(std::locale(""));
+	CS_SAY("read");
+
+	uint32_t processed = 0;
+	ssize_t readed = 0;
+	while (true)
+	{
+		memset(content, 0, _JEBE_PROCESS_STEP + 1);
+		CS_SAY("content readed: " << readed);
+		if (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
+		{
+			break;
+		}
+		if (CS_BUNLIKELY(maxchars != 0))
+		{
+			processed += readed;
+			if (CS_BUNLIKELY(processed > maxchars))
+			{
+				break;
+			}
+		}
+		scan(content, readed);
+	}
+	delete[] content;
+	file.close();
+}
+/*
+void fetchContent(const boost::filesystem::path& contentfile,
 		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
 	uint32_t processed = 0;
@@ -306,7 +350,8 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 	{
 		while ((readed = ifile.readsome(buf + buf_remains, _JEBE_PROCESS_STEP - buf_remains)))
 		{
-			CS_SAY("readed: " << readed << ", bufremains: " << buf_remains);
+			CS_STDOUT << std::endl << "--------------------------------------------------" << std::endl;
+			CS_SAY("readed: " << readed << ", buf_remains: " << buf_remains);
 			memset(mem, 0, memsize);
 			processed += readed;
 			if (maxchars != 0 && processed > maxchars)
@@ -314,13 +359,13 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 				break;
 			}
 
+			// ---------- urldecode
 			last_buf_remains = buf_remains;
 			CS_SAY("strlen(mbs): " << strlen(mbs));
+			mbs_len = 0;
 			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains, &mbs_len);
-			CS_SAY("strlen(mbs): " << strlen(mbs));
-			CS_SAY(mbs);
-			CS_SAY("[" << mbs << "]");
-			CS_SAY("buf_remains: " << buf_remains << std::endl);
+			CS_SAY("mbs:" << strlen(mbs) << ": [" << mbs << "]");
+			CS_SAY("buf_remains: " << buf_remains);
 			if (buf_remains)
 			{
 				memcpy(mem, buf + (readed + last_buf_remains - buf_remains), buf_remains);
@@ -332,16 +377,32 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 				memset(buf, 0, bufsize);
 			}
 
+			// ---------- mbs => wcs
 			memset(ws, 0, wssize);
-			CS_SAY("mbs_len: " << mbs_len << ", strlen(mbs): " << strlen(mbs));
-			converted = staging::mbswcs::mb2wc(mbs, ws, mbs_len - 1);
-			mbs_len = 0;
+			CS_SAY("mbs_remains: " << mbs_remains << ", mbs_len: " << mbs_len << ", strlen(mbs): " << strlen(mbs));
+			size_t mbs_converted = 0;
+			converted = staging::mbswcs::mb2wc(mbs, ws, mbs_len, &mbs_converted);
 
+			mbs_remains = 0;
 			if (converted == static_cast<size_t>(-1))
 			{
 				CS_SAY("convert failed, converted " << converted);
-				converted = 0;
-				mbs_remains = strlen(mbs);
+				// ----------- entirely clean ----------------
+				//buf_remains = 0;
+				mbs_remains = 0;
+				mbs_remains = 0;
+
+
+				memset(mem, 0, memsize);
+				memcpy(mem, mbs + mbs_consumed, mbs_remains);
+				memset(mbs, 0, mbssize);
+				memcpy(mbs, mem, mbs_remains);
+				memset(mem, 0, memsize);
+
+				//memset(buf, 0, bufsize);
+				memset(mbs, 0, mbssize);
+				memset(ws, 0, wssize);
+				memset(mem, 0, memsize);
 			}
 			else
 			{
@@ -352,7 +413,8 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 #endif
 					scan(ws, converted);
 
-					mbs_consumed = wcstombs(NULL, ws, 0);
+					mbs_consumed = mbs_converted;
+//					mbs_consumed = wcstombs(NULL, ws, 0);
 					if (mbs_consumed == static_cast<size_t>(-1))
 					{
 						CS_DIE("mbs_consumed: " << mbs_consumed);
@@ -381,7 +443,7 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 				}
 				else
 				{
-					mbs_remains = strlen(mbs);
+					mbs_remains = mbs_len;
 				}
 			}
 		}
@@ -396,11 +458,11 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 //	delete[] mbs;
 //	delete[] ws;
 //	delete[] mem;
-	boost::checked_array_delete(buf);
-	boost::checked_array_delete(mbs);
-	boost::checked_array_delete(ws);
-	boost::checked_array_delete(mem);
+//	boost::checked_array_delete(buf);
+//	boost::checked_array_delete(mbs);
+//	boost::checked_array_delete(ws);
+//	boost::checked_array_delete(mem);
 }
-
+*/
 } /* namespace cws */
 } /* namespace jebe */
