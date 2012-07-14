@@ -14,7 +14,7 @@ class Decoder
     protected $insize;
     protected $maxchars;
     protected $limit;
-    protected $step = 3145728;  // 3M(bytes)
+    protected $step = 12582912;  // 12M(bytes)
     protected $reserve = 2;
 
     public function __construct($infile, $outfile, $maxchars = 0)
@@ -51,7 +51,7 @@ class Decoder
             $len = strlen($content);
             if ($len < 3)
             {
-                throw new Exception('strlen($content) === ' . $len);
+                return;
             }
 
             $tailpos = 0;
@@ -127,15 +127,19 @@ class Decoder
 //            }
             fwrite($this->out, $decoded);
         }
-        if ($decoded_remains)
-        {
-            fwrite($this->out, $decoded_remains);
-        }
+//        if ($decoded_remains)
+//        {
+//            fwrite($this->out, $decoded_remains);
+//        }
     }
 
     protected function prepare()
     {
         $this->in = fopen($this->infile, 'r');
+        if (file_exists($this->outfile))
+        {
+            die("file {$this->outfile} already exists!" . PHP_EOL);
+        }
         $this->out = fopen($this->outfile, 'a+');
 
         if (!$this->in or !$this->out)

@@ -2,7 +2,6 @@
 #pragma once
 
 #include "staging.hpp"
-#include <algorithm>
 #include <bitset>
 #include <list>
 #include <iostream>
@@ -10,20 +9,25 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/preprocessor.hpp>
 #include "hash.hpp"
 #include "array.hpp"
+#include "misc.hpp"
 #ifndef WIN32
 #	include <limits.h>
 #endif
 
+#define _JEBE_PROCESS_STEP		(2 << 20)
+#define _JEBE_WORD_MIN_ATIMES	5
+#define _JEBE_WORD_MAX_LEN		6
+#define _JEBE_MAP_MAX_LEN		BOOST_PP_INC(_JEBE_WORD_MAX_LEN)
+
 namespace jebe {
 namespace cws {
 
-#define _JEBE_PROCESS_STEP (2 << 20)
-#define _JEBE_WORD_MIN_ATIMES (5)
-
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
+BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
 typedef std::wstring String;
 
 template<uint8_t plen> class MapHashBits { public: enum { bits = 24 }; };
@@ -97,48 +101,48 @@ public:
 	}
 
 	// half-hash. one day, meta-program or boost::preprocessor ...
-	uint32_t hfhash() const
-	{
-		typedef uint32_t mask_t;
-		if (sizeof(CharType) == sizeof(mask_t))
-		{
-			switch (length)
-			{
-			case 1:
-				return str[0];
-			case 2:
-				return str[0] ^ str[1];
-			case 3:
-				return str[0] ^ str[1] ^ str[2];
-			case 4:
-				return str[0] ^ str[1] ^ str[2] ^ str[3];
-			case 5:
-				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4];
-			case 6:
-				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5];
-			case 7:
-				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5] ^ str[6];
-			default:
-				mask_t mask = 0;
-				for (uint8_t i = 0; i < length; ++i)
-				{
-					mask ^= str[i];
-				}
-				return mask;
-			}
-		}
-		else
-		{
-			mask_t mask = 0;
-			char* res = reinterpret_cast<char*>(&mask);
-			const char* str_ = reinterpret_cast<const char*>(str);
-			for (uint8_t i = 0, end = length * sizeof(CharType); i < end; ++i)
-			{
-				res[i & 3] ^= str_[i];
-			}
-			return mask;
-		}
-	}
+//	inline uint32_t hfhash() const;
+//	{
+//		typedef uint32_t mask_t;
+//		if (sizeof(CharType) == sizeof(mask_t))
+//		{
+//			switch (length)
+//			{
+//			case 1:
+//				return str[0];
+//			case 2:
+//				return str[0] ^ str[1];
+//			case 3:
+//				return str[0] ^ str[1] ^ str[2];
+//			case 4:
+//				return str[0] ^ str[1] ^ str[2] ^ str[3];
+//			case 5:
+//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4];
+//			case 6:
+//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5];
+//			case 7:
+//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5] ^ str[6];
+//			default:
+//				mask_t mask = 0;
+//				for (uint8_t i = 0; i < length; ++i)
+//				{
+//					mask ^= str[i];
+//				}
+//				return mask;
+//			}
+//		}
+//		else
+//		{
+//			mask_t mask = 0;
+//			char* res = reinterpret_cast<char*>(&mask);
+//			const char* str_ = reinterpret_cast<const char*>(str);
+//			for (uint8_t i = 0, end = length * sizeof(CharType); i < end; ++i)
+//			{
+//				res[i & 3] ^= str_[i];
+//			}
+//			return mask;
+//		}
+//	}
 
 	bool eq(const P& rph) const
 	{
@@ -157,7 +161,7 @@ public:
 
 	operator uint16_t() const
 	{
-		return *reinterpret_cast<const uint64_t*>(str);
+		return reinterpret_cast<const uint64_t*>(str)[BOOST_PP_IF(CS_IS_LITTLE_ENDIAN, 0, 1)];
 	}
 
 	// NOTE: debug only
@@ -223,6 +227,8 @@ bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 	}
 }
 
+template<uint8_t plen> CS_FORCE_INLINE uint32_t hfhash(const Phrase<plen>& p);
+
 template<uint8_t len>
 bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 {
@@ -241,17 +247,13 @@ public:
 
 	uint32_t operator()(const Ph& ph) const
 	{
-		return hasher(ph.hfhash());
+		return hasher(hfhash(ph));
 	}
 };
 
-typedef Phrase<1> Ph1;
-typedef Phrase<2> Ph2;
-typedef Phrase<3> Ph3;
-typedef Phrase<4> Ph4;
-typedef Phrase<5> Ph5;
-typedef Phrase<6> Ph6;
-typedef Phrase<7> Ph7;
+#define _JEBE_DEF_PHRASE(Z, n, N)		typedef Phrase<n> BOOST_PP_CAT(Ph, n);
+BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DEF_PHRASE, BOOST_PP_EMPTY());
+#undef _JEBE_DEF_PHRASE
 
 class Extractor
 {
@@ -261,13 +263,9 @@ public:
 protected:
 	std::bitset<gb_char_max> gb2312;
 
-	Ph1::MapType map1;
-	Ph2::MapType map2;
-	Ph3::MapType map3;
-	Ph4::MapType map4;
-	Ph5::MapType map5;
-	Ph6::MapType map6;
-	Ph7::MapType map7;
+	#define _JEBE_DECL_MAP(Z, n, N)		BOOST_PP_CAT(Ph, n)::MapType BOOST_PP_CAT(map, n);
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DECL_MAP, BOOST_PP_EMPTY())
+	#undef _JEBE_DECL_MAP
 
 public:
 	void extract(const boost::filesystem::path& contentfile,
@@ -328,20 +326,13 @@ protected:
 	typedef staging::Array<atimes_t, Extractor::gb_char_max> SuffixMap;
 	SuffixMap smap;
 
-	Ph1::MapType& map1;
-	Ph2::MapType& map2;
-	Ph3::MapType& map3;
-	Ph4::MapType& map4;
-	Ph5::MapType& map5;
-	Ph6::MapType& map6;
-	Ph7::MapType& map7;
+	#define _JEBE_DECL_MAP(Z, n, N)		BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(map, n);
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DECL_MAP, BOOST_PP_EMPTY())
+	#undef _JEBE_DECL_MAP
 
-	Ph1::PadMap pad1;		// pad1 -> atimes = map1[prefix] or sum(suffix.atimes) ? should be sum(..).
-	Ph2::PadMap pad2;
-	Ph3::PadMap pad3;
-	Ph4::PadMap pad4;
-	Ph5::PadMap pad5;
-	Ph6::PadMap pad6;
+	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(pad, n);
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	#undef _JEBE_DECL_PAD
 
 	std::size_t totalAtimes;
 
@@ -370,19 +361,17 @@ public:
 
 	void extractWords()
 	{
-		extractWords_<2>(map2, map1, pad1);
-		extractWords_<3>(map3, map2, pad2);
-		extractWords_<4>(map4, map3, pad3);
-		extractWords_<5>(map5, map4, pad4);
-		extractWords_<6>(map6, map5, pad5);
+		#define _JEBE_CALL_EXTRACT_WORDS(Z, n, N)		extractWords_<n>(BOOST_PP_CAT(map, n), BOOST_PP_CAT(map, BOOST_PP_DEC(n)), BOOST_PP_CAT(pad, BOOST_PP_DEC(n)));
+		BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_EXTRACT_WORDS, BOOST_PP_EMPTY())
+		#undef _JEBE_CALL_EXTRACT_WORDS
 		CS_SAY("character-total-atimes: " << totalAtimes);
 	}
 
 	template<uint8_t plen>
 	void extractWords_(typename Phrase<plen>::MapType& map,
-			typename Phrase<plen - 1>::MapType& prefixmap,
-			typename Phrase<plen - 1>::PadMap& padmap
-			)
+		typename Phrase<plen - 1>::MapType& prefixmap,
+		typename Phrase<plen - 1>::PadMap& padmap
+		)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
 
@@ -397,7 +386,7 @@ public:
 				{
 					words.erase(Phrase<plen - 1>(it->first.str));
 				}
-			}
+			}	// else: could remove some longer phrases for performance.
 		}
 	}
 
@@ -420,12 +409,9 @@ public:
 
 	void buildPadMap()
 	{
-		buildPadMap_<1>(pad1, map2);
-		buildPadMap_<2>(pad2, map3);
-		buildPadMap_<3>(pad3, map4);
-		buildPadMap_<4>(pad4, map5);
-		buildPadMap_<5>(pad5, map6);
-		buildPadMap_<6>(pad6, map7);
+		#define _JEBE_CALL_BUILD_MAP(Z, n, N)		buildPadMap_<n>(BOOST_PP_CAT(pad, n), BOOST_PP_CAT(map, BOOST_PP_INC(n)));
+		BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_BUILD_MAP, BOOST_PP_EMPTY())
+		#undef _JEBE_CALL_BUILD_MAP
 	}
 
 	template<uint8_t prefix_len>

@@ -1,4 +1,5 @@
 
+#include "extractor.impl.hpp"
 #include "extractor.hpp"
 #include <iostream>
 #include <fstream>
@@ -8,6 +9,7 @@
 #include <boost/checked_delete.hpp>
 #include <boost/iostreams/code_converter.hpp>
 #include <boost/iostreams/device/file.hpp>
+#include <boost/preprocessor.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 
@@ -36,7 +38,7 @@ Analyzer::WordExamineRes Analyzer::isWord(const Phrase<plen>& phrase,
 	double joinprobActual = count(phrase) / count(prefix),
 			joinprobPred = count(suffix) / totalAtimes;
 	double overRate = joinprobActual / joinprobPred;
-	// so, one a bit fast and explicit edition: */
+	// so, the a bit fast and explicit edition: */
 	double atimes = map[phrase];
 	double overRate = std::sqrt(atimes) * atimes / prefixmap[prefix] * totalAtimes / smap[suffix];
 
