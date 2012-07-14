@@ -102,13 +102,9 @@ void Analyzer::analysis()
 
 void Analyzer::clean(std::size_t min_atimes)
 {
-	clean_<1>(map1, min_atimes);
-	clean_<2>(map2, min_atimes);
-	clean_<3>(map3, min_atimes);
-	clean_<4>(map4, min_atimes);
-	clean_<5>(map5, min_atimes);
-	clean_<6>(map6, min_atimes);
-	clean_<7>(map7, min_atimes);
+	#define _JEBE_CALL_CLEAN(Z, n, N)		clean_<n>(BOOST_PP_CAT(map, n), min_atimes);
+	BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_CLEAN, BOOST_PP_EMPTY())
+	#undef _JEBE_CALL_CLEAN
 }
 
 template<uint8_t plen>
@@ -130,12 +126,15 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 
 void Extractor::extract(const boost::filesystem::path& outfile)
 {
-	Analyzer azer(map1, map2, map3, map4, map5, map6, map7);
-	azer.analysis();
+
+#define _JEBE_AZER_ARG(Z, n, N)			BOOST_PP_CAT(map, n)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+	std::auto_ptr<Analyzer> azer(new Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_AZER_ARG, BOOST_PP_EMPTY())));
+#undef _JEBE_AZER_ARG
+	azer->analysis();
 
 	std::wofstream ofile(outfile.string().c_str(), std::ios_base::trunc);
 	ofile.imbue(std::locale(""));
-	Analyzer::Words& words = azer.getWords();
+	Analyzer::Words& words = azer->getWords();
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
 		ofile << it->c_str() << std::endl;
@@ -169,7 +168,7 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 			if (hasChs)
 			{
 				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-				addSentence_(str + chkPoint, i - chkPoint);
+				addSentence(str + chkPoint, i - chkPoint);
 
 				hasChs = false;
 			}
@@ -181,24 +180,20 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 	if (hasChs)
 	{
 		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
-		addSentence_(str + chkPoint, i - chkPoint);
+		addSentence(str + chkPoint, i - chkPoint);
 		hasChs = false;
 	}
 }
 
-void Extractor::addSentence_(const CharType* const str, String::size_type len)
+void Extractor::addSentence(const CharType* const str, String::size_type len)
 {
-	scanSentence<1>(str, len, map1);
-	scanSentence<2>(str, len, map2);
-	scanSentence<3>(str, len, map3);
-	scanSentence<4>(str, len, map4);
-	scanSentence<5>(str, len, map5);
-	scanSentence<6>(str, len, map6);
-	scanSentence<7>(str, len, map7);
+	#define _JEBE_CALL_SCAN(Z, n, N)		scanSentence_<n>(str, len, BOOST_PP_CAT(map, n));
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_SCAN, BOOST_PP_EMPTY())
+	#undef _JEBE_CALL_SCAN
 }
 
 template<uint8_t plen>
-void Extractor::scanSentence(const CharType* const str, String::size_type len,
+void Extractor::scanSentence_(const CharType* const str, String::size_type len,
 		typename Phrase<plen>::MapType& map)
 {
 	if (CS_BUNLIKELY(len < plen))
@@ -226,40 +221,14 @@ void Extractor::scanSentence(const CharType* const str, String::size_type len,
 
 void Extractor::display()
 {
-	for (Ph1::MapType::iterator it = map1.begin(); it != map1.end(); ++it)
-	{
-		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);
+	#define _JEBE_DO_DISPLAY(Z, n, N)														\
+	for (BOOST_PP_CAT(Ph, n)::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
+		it != BOOST_PP_CAT(map, n).end(); ++it)												\
+	{																						\
+		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);					\
 	}
-
-	for (Ph2::MapType::iterator it = map2.begin(); it != map2.end(); ++it)
-	{
-		CS_SAY("phrase2: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph3::MapType::iterator it = map3.begin(); it != map3.end(); ++it)
-	{
-		CS_SAY("phrase3: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph4::MapType::iterator it = map4.begin(); it != map4.end(); ++it)
-	{
-		CS_SAY("phrase4: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph5::MapType::iterator it = map5.begin(); it != map5.end(); ++it)
-	{
-		CS_SAY("phrase5: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph6::MapType::iterator it = map6.begin(); it != map6.end(); ++it)
-	{
-		CS_SAY("phrase6: [" << it->first.c_str() << "]: " << it->second);
-	}
-
-	for (Ph7::MapType::iterator it = map7.begin(); it != map7.end(); ++it)
-	{
-		CS_SAY("phrase7: [" << it->first.c_str() << "]: " << it->second);
-	}
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DO_DISPLAY, BOOST_PP_EMPTY())
+	#undef _JEBE_CALL_SCAN
 }
 
 #define _JEBE_GB2312_CHAR_NUM 6763

@@ -17,10 +17,9 @@
 #	include <limits.h>
 #endif
 
-#define _JEBE_PROCESS_STEP		(2 << 20)
+#define _JEBE_WORD_MAX_LEN		7
 #define _JEBE_WORD_MIN_ATIMES	5
-#define _JEBE_WORD_MAX_LEN		6
-#define _JEBE_MAP_MAX_LEN		BOOST_PP_INC(_JEBE_WORD_MAX_LEN)
+#define _JEBE_PROCESS_STEP		(2 << 20)
 
 namespace jebe {
 namespace cws {
@@ -30,14 +29,16 @@ typedef wchar_t	CharType;
 BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
 typedef std::wstring String;
 
-template<uint8_t plen> class MapHashBits { public: enum { bits = 24 }; };
+template<uint8_t plen> class MapHashBits { public: enum { bits = 13 }; };
 template<> class MapHashBits<1> { public: enum { bits = 12 }; };
-template<> class MapHashBits<4> { public: enum { bits = 21 }; };
+template<> class MapHashBits<2> { public: enum { bits = 24 }; };
+template<> class MapHashBits<3> { public: enum { bits = 24 }; };
+template<> class MapHashBits<4> { public: enum { bits = 22 }; };
 template<> class MapHashBits<5> { public: enum { bits = 20 }; };
 template<> class MapHashBits<6> { public: enum { bits = 18 }; };
 template<> class MapHashBits<7> { public: enum { bits = 15 }; };
 
-template<uint8_t plen> class PadHashBits { public: enum { bits = 20 }; };
+template<uint8_t plen> class PadHashBits { public: enum { bits = 12 }; };
 template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
 template<> class PadHashBits<2> { public: enum { bits = 22 }; };
 template<> class PadHashBits<3> { public: enum { bits = 20 }; };
@@ -64,12 +65,12 @@ public:
 	class SumedList
 	{
 	public:
-		std::size_t sum;
 		typedef std::list<T> List;
-		List list;
-
 		typedef typename List::iterator iterator;
 		typedef typename List::const_iterator const_iterator;
+
+		std::size_t sum;
+		List list;
 
 		SumedList(): sum(0) {}
 
@@ -100,50 +101,6 @@ public:
 		memcpy(str, str_, length * sizeof(CharType));
 	}
 
-	// half-hash. one day, meta-program or boost::preprocessor ...
-//	inline uint32_t hfhash() const;
-//	{
-//		typedef uint32_t mask_t;
-//		if (sizeof(CharType) == sizeof(mask_t))
-//		{
-//			switch (length)
-//			{
-//			case 1:
-//				return str[0];
-//			case 2:
-//				return str[0] ^ str[1];
-//			case 3:
-//				return str[0] ^ str[1] ^ str[2];
-//			case 4:
-//				return str[0] ^ str[1] ^ str[2] ^ str[3];
-//			case 5:
-//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4];
-//			case 6:
-//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5];
-//			case 7:
-//				return str[0] ^ str[1] ^ str[2] ^ str[3] ^ str[4] ^ str[5] ^ str[6];
-//			default:
-//				mask_t mask = 0;
-//				for (uint8_t i = 0; i < length; ++i)
-//				{
-//					mask ^= str[i];
-//				}
-//				return mask;
-//			}
-//		}
-//		else
-//		{
-//			mask_t mask = 0;
-//			char* res = reinterpret_cast<char*>(&mask);
-//			const char* str_ = reinterpret_cast<const char*>(str);
-//			for (uint8_t i = 0, end = length * sizeof(CharType); i < end; ++i)
-//			{
-//				res[i & 3] ^= str_[i];
-//			}
-//			return mask;
-//		}
-//	}
-
 	bool eq(const P& rph) const
 	{
 		return match(str, rph.str);
@@ -156,7 +113,9 @@ public:
 
 	operator String() const
 	{
-		return String(c_str());
+		String s;
+		s.assign(str, length);
+		return s;
 	}
 
 	operator uint16_t() const
@@ -164,7 +123,7 @@ public:
 		return reinterpret_cast<const uint64_t*>(str)[BOOST_PP_IF(CS_IS_LITTLE_ENDIAN, 0, 1)];
 	}
 
-	// NOTE: debug only
+#if CS_DEBUG
 	CharType* c_str() const
 	{
 		CharType* cstr = new CharType[length + 1];
@@ -172,68 +131,20 @@ public:
 		memcpy(cstr, str, length * sizeof(CharType));
 		return cstr;
 	}
+#endif
 };
 
-template<uint8_t len_1, uint8_t len_2>
-bool match(const CharType prefix[len_1], const CharType rstr[len_2])
-{
-	BOOST_STATIC_ASSERT(len_1 <= len_2);
-	switch (len_1)
-	{
-	case 1:
-		return prefix[0] == rstr[0];
-	case 2:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1];
-	case 3:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2];
-	case 4:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3];
-	case 5:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4];
-	case 6:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4]
-			 && prefix[5] == rstr[5];
-	case 7:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4]
-			 && prefix[5] == rstr[5]
-			 && prefix[6] == rstr[6];
-	default:
-		for (uint8_t i = 0; i < len_1; ++i)
-		{
-			if (prefix[i] != rstr[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-}
+template<uint8_t len_1, uint8_t len_2> CS_FORCE_INLINE
+bool match(const CharType prefix[len_1], const CharType rstr[len_2]);
 
-template<uint8_t plen> CS_FORCE_INLINE uint32_t hfhash(const Phrase<plen>& p);
-
-template<uint8_t len>
+template<uint8_t len> CS_FORCE_INLINE
 bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 {
 	return match<len, len>(lph.str, rph.str);
 }
+
+template<uint8_t plen> CS_FORCE_INLINE
+uint32_t hfhash(const Phrase<plen>& p);
 
 template<uint8_t plen, uint8_t bits>
 class PhraseHash
@@ -283,10 +194,10 @@ protected:
 
 	void scan(const CharType* const str, String::size_type len);
 
-	void addSentence_(const CharType* const str, String::size_type len);
+	void addSentence(const CharType* const str, String::size_type len);
 
 	template<uint8_t plen>
-	void scanSentence(const CharType* const str, String::size_type len,
+	void scanSentence_(const CharType* const str, String::size_type len,
 			typename Phrase<plen>::MapType& map);
 
 	bool isGb2312(CharType c) const
@@ -338,21 +249,23 @@ protected:
 
 	Words words;
 
-	static const double entropyThreshold = .2;
-	static const double joinThresholdLower = 10.;
-	static const double joinThresholdUpper = 300.;
+	static const double entropyThreshold		= 0.2;
+	static const double joinThresholdLower		= 10.;
+	static const double joinThresholdUpper		= 300.;
 
 	enum WordExamineRes { no = 0, yes, should_cover, };
 
 public:
-	Analyzer(Ph1::MapType& map1_, Ph2::MapType& map2_, Ph3::MapType& map3_,
-			Ph4::MapType& map4_, Ph5::MapType& map5_, Ph6::MapType& map6_, Ph7::MapType& map7_)
-		: map1(map1_), map2(map2_), map3(map3_),
-		  map4(map4_), map5(map5_), map6(map6_), map7(map7_),
+	#define _JEBE_ANALYZER_ARG(Z, n, N)			BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+	#define _JEBE_ANALYZER_INIT(Z, n, N)		BOOST_PP_CAT(map, n)(BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)),
+	Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_ARG, BOOST_PP_EMPTY()))
+		: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_INIT, BOOST_PP_EMPTY())
 		  totalAtimes(0)
 	{
 		buildSuffixMap();
 	}
+	#undef _JEBE_ANALYZER_ARG
+	#undef _JEBE_ANALYZER_INIT
 
 	Words& getWords()
 	{
