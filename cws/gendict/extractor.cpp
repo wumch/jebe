@@ -6,22 +6,23 @@
 #include <algorithm>
 #include <exception>
 #include <cstdlib>
-#include <boost/checked_delete.hpp>
+#include <cmath>
 #include <boost/iostreams/code_converter.hpp>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/preprocessor.hpp>
+#include <boost/mpl/map.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 
 namespace jebe {
 namespace cws {
-
+std::wstringstream log;
 template<uint8_t plen>
-Analyzer::WordExamineRes Analyzer::isWord(const Phrase<plen>& phrase,
-		typename Phrase<plen>::MapType& map,
-		typename Phrase<plen - 1>::MapType& prefixmap,
-		typename Phrase<plen - 1>::PadMap& padmap
-		) const
+Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
+		const typename Phrase<plen>::MapType& map,
+		const typename Phrase<plen - 1>::MapType& prefixmap,
+		const typename Phrase<plen - 1>::PadMap& padmap
+	) const
 {
 	typedef Phrase<plen - 1> PhraseType;
 	typedef typename PhraseType::MapType MapType;
@@ -29,65 +30,70 @@ Analyzer::WordExamineRes Analyzer::isWord(const Phrase<plen>& phrase,
 	typedef typename PhraseType::PadList PadListType;
 	typedef typename PhraseType::Suffix SuffixType;
 
-	PhraseType prefix(phrase.str);
-	SuffixType suffix(phrase.str + (plen - 1));
+	const PhraseType prefix(phrase.str);
+	const SuffixType suffix(phrase.str + (plen - 1));
 
-//		PadListType& plist = padmap[prefix];
-	// both count(prefix) and  can not be 0, it is impossible.
+	log << phrase.c_str() << "\t";
+	// both count(prefix) and count(suffix) can not be 0, it is impossible.
 	/*
 	double joinprobActual = count(phrase) / count(prefix),
 			joinprobPred = count(suffix) / totalAtimes;
 	double overRate = joinprobActual / joinprobPred;
 	// so, the a bit fast and explicit edition: */
-	double atimes = map[phrase];
-	double overRate = std::sqrt(atimes) * atimes / prefixmap[prefix] * totalAtimes / smap[suffix];
+	const atimes_t
+		atimes = map.find(phrase)->second,
+		prefix_atimes = (plen == 2) ?  smap[prefix] : prefixmap.find(prefix)->second;
+	const double overRate = std::sqrt(atimes) * atimes / prefix_atimes * totalAtimes / smap[suffix];
+	log << "\tatimes/patimes:" << atimes << "," << prefix_atimes << "\toverRate: " << overRate;
 
-	if (overRate < joinThresholdLower)
+	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
+	if (CS_BLIKELY(overRate < joinThresholdLower))
 	{
 		return no;
 	}
 
-	PadListType& plist = padmap[prefix];
-	if (plist->size() == 1)
+//	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
+	if (CS_BUNLIKELY(prefix_atimes == atimes))
 	{
-		return should_cover;
+		res |= yes | typo_prefix;
 	}
+//	else
+//	{
+		const PadListType& plist = padmap.find(prefix)->second;
+		double entropy = 0., rate = 0.;
+		for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+		{
+			rate = static_cast<double>(it->second) / plist.sum;
+			entropy -= rate * std::log(rate);
+		}
+		log << "\trate:" << rate << ",entropy:" << entropy;
+		CS_SAY(phrase << " entropy: " << entropy);
+		if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
+		{
+//			if (CS_BUNLIKELY(!(res & yes)))
+//			{
+				res |= no;
+//			}
+		}
+		else if (CS_BUNLIKELY(entropy < entropyThresholdLower))
+		{
+			if (CS_BUNLIKELY(!(res & yes)))
+			{
+				res |= yes | typo_prefix;
+			}
+		}
+//	}
 
-	double entropy = 0., rate = 0.;
-	for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+	if (CS_LIKELY(res & yes))
 	{
-		entropy = 0;
-		rate = static_cast<double>(it->second) / plist.sum;
-		entropy -= rate * std::log(rate);
+		if (isTailTypo(phrase, atimes, prefixmap))
+		{
+			res |= typo_suffix;
+			log << "\tprefix-is-typo";
+		}
 	}
-
-	CS_SAY(phrase << " entropy: " << entropy);
-	return entropy > entropyThreshold ? yes : should_cover;
-
-	if (overRate > joinThresholdUpper)
-	{
-		CS_SAY("must be a word: [" << phrase.c_str() << "], overRate: " << overRate
-			<< ", map[phrase]: " << map[phrase]
-			<< ", prefixmap[prefix]: " << prefixmap[prefix]
-			<< ", map1[suffix]: " << smap[suffix]
-		);
-		return should_cover;
-	}
-
-	if (overRate > joinThresholdLower)
-	{
-		CS_SAY("can be a word: [" << phrase.c_str() << "]");
-	}
-
-	CS_SAY("can be a word: [" << phrase.c_str() << "], overRate: " << overRate
-		<< ", map[phrase]: " << map[phrase]
-		<< ", prefixmap[prefix]: " << prefixmap[prefix]
-		<< ", map1[suffix]: " << smap[suffix]
-	);
-
-	return yes;
-
-//		std::log(joinfreq);
+	log << "\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl;
+	return static_cast<WordExamineRes>(res);
 }
 
 void Analyzer::analysis()
@@ -95,9 +101,32 @@ void Analyzer::analysis()
 	clean(_JEBE_WORD_MIN_ATIMES);
 	buildSuffixMap();
 	buildPadMap();
-	map6.clear();
+	BOOST_PP_CAT(map, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)).clear();
 	caltureTotalAtimes();
 	extractWords();
+	CS_STDOUT << log.str() << std::endl;
+}
+
+template<uint8_t plen> class MinMiss { public: static const double rate = 0.9; };
+template<> class MinMiss<3> { public: static const double rate = 0.50; };
+template<> class MinMiss<4> { public: static const double rate = 0.60; };
+template<> class MinMiss<5> { public: static const double rate = 0.70; };
+template<> class MinMiss<6> { public: static const double rate = 0.80; };
+template<> class MinMiss<7> { public: static const double rate = 0.90; };
+template<> class MinMiss<8> { public: static const double rate = 0.95; };
+
+template<uint8_t plen> CS_FORCE_INLINE
+bool Analyzer::isTailTypo(const Phrase<plen>& phrase, atimes_t atimes,
+		const typename Phrase<plen - 1>::MapType& shorterMap) const
+{
+	return atimes >= MinMiss<plen>::rate * shorterMap.find((Phrase<plen - 1>(phrase.str + 1)))->second;
+}
+
+template<> CS_FORCE_INLINE
+bool Analyzer::isTailTypo<2>(const Phrase<2>& phrase, atimes_t atimes,
+		const typename Phrase<1>::MapType& shorterMap) const
+{
+	return false;
 }
 
 void Analyzer::clean(std::size_t min_atimes)
@@ -126,18 +155,17 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 
 void Extractor::extract(const boost::filesystem::path& outfile)
 {
-
-#define _JEBE_AZER_ARG(Z, n, N)			BOOST_PP_CAT(map, n)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+	#define _JEBE_AZER_ARG(Z, n, N)			BOOST_PP_CAT(map, n)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 	std::auto_ptr<Analyzer> azer(new Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_AZER_ARG, BOOST_PP_EMPTY())));
-#undef _JEBE_AZER_ARG
+	#undef _JEBE_AZER_ARG
 	azer->analysis();
 
 	std::wofstream ofile(outfile.string().c_str(), std::ios_base::trunc);
 	ofile.imbue(std::locale(""));
-	Analyzer::Words& words = azer->getWords();
+	const Analyzer::Words& words = azer->getWords();
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
-		ofile << it->c_str() << std::endl;
+		ofile << it->c_str() << '\n';
 	}
 	ofile.close();
 }
@@ -158,21 +186,20 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 	{
 		if (CS_BLIKELY(isGb2312(str[i])))
 		{
-			if (!hasChs)
+			if (CS_BUNLIKELY(!hasChs))
 			{
 				hasChs = true;
+				chkPoint = i;
 			}
 		}
 		else
 		{
-			if (hasChs)
+			if (CS_BLIKELY(hasChs))
 			{
 				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
 				addSentence(str + chkPoint, i - chkPoint);
-
 				hasChs = false;
 			}
-			chkPoint = i + 1;
 		}
 		++i;
 	}
@@ -205,8 +232,8 @@ void Extractor::scanSentence_(const CharType* const str, String::size_type len,
 	{
 		typedef Phrase<plen> PhraseType;
 
-		PhraseType p(str + i);
-		typename Phrase<plen>::MapType::iterator it = map.find(p);
+		const PhraseType p(str + i);
+		typename PhraseType::MapType::iterator it = map.find(p);
 
 		if (CS_BLIKELY(it != map.end()))
 		{
@@ -234,7 +261,7 @@ void Extractor::display()
 #define _JEBE_GB2312_CHAR_NUM 6763
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 {
-	CharType* gb = new CharType[_JEBE_GB2312_CHAR_NUM + 1];
+	CharType* const gb = new CharType[_JEBE_GB2312_CHAR_NUM + 1];
 	memset(gb, 0, (_JEBE_GB2312_CHAR_NUM + 1) * sizeof(CharType));
 
 	std::wifstream ifile(gbfile.string().c_str());
@@ -259,7 +286,7 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
-	CharType* content = new CharType[_JEBE_PROCESS_STEP + 1];
+	CharType* const content = new CharType[_JEBE_PROCESS_STEP + 1];
 
 	std::wfstream file(contentfile.string().c_str(), std::ios_base::in);
 	CS_SAY("imbue");
@@ -289,151 +316,6 @@ void Extractor::fetchContent(const boost::filesystem::path& contentfile,
 	delete[] content;
 	file.close();
 }
-/*
-void fetchContent(const boost::filesystem::path& contentfile,
-		const boost::filesystem::path& outfile, uint32_t maxchars)
-{
-	uint32_t processed = 0;
-	std::size_t buf_remains = 0, last_buf_remains = 0;
-	std::ifstream ifile(contentfile.string().c_str());
 
-	const std::size_t
-		bufsize = ((_JEBE_PROCESS_STEP) + 1) * sizeof(char),
-		mbssize = ((_JEBE_PROCESS_STEP) * 2 + 1) * sizeof(char),
-		wssize = (mbssize / sizeof(char)) * sizeof(wchar_t),
-		memsize = wssize;
-
-	CS_SAY("bufsize:" << bufsize << ", mbssize:" << mbssize << ", wssize:" << wssize << ",memsize:" << memsize);
-
-	char* const buf = new char[bufsize / sizeof(char)];
-	char* const mbs = new char[mbssize / sizeof(char)];
-	wchar_t* const ws = new wchar_t[wssize / sizeof(wchar_t)];
-	char* const mem = new char[memsize / sizeof(char)];
-
-	memset(buf, 0, bufsize);
-	memset(mbs, 0, mbssize);
-	memset(ws, 0, wssize);
-
-	std::size_t converted = 0, mbs_consumed = 0, mbs_len = 0;
-	ssize_t readed = 0, mbs_remains = 0;
-
-	try
-	{
-		while ((readed = ifile.readsome(buf + buf_remains, _JEBE_PROCESS_STEP - buf_remains)))
-		{
-			CS_STDOUT << std::endl << "--------------------------------------------------" << std::endl;
-			CS_SAY("readed: " << readed << ", buf_remains: " << buf_remains);
-			memset(mem, 0, memsize);
-			processed += readed;
-			if (maxchars != 0 && processed > maxchars)
-			{
-				break;
-			}
-
-			// ---------- urldecode
-			last_buf_remains = buf_remains;
-			CS_SAY("strlen(mbs): " << strlen(mbs));
-			mbs_len = 0;
-			buf_remains = staging::urldecode(buf, mbs + mbs_remains, readed + last_buf_remains, &mbs_len);
-			CS_SAY("mbs:" << strlen(mbs) << ": [" << mbs << "]");
-			CS_SAY("buf_remains: " << buf_remains);
-			if (buf_remains)
-			{
-				memcpy(mem, buf + (readed + last_buf_remains - buf_remains), buf_remains);
-				memset(buf, 0, bufsize);
-				memcpy(buf, mem, buf_remains);
-			}
-			else
-			{
-				memset(buf, 0, bufsize);
-			}
-
-			// ---------- mbs => wcs
-			memset(ws, 0, wssize);
-			CS_SAY("mbs_remains: " << mbs_remains << ", mbs_len: " << mbs_len << ", strlen(mbs): " << strlen(mbs));
-			size_t mbs_converted = 0;
-			converted = staging::mbswcs::mb2wc(mbs, ws, mbs_len, &mbs_converted);
-
-			mbs_remains = 0;
-			if (converted == static_cast<size_t>(-1))
-			{
-				CS_SAY("convert failed, converted " << converted);
-				// ----------- entirely clean ----------------
-				//buf_remains = 0;
-				mbs_remains = 0;
-				mbs_remains = 0;
-
-
-				memset(mem, 0, memsize);
-				memcpy(mem, mbs + mbs_consumed, mbs_remains);
-				memset(mbs, 0, mbssize);
-				memcpy(mbs, mem, mbs_remains);
-				memset(mem, 0, memsize);
-
-				//memset(buf, 0, bufsize);
-				memset(mbs, 0, mbssize);
-				memset(ws, 0, wssize);
-				memset(mem, 0, memsize);
-			}
-			else
-			{
-				if (converted > 0)
-				{
-#if CS_DEBUG > 1
-					CS_SAY("ws: " << ws);
-#endif
-					scan(ws, converted);
-
-					mbs_consumed = mbs_converted;
-//					mbs_consumed = wcstombs(NULL, ws, 0);
-					if (mbs_consumed == static_cast<size_t>(-1))
-					{
-						CS_DIE("mbs_consumed: " << mbs_consumed);
-					}
-
-					mbs_remains = strlen(mbs) - mbs_consumed;
-					CS_SAY("converted: " << converted << ", mbs_consumed: " << mbs_consumed << ", mbs_remains: " << mbs_remains);
-
-					if (mbs_remains > 0)
-					{
-						memset(mem, 0, memsize);
-						memcpy(mem, mbs + mbs_consumed, mbs_remains);
-						memset(mbs, 0, mbssize);
-						memcpy(mbs, mem, mbs_remains);
-						memset(mem, 0, memsize);
-					}
-					else if (mbs_remains == 0)
-					{
-						memset(mbs, 0, mbssize);
-						memset(mem, 0, memsize);
-					}
-					else
-					{
-						CS_DIE("mbs_remains < 0, converted = " << converted << ", strlen(mbs) = " << strlen(mbs));
-					}
-				}
-				else
-				{
-					mbs_remains = mbs_len;
-				}
-			}
-		}
-		ifile.close();
-	}
-	catch (std::exception& e)
-	{
-		CS_DIE("error occured while reading contentfile " << contentfile << ": " << e.what());
-	}
-
-//	delete[] buf;
-//	delete[] mbs;
-//	delete[] ws;
-//	delete[] mem;
-//	boost::checked_array_delete(buf);
-//	boost::checked_array_delete(mbs);
-//	boost::checked_array_delete(ws);
-//	boost::checked_array_delete(mem);
-}
-*/
 } /* namespace cws */
 } /* namespace jebe */

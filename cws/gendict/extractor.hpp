@@ -18,7 +18,7 @@
 #endif
 
 #define _JEBE_WORD_MAX_LEN		7
-#define _JEBE_WORD_MIN_ATIMES	5
+#define _JEBE_WORD_MIN_ATIMES	2
 #define _JEBE_PROCESS_STEP		(2 << 20)
 
 namespace jebe {
@@ -80,6 +80,11 @@ public:
 			sum += elem.second;
 		}
 
+		const List* operator->() const
+		{
+			return &list;
+		}
+
 		List* operator->()
 		{
 			return &list;
@@ -126,7 +131,7 @@ public:
 #if CS_DEBUG
 	CharType* c_str() const
 	{
-		CharType* cstr = new CharType[length + 1];
+		CharType* const cstr = new CharType[length + 1];
 		memset(cstr, 0, (length + 1) * sizeof(CharType));
 		memcpy(cstr, str, length * sizeof(CharType));
 		return cstr;
@@ -249,11 +254,19 @@ protected:
 
 	Words words;
 
-	static const double entropyThreshold		= 0.2;
+	static const double entropyThresholdLower	= 0.2;
+	static const double entropyThresholdUpper	= 1.5;
 	static const double joinThresholdLower		= 10.;
 	static const double joinThresholdUpper		= 300.;
+	static const double firstCharMaxMiss		= 80;	// atimes(str[0]) < 50*atimes(str[1:]
 
-	enum WordExamineRes { no = 0, yes, should_cover, };
+	enum WordExamineRes {
+		no 					= 1,					// it's not a word.
+		yes 				= 1 << 1,				// it's a word.
+		typo_prefix 		= 1 << 2, 							// it's a word, and str[:-1] is not a typo.
+		typo_suffix 		= 1 << 3,							// it's a word, and str[1:] is not a typo.
+		typo_prefix_suffix 	= yes | typo_prefix | typo_suffix,	// it's a word, and both str[:-1] and str[1:] are typo.
+	};
 
 public:
 	#define _JEBE_ANALYZER_ARG(Z, n, N)			BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
@@ -267,11 +280,14 @@ public:
 	#undef _JEBE_ANALYZER_ARG
 	#undef _JEBE_ANALYZER_INIT
 
-	Words& getWords()
+	void analysis();
+
+	const Words& getWords() const
 	{
 		return words;
 	}
 
+protected:
 	void extractWords()
 	{
 		#define _JEBE_CALL_EXTRACT_WORDS(Z, n, N)		extractWords_<n>(BOOST_PP_CAT(map, n), BOOST_PP_CAT(map, BOOST_PP_DEC(n)), BOOST_PP_CAT(pad, BOOST_PP_DEC(n)));
@@ -280,37 +296,47 @@ public:
 		CS_SAY("character-total-atimes: " << totalAtimes);
 	}
 
+	template<uint8_t plen> CS_FORCE_INLINE
+	bool isTailTypo(const Phrase<plen>& phrase, atimes_t atimes,
+		const typename Phrase<plen - 1>::MapType& prefixmap) const;
+
 	template<uint8_t plen>
 	void extractWords_(typename Phrase<plen>::MapType& map,
-		typename Phrase<plen - 1>::MapType& prefixmap,
-		typename Phrase<plen - 1>::PadMap& padmap
+			const typename Phrase<plen - 1>::MapType& prefixmap,
+			const typename Phrase<plen - 1>::PadMap& padmap
 		)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
 
+		typedef Phrase<plen - 1> ShorterPhraseType;
 		WordExamineRes res = no;
 		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			res = isWord<plen>(it->first, map, prefixmap, padmap);
-			if (res != no)
+			res = judge<plen>(it->first, map, prefixmap, padmap);
+			if (CS_BUNLIKELY(res & yes))
 			{
 				words.insert(it->first);
-				if (res == should_cover)
-				{
-					words.erase(Phrase<plen - 1>(it->first.str));
-				}
-			}	// else: could remove some longer phrases for performance.
+			}
+			if (CS_BUNLIKELY(res & typo_prefix))
+			{
+				words.erase(ShorterPhraseType(it->first.str));
+				CS_SAY("prefix is not a word: [" << it->first.c_str() << "]");
+			}
+			if (CS_BUNLIKELY(res & typo_suffix))
+			{
+				words.erase(ShorterPhraseType(it->first.str + 1));
+				CS_SAY("suffix is not a word: [" << it->first.c_str() << "]");
+			}
+			// else: could remove some longer phrases for performance.
 		}
 	}
 
 	template<uint8_t plen>
-	Analyzer::WordExamineRes isWord(const Phrase<plen>& phrase,
-			typename Phrase<plen>::MapType& map,
-			typename Phrase<plen - 1>::MapType& prefixmap,
-			typename Phrase<plen - 1>::PadMap& padmap
+	Analyzer::WordExamineRes judge(const Phrase<plen>& phrase,
+			const typename Phrase<plen>::MapType& map,
+			const typename Phrase<plen - 1>::MapType& prefixmap,
+			const typename Phrase<plen - 1>::PadMap& padmap
 			) const;
-
-	void analysis();
 
 	void caltureTotalAtimes()
 	{
@@ -339,8 +365,8 @@ public:
 
 		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			PrefixType prefix(it->first.str);
-			SuffixType suffix(it->first.str + prefix_len);
+			const PrefixType prefix(it->first.str);
+			const SuffixType suffix(it->first.str + prefix_len);
 
 			if (padmap.find(prefix) == padmap.end())
 			{
