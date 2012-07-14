@@ -250,6 +250,10 @@ protected:
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
+	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(prx, n);
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	#undef _JEBE_DECL_PAD
+
 	std::size_t totalAtimes;
 
 	Words words;
@@ -336,7 +340,7 @@ protected:
 			const typename Phrase<plen>::MapType& map,
 			const typename Phrase<plen - 1>::MapType& prefixmap,
 			const typename Phrase<plen - 1>::PadMap& padmap
-			) const;
+		) const;
 
 	void caltureTotalAtimes()
 	{
@@ -384,6 +388,49 @@ protected:
 			{
 				padit->second = it->second;
 				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: " << suffix.c_str() << "], atimes: " << it->second);
+			}
+			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
+		}
+	}
+
+	void buildPrxMap()
+	{
+		#define _JEBE_CALL_BUILD_MAP(Z, n, N)		buildPadMap_<n>(BOOST_PP_CAT(pad, n), BOOST_PP_CAT(map, BOOST_PP_INC(n)));
+		BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_BUILD_MAP, BOOST_PP_EMPTY())
+		#undef _JEBE_CALL_BUILD_MAP
+	}
+
+	template<uint8_t prefix_len>
+	void buildPrxMap_(typename Phrase<prefix_len>::PadMap& prxmap, const typename Phrase<prefix_len + 1>::MapType& map)
+	{
+		typedef Phrase<prefix_len> SuffixType;
+		typedef typename SuffixType::Suffix PrefixType;
+		typedef typename Phrase<prefix_len + 1>::MapType MapType;
+
+		typedef typename SuffixType::PadList PadListType;
+		typedef typename SuffixType::PadMap PadMapType;
+
+		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
+		{
+			const SuffixType prefix(it->first.str + 1);
+			const PrefixType suffix(it->first.str);
+
+			if (prxmap.find(suffix) == prxmap.end())
+			{
+				prxmap[suffix] = PadListType();
+			}
+
+			PadListType& plist = prxmap[suffix];
+			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(prefix));
+			if (padit == plist->end())
+			{
+				plist.append(typename PrefixType::Pad(prefix, it->second));
+				CS_SAY("first " << prefix_len << ", prefix: [" << suffix.c_str() << "], suffix: [" << prefix.c_str() << "], atimes: " << it->second);
+			}
+			else
+			{
+				padit->second = it->second;
+				CS_SAY("repeat " << prefix_len << ", prefix: [" << suffix.c_str() << "], suffix: " << prefix.c_str() << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
 		}
