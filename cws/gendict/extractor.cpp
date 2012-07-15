@@ -1,4 +1,6 @@
 
+#include "staging.hpp"
+#include "memory.hpp"
 #include "extractor.impl.hpp"
 #include "extractor.hpp"
 #include <iostream>
@@ -16,9 +18,35 @@
 
 namespace jebe {
 namespace cws {
+
+#if CS_LOG_ON
 std::wstringstream log;
+#define CS_LOG(...)  log << __VA_ARGS__
+#else
+#define CS_LOG(...)
+#endif
+
+//template<>
+//void Analyzer::extractWords_<2>(typename Phrase<2>::MapType& map,
+//		const typename Phrase<2 - 1>::MapType& prefixmap,
+//		const typename Phrase<2 - 1>::PadMap& padmap,
+//		const typename Phrase<2 - 1>::PadMap& prxmap
+//	)
+//{
+//	typedef Phrase<1> ShorterPhraseType;
+//	WordExamineRes res = no;
+//	for (typename Phrase<2>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
+//	{
+//		res = judgePad<2>(it->first, map, prefixmap, padmap);
+//		if (CS_BUNLIKELY(res & yes))
+//		{
+//			words.insert(it->first);
+//		}
+//	}
+//}
+
 template<uint8_t plen>
-Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
+Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
 		const typename Phrase<plen>::MapType& map,
 		const typename Phrase<plen - 1>::MapType& prefixmap,
 		const typename Phrase<plen - 1>::PadMap& padmap
@@ -33,7 +61,7 @@ Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
 	const PhraseType prefix(phrase.str);
 	const SuffixType suffix(phrase.str + (plen - 1));
 
-	log << phrase.c_str() << "\t";
+	CS_LOG(phrase.c_str() << "\t");
 	// both count(prefix) and count(suffix) can not be 0, it is impossible.
 	/*
 	double joinprobActual = count(phrase) / count(prefix),
@@ -44,11 +72,12 @@ Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
 		atimes = map.find(phrase)->second,
 		prefix_atimes = (plen == 2) ?  smap[prefix] : prefixmap.find(prefix)->second;
 	const double overRate = std::sqrt(atimes) * atimes / prefix_atimes * totalAtimes / smap[suffix];
-	log << "\tatimes/patimes:" << atimes << "," << prefix_atimes << "\toverRate: " << overRate;
+	CS_LOG("\tatimes/patimes:" << atimes << "," << prefix_atimes << "\toverRate: " << overRate);
 
 	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
 	if (CS_BLIKELY(overRate < joinThresholdLower))
 	{
+		CS_LOG(std::endl);
 		return no;
 	}
 
@@ -66,8 +95,8 @@ Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
 			rate = static_cast<double>(it->second) / plist.sum;
 			entropy -= rate * std::log(rate);
 		}
-		log << "\trate:" << rate << ",entropy:" << entropy;
-		CS_SAY(phrase << " entropy: " << entropy);
+		CS_LOG("\trate:" << rate << ",entropy:" << entropy);
+		CS_SAY(phrase.c_str() << " entropy: " << entropy);
 		if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
 		{
 //			if (CS_BUNLIKELY(!(res & yes)))
@@ -84,15 +113,79 @@ Analyzer::WordExamineRes Analyzer::judge(const Phrase<plen>& phrase,
 		}
 //	}
 
-	if (CS_LIKELY(res & yes))
+	CS_LOG("\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl);
+	return static_cast<WordExamineRes>(res);
+}
+
+template<uint8_t plen>
+Analyzer::WordExamineRes Analyzer::judgePrx(const Phrase<plen>& phrase,
+		const typename Phrase<plen>::MapType& map,
+		const typename Phrase<plen - 1>::MapType& suffixmap,
+		const typename Phrase<plen - 1>::PadMap& prxmap
+	) const
+{
+	typedef Phrase<plen - 1> PhraseType;
+	typedef typename PhraseType::MapType MapType;
+	typedef typename PhraseType::PadMap PadMapType;
+	typedef typename PhraseType::PadList PadListType;
+	typedef typename PhraseType::Suffix SuffixType;
+
+	const PhraseType suffix(phrase.str + 1);
+	const SuffixType prefix(phrase.str);
+
+	CS_LOG(phrase.c_str() << "\t");
+	// both count(prefix) and count(suffix) can not be 0, it is impossible.
+	/*
+	double joinprobActual = count(phrase) / count(prefix),
+			joinprobPred = count(suffix) / totalAtimes;
+	double overRate = joinprobActual / joinprobPred;
+	// so, the a bit fast and explicit edition: */
+	const atimes_t
+		atimes = map.find(phrase)->second,
+		suffix_atimes = (plen == 2) ?  smap[suffix] : suffixmap.find(suffix)->second;
+	const double overRate = std::sqrt(atimes) * atimes / suffix_atimes * totalAtimes / smap[prefix];
+	CS_LOG("\tatimes/patimes:" << atimes << "," << suffix_atimes << "\toverRate: " << overRate);
+
+	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
+	if (CS_BLIKELY(overRate < joinThresholdLower))
 	{
-		if (isTailTypo(phrase, atimes, prefixmap))
-		{
-			res |= typo_suffix;
-			log << "\tprefix-is-typo";
-		}
+		CS_LOG(std::endl);
+		return no;
 	}
-	log << "\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl;
+
+//	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
+	if (CS_BUNLIKELY(suffix_atimes == atimes))
+	{
+		res |= yes | typo_suffix;
+	}
+//	else
+//	{
+		const PadListType& plist = prxmap.find(suffix)->second;
+		double entropy = 0., rate = 0.;
+		for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+		{
+			rate = static_cast<double>(it->second) / plist.sum;
+			entropy -= rate * std::log(rate);
+		}
+		CS_LOG("\trate:" << rate << ",entropy:" << entropy);
+		CS_SAY(phrase.c_str() << " entropy: " << entropy);
+		if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
+		{
+//			if (CS_BUNLIKELY(!(res & yes)))
+//			{
+				res |= no;
+//			}
+		}
+		else if (CS_BUNLIKELY(entropy < entropyThresholdLower))
+		{
+			if (CS_BUNLIKELY(!(res & yes)))
+			{
+				res |= yes | typo_suffix;
+			}
+		}
+//	}
+
+	CS_LOG("\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl);
 	return static_cast<WordExamineRes>(res);
 }
 
@@ -101,10 +194,13 @@ void Analyzer::analysis()
 	clean(_JEBE_WORD_MIN_ATIMES);
 	buildSuffixMap();
 	buildPadMap();
+	buildPrxMap();
 	BOOST_PP_CAT(map, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)).clear();
 	caltureTotalAtimes();
 	extractWords();
+#if CS_LOG_ON
 	CS_STDOUT << log.str() << std::endl;
+#endif
 }
 
 template<uint8_t plen> class MinMiss { public: static const double rate = 0.9; };
@@ -259,7 +355,7 @@ void Extractor::display()
 }
 
 #define _JEBE_GB2312_CHAR_NUM 6763
-#define _JEBE_EXTRACTOR_INIT(Z, n, N)		BOOST_PP_CAT(map, n)BOOST_PP_LPAREN()MapHashBits<n>::bits BOOST_PP_RPAREN()BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+#define _JEBE_EXTRACTOR_INIT(Z, n, N)		BOOST_PP_CAT(map, n)BOOST_PP_LPAREN()1 << MapHashBits<n>::bits BOOST_PP_RPAREN()BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 	: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_EXTRACTOR_INIT, BOOST_PP_EMPTY())
 {

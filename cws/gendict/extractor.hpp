@@ -18,8 +18,15 @@
 #endif
 
 #define _JEBE_WORD_MAX_LEN		7
-#define _JEBE_WORD_MIN_ATIMES	2
+#define _JEBE_WORD_MIN_ATIMES	5
 #define _JEBE_PROCESS_STEP		(2 << 20)
+
+namespace staging {
+
+template<size_t dwords> CS_FORCE_INLINE
+void memcpy4(void* const s1, const void* const s2);
+
+}
 
 namespace jebe {
 namespace cws {
@@ -103,7 +110,7 @@ public:
 public:
 	explicit Phrase(const CharType* const str_)
 	{
-		memcpy(str, str_, length * sizeof(CharType));
+		staging::memcpy4<length * sizeof(CharType)>(str, str_);
 	}
 
 	bool eq(const P& rph) const
@@ -128,7 +135,7 @@ public:
 		return reinterpret_cast<const uint64_t*>(str)[BOOST_PP_IF(CS_IS_LITTLE_ENDIAN, 0, 1)];
 	}
 
-#if CS_DEBUG
+#if CS_DEBUG || CS_LOG_ON
 	CharType* c_str() const
 	{
 		CharType* const cstr = new CharType[length + 1];
@@ -261,7 +268,7 @@ protected:
 	static const double entropyThresholdLower	= 0.2;
 	static const double entropyThresholdUpper	= 1.5;
 	static const double joinThresholdLower		= 10.;
-	static const double joinThresholdUpper		= 300.;
+	static const double joinThresholdUpper		= 1000.;
 	static const double firstCharMaxMiss		= 80;	// atimes(str[0]) < 50*atimes(str[1:]
 
 	enum WordExamineRes {
@@ -274,9 +281,13 @@ protected:
 
 public:
 	#define _JEBE_ANALYZER_ARG(Z, n, N)			BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
-	#define _JEBE_ANALYZER_INIT(Z, n, N)		BOOST_PP_CAT(map, n)(BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)),
+	#define _JEBE_ANALYZER_INIT_MAP(Z, n, N)		BOOST_PP_CAT(map, n)(BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)),
+	#define _JEBE_ANALYZER_INIT_PAD(Z, n, N)		BOOST_PP_CAT(pad, n)(1 << PadHashBits<n>::bits),
+	#define _JEBE_ANALYZER_INIT_PRX(Z, n, N)		BOOST_PP_CAT(prx, n)(1 << PadHashBits<n>::bits),
 	Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_ARG, BOOST_PP_EMPTY()))
-		: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_INIT, BOOST_PP_EMPTY())
+		: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_INIT_MAP, BOOST_PP_EMPTY())
+		  BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_ANALYZER_INIT_PAD, BOOST_PP_EMPTY())
+		  BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_ANALYZER_INIT_PRX, BOOST_PP_EMPTY())
 		  totalAtimes(0)
 	{
 		buildSuffixMap();
@@ -294,7 +305,7 @@ public:
 protected:
 	void extractWords()
 	{
-		#define _JEBE_CALL_EXTRACT_WORDS(Z, n, N)		extractWords_<n>(BOOST_PP_CAT(map, n), BOOST_PP_CAT(map, BOOST_PP_DEC(n)), BOOST_PP_CAT(pad, BOOST_PP_DEC(n)));
+		#define _JEBE_CALL_EXTRACT_WORDS(Z, n, N)		extractWords_<n>(BOOST_PP_CAT(map, n), BOOST_PP_CAT(map, BOOST_PP_DEC(n)), BOOST_PP_CAT(pad, BOOST_PP_DEC(n)), BOOST_PP_CAT(prx, BOOST_PP_DEC(n)));
 		BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_EXTRACT_WORDS, BOOST_PP_EMPTY())
 		#undef _JEBE_CALL_EXTRACT_WORDS
 		CS_SAY("character-total-atimes: " << totalAtimes);
@@ -307,7 +318,8 @@ protected:
 	template<uint8_t plen>
 	void extractWords_(typename Phrase<plen>::MapType& map,
 			const typename Phrase<plen - 1>::MapType& prefixmap,
-			const typename Phrase<plen - 1>::PadMap& padmap
+			const typename Phrase<plen - 1>::PadMap& padmap,
+			const typename Phrase<plen - 1>::PadMap& prxmap
 		)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
@@ -316,27 +328,42 @@ protected:
 		WordExamineRes res = no;
 		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			res = judge<plen>(it->first, map, prefixmap, padmap);
+			res = judgePad<plen>(it->first, map, prefixmap, padmap);
 			if (CS_BUNLIKELY(res & yes))
 			{
 				words.insert(it->first);
 			}
-			if (CS_BUNLIKELY(res & typo_prefix))
+			if (plen > 2)
 			{
-				words.erase(ShorterPhraseType(it->first.str));
-				CS_SAY("prefix is not a word: [" << it->first.c_str() << "]");
+				if (CS_BUNLIKELY(res & typo_prefix))
+				{
+					words.erase(ShorterPhraseType(it->first.str));
+					CS_SAY("prefix is not a word: [" << it->first.c_str() << "]");
+				}
+
+				res = judgePrx<plen>(it->first, map, prefixmap, prxmap);
+				if (CS_BUNLIKELY(res & yes))
+				{
+					words.insert(it->first);
+				}
+				if (CS_BUNLIKELY(res & typo_prefix))
+				{
+					words.erase(ShorterPhraseType(it->first.str + 1));
+					CS_SAY("prefix is not a word: [" << it->first.c_str() << "]");
+				}
 			}
-			if (CS_BUNLIKELY(res & typo_suffix))
-			{
-				words.erase(ShorterPhraseType(it->first.str + 1));
-				CS_SAY("suffix is not a word: [" << it->first.c_str() << "]");
-			}
-			// else: could remove some longer phrases for performance.
 		}
 	}
 
 	template<uint8_t plen>
-	Analyzer::WordExamineRes judge(const Phrase<plen>& phrase,
+	Analyzer::WordExamineRes judgePad(const Phrase<plen>& phrase,
+			const typename Phrase<plen>::MapType& map,
+			const typename Phrase<plen - 1>::MapType& prefixmap,
+			const typename Phrase<plen - 1>::PadMap& padmap
+		) const;
+
+	template<uint8_t plen>
+	Analyzer::WordExamineRes judgePrx(const Phrase<plen>& phrase,
 			const typename Phrase<plen>::MapType& map,
 			const typename Phrase<plen - 1>::MapType& prefixmap,
 			const typename Phrase<plen - 1>::PadMap& padmap
@@ -395,7 +422,7 @@ protected:
 
 	void buildPrxMap()
 	{
-		#define _JEBE_CALL_BUILD_MAP(Z, n, N)		buildPadMap_<n>(BOOST_PP_CAT(pad, n), BOOST_PP_CAT(map, BOOST_PP_INC(n)));
+		#define _JEBE_CALL_BUILD_MAP(Z, n, N)		buildPrxMap_<n>(BOOST_PP_CAT(prx, n), BOOST_PP_CAT(map, BOOST_PP_INC(n)));
 		BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_BUILD_MAP, BOOST_PP_EMPTY())
 		#undef _JEBE_CALL_BUILD_MAP
 	}
@@ -412,8 +439,8 @@ protected:
 
 		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
-			const SuffixType prefix(it->first.str + 1);
-			const PrefixType suffix(it->first.str);
+			const PrefixType prefix(it->first.str);
+			const SuffixType suffix(it->first.str + 1);
 
 			if (prxmap.find(suffix) == prxmap.end())
 			{
@@ -424,7 +451,7 @@ protected:
 			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(prefix));
 			if (padit == plist->end())
 			{
-				plist.append(typename PrefixType::Pad(prefix, it->second));
+				plist.append(typename SuffixType::Pad(prefix, it->second));
 				CS_SAY("first " << prefix_len << ", prefix: [" << suffix.c_str() << "], suffix: [" << prefix.c_str() << "], atimes: " << it->second);
 			}
 			else
@@ -451,16 +478,6 @@ protected:
 
 	template<uint8_t plen>
 	void clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes);
-
-	bool wordJudge() const;
-
-	template<uint8_t plen>
-	void getSuffixCount(const Phrase<plen>& ph,
-			const typename Phrase<plen>::MapType& map,
-			const typename Phrase<plen + 1>::MapType& suffixMap
-			) const
-	{
-	}
 };
 
 } /* namespace cws */
