@@ -10,6 +10,7 @@
 #include <boost/unordered_set.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/preprocessor.hpp>
+#include <boost/array.hpp>
 #include "hash.hpp"
 #include "array.hpp"
 #include "misc.hpp"
@@ -17,7 +18,7 @@
 #	include <limits.h>
 #endif
 
-#define _JEBE_WORD_MAX_LEN		7
+#define _JEBE_WORD_MAX_LEN		6
 #define _JEBE_WORD_MIN_ATIMES	5
 #define _JEBE_PROCESS_STEP		(2 << 20)
 
@@ -61,6 +62,7 @@ class Phrase
 {
 	template<uint8_t len> friend bool operator==(const Phrase<len>& lph, const Phrase<len>& rph);
 public:
+	enum { len = length };
 	typedef Phrase<length> P;
 
 	typedef boost::unordered_map<P, atimes_t, PhraseHash<length, MapHashBits<length>::bits> > MapType;
@@ -101,7 +103,6 @@ public:
 	typedef SumedList<Pad> PadList;
 	typedef boost::unordered_map<P, PadList, PhraseHash<length, PadHashBits<length>::bits> > PadMap;
 
-	static const uint8_t len = length;
 	typedef CharType StrType[length];
 
 //protected:
@@ -261,14 +262,14 @@ protected:
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
-	std::size_t totalAtimes;
+	boost::array<uint64_t, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)> totalAtimes;
 
 	Words words;
 
 	static const double entropyThresholdLower	= 0.2;
 	static const double entropyThresholdUpper	= 1.5;
 	static const double joinThresholdLower		= 10.;
-	static const double joinThresholdUpper		= 1000.;
+	static const double joinThresholdUpper		= 600.;
 	static const double firstCharMaxMiss		= 80;	// atimes(str[0]) < 50*atimes(str[1:]
 
 	enum WordExamineRes {
@@ -283,12 +284,11 @@ public:
 	#define _JEBE_ANALYZER_ARG(Z, n, N)			BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 	#define _JEBE_ANALYZER_INIT_MAP(Z, n, N)		BOOST_PP_CAT(map, n)(BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)),
 	#define _JEBE_ANALYZER_INIT_PAD(Z, n, N)		BOOST_PP_CAT(pad, n)(1 << PadHashBits<n>::bits),
-	#define _JEBE_ANALYZER_INIT_PRX(Z, n, N)		BOOST_PP_CAT(prx, n)(1 << PadHashBits<n>::bits),
+	#define _JEBE_ANALYZER_INIT_PRX(Z, n, N)		BOOST_PP_CAT(prx, n)(1 << PadHashBits<n>::bits)BOOST_PP_COMMA_IF(BOOST_PP_LESS(n, _JEBE_WORD_MAX_LEN))
 	Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_ARG, BOOST_PP_EMPTY()))
 		: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_ANALYZER_INIT_MAP, BOOST_PP_EMPTY())
 		  BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_ANALYZER_INIT_PAD, BOOST_PP_EMPTY())
 		  BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_ANALYZER_INIT_PRX, BOOST_PP_EMPTY())
-		  totalAtimes(0)
 	{
 		buildSuffixMap();
 	}
@@ -308,7 +308,7 @@ protected:
 		#define _JEBE_CALL_EXTRACT_WORDS(Z, n, N)		extractWords_<n>(BOOST_PP_CAT(map, n), BOOST_PP_CAT(map, BOOST_PP_DEC(n)), BOOST_PP_CAT(pad, BOOST_PP_DEC(n)), BOOST_PP_CAT(prx, BOOST_PP_DEC(n)));
 		BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_CALL_EXTRACT_WORDS, BOOST_PP_EMPTY())
 		#undef _JEBE_CALL_EXTRACT_WORDS
-		CS_SAY("character-total-atimes: " << totalAtimes);
+//		CS_SAY("character-total-atimes: " << totalAtimes);
 	}
 
 	template<uint8_t plen> CS_FORCE_INLINE
@@ -342,11 +342,15 @@ protected:
 				}
 
 				res = judgePrx<plen>(it->first, map, prefixmap, prxmap);
-				if (CS_BUNLIKELY(res & yes))
+				if (CS_BUNLIKELY(res & no))
 				{
-					words.insert(it->first);
+					words.erase(it->first);
 				}
-				if (CS_BUNLIKELY(res & typo_prefix))
+//				if (CS_BUNLIKELY(res & yes))
+//				{
+//					words.insert(it->first);
+//				}
+				if (CS_BUNLIKELY(res & typo_suffix))
 				{
 					words.erase(ShorterPhraseType(it->first.str + 1));
 					CS_SAY("prefix is not a word: [" << it->first.c_str() << "]");
@@ -371,9 +375,19 @@ protected:
 
 	void caltureTotalAtimes()
 	{
-		for (Ph1::MapType::const_iterator it = map1.begin(); it != map1.end(); ++it)
+		totalAtimes.fill(0);
+		#define _JEBE_CALL_TOTALATIMES(Z, n, N)		caltureTotalAtimes_<n>(BOOST_PP_CAT(map, n));
+		BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_TOTALATIMES, BOOST_PP_EMPTY())
+		#undef _JEBE_CALL_TOTALATIMES
+	}
+
+	template<uint8_t plen>
+	void caltureTotalAtimes_(const typename Phrase<plen>::MapType& map)
+	{
+		typedef typename Phrase<plen>::MapType::const_iterator IterType;
+		for (IterType it = map.begin(); it != map.end(); ++it)
 		{
-			totalAtimes += it->second;
+			totalAtimes[plen - 1] += it->second;
 		}
 	}
 

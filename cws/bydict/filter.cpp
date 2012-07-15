@@ -1,4 +1,5 @@
 
+#include "staging.hpp"
 #include "filter.hpp"
 #include <fstream>
 #include <iomanip>
@@ -23,7 +24,7 @@ void Filter::find(const AtomList atoms, const ContentLen len,
     Cursor wcur = 0;
     for (Cursor i = len - 1, offset = i - 1; -1 < i; --i)
     {
-        if ((node = node->children[atoms[i]]))
+        if (CS_LIKELY(node = node->children[atoms[i]]))
         {
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
             if (begin_from_root)
@@ -32,7 +33,7 @@ void Filter::find(const AtomList atoms, const ContentLen len,
                 --offset;
             }
 #endif
-            if (node->patten_end)
+            if (CS_BUNLIKELY(node->patten_end))
             {
                 offset = i;
 //                res.push_back(Pos(i, node->patten.size()));
@@ -40,11 +41,11 @@ void Filter::find(const AtomList atoms, const ContentLen len,
                 wcur += node->patten.size();
                 res[wcur++] = ' ';
 
-                if (max_match != 0 && max_match < ++match_count)
+                if (CS_BUNLIKELY(max_match != 0 && max_match < ++match_count))
                 {
                     break;
                 }
-                if (node->is_leaf)
+                if (CS_BLIKELY(node->is_leaf))
                 {
                     node = tree.root;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI

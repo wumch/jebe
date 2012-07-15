@@ -71,47 +71,42 @@ Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
 	const atimes_t
 		atimes = map.find(phrase)->second,
 		prefix_atimes = (plen == 2) ?  smap[prefix] : prefixmap.find(prefix)->second;
-	const double overRate = std::sqrt(atimes) * atimes / prefix_atimes * totalAtimes / smap[suffix];
+	const double overRate = std::log10(atimes) * atimes / prefix_atimes * totalAtimes[SuffixType::len - 1] / smap[suffix];
 	CS_LOG("\tatimes/patimes:" << atimes << "," << prefix_atimes << "\toverRate: " << overRate);
 
-	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
 	if (CS_BLIKELY(overRate < joinThresholdLower))
 	{
 		CS_LOG(std::endl);
 		return no;
 	}
 
-//	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
-	if (CS_BUNLIKELY(prefix_atimes == atimes))
+	uint32_t res;
+	if (CS_BUNLIKELY(overRate > joinThresholdUpper))
 	{
-		res |= yes | typo_prefix;
+		res = yes;
 	}
-//	else
-//	{
-		const PadListType& plist = padmap.find(prefix)->second;
-		double entropy = 0., rate = 0.;
-		for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+
+	const PadListType& plist = padmap.find(prefix)->second;
+	double entropy = 0., rate = 0.;
+	for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+	{
+		rate = static_cast<double>(it->second) / plist.sum;
+		entropy -= rate * std::log(rate);
+	}
+	CS_LOG("\trate:" << rate << ",entropy:" << entropy);
+	CS_SAY(phrase.c_str() << " entropy: " << entropy);
+	if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
+	{
+		res |= no;
+	}
+	else
+	{
+		res |= yes;
+		if (CS_BUNLIKELY(entropy < entropyThresholdLower))
 		{
-			rate = static_cast<double>(it->second) / plist.sum;
-			entropy -= rate * std::log(rate);
+			res |= typo_prefix;
 		}
-		CS_LOG("\trate:" << rate << ",entropy:" << entropy);
-		CS_SAY(phrase.c_str() << " entropy: " << entropy);
-		if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
-		{
-//			if (CS_BUNLIKELY(!(res & yes)))
-//			{
-				res |= no;
-//			}
-		}
-		else if (CS_BUNLIKELY(entropy < entropyThresholdLower))
-		{
-			if (CS_BUNLIKELY(!(res & yes)))
-			{
-				res |= yes | typo_prefix;
-			}
-		}
-//	}
+	}
 
 	CS_LOG("\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl);
 	return static_cast<WordExamineRes>(res);
@@ -143,47 +138,42 @@ Analyzer::WordExamineRes Analyzer::judgePrx(const Phrase<plen>& phrase,
 	const atimes_t
 		atimes = map.find(phrase)->second,
 		suffix_atimes = (plen == 2) ?  smap[suffix] : suffixmap.find(suffix)->second;
-	const double overRate = std::sqrt(atimes) * atimes / suffix_atimes * totalAtimes / smap[prefix];
+	const double overRate = std::log10(atimes) * atimes / suffix_atimes * totalAtimes[PhraseType::len - 1] / smap[prefix];
 	CS_LOG("\tatimes/patimes:" << atimes << "," << suffix_atimes << "\toverRate: " << overRate);
 
-	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
 	if (CS_BLIKELY(overRate < joinThresholdLower))
 	{
 		CS_LOG(std::endl);
 		return no;
 	}
 
-//	uint32_t res = (overRate > joinThresholdUpper) ? yes : no;
-	if (CS_BUNLIKELY(suffix_atimes == atimes))
+	uint32_t res;
+	if (CS_BUNLIKELY(overRate > joinThresholdUpper))
 	{
-		res |= yes | typo_suffix;
+		res = yes;
 	}
-//	else
-//	{
-		const PadListType& plist = prxmap.find(suffix)->second;
-		double entropy = 0., rate = 0.;
-		for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+
+	const PadListType& plist = prxmap.find(suffix)->second;
+	double entropy = 0., rate = 0.;
+	for (typename PadListType::const_iterator it = plist->begin(); it != plist->end(); ++it)
+	{
+		rate = static_cast<double>(it->second) / plist.sum;
+		entropy -= rate * std::log(rate);
+	}
+	CS_LOG("\trate:" << rate << ",entropy:" << entropy);
+	CS_SAY(phrase.c_str() << " entropy: " << entropy);
+	if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
+	{
+		res |= no;
+	}
+	else
+	{
+		res |= yes;
+		if (CS_BUNLIKELY(entropy < entropyThresholdLower))
 		{
-			rate = static_cast<double>(it->second) / plist.sum;
-			entropy -= rate * std::log(rate);
+			res |= typo_suffix;
 		}
-		CS_LOG("\trate:" << rate << ",entropy:" << entropy);
-		CS_SAY(phrase.c_str() << " entropy: " << entropy);
-		if (CS_BUNLIKELY(entropy > entropyThresholdUpper))
-		{
-//			if (CS_BUNLIKELY(!(res & yes)))
-//			{
-				res |= no;
-//			}
-		}
-		else if (CS_BUNLIKELY(entropy < entropyThresholdLower))
-		{
-			if (CS_BUNLIKELY(!(res & yes)))
-			{
-				res |= yes | typo_suffix;
-			}
-		}
-//	}
+	}
 
 	CS_LOG("\tres: " << std::bitset<4>(res).to_string().c_str() << ((res & yes) ? "yes" : "not-yes") << std::endl);
 	return static_cast<WordExamineRes>(res);
@@ -191,12 +181,12 @@ Analyzer::WordExamineRes Analyzer::judgePrx(const Phrase<plen>& phrase,
 
 void Analyzer::analysis()
 {
+	caltureTotalAtimes();
 	clean(_JEBE_WORD_MIN_ATIMES);
 	buildSuffixMap();
 	buildPadMap();
 	buildPrxMap();
 	BOOST_PP_CAT(map, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)).clear();
-	caltureTotalAtimes();
 	extractWords();
 #if CS_LOG_ON
 	CS_STDOUT << log.str() << std::endl;
