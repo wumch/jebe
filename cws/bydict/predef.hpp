@@ -1,9 +1,8 @@
 
 #pragma once
 
-#include <stddef.h>
+#include "staging.hpp"
 #include <boost/asio.hpp>
-#include "../../staging/staging.hpp"
 
 #ifndef HAS_LUAPLUS
 #	define HAS_LUAPLUS 0
@@ -30,6 +29,8 @@ typedef BA::ip::tcp::socket Sock;
 typedef boost::shared_ptr<Sock> SockPtr;
 
 typedef uint8_t SceneId;
+
+typedef wchar_t CharType;
 
 }
 }

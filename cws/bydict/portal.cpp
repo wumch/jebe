@@ -8,11 +8,10 @@
 namespace jebe {
 namespace cws {
 
-Portal::Portal(const char* config_file)
+Portal::Portal()
 {
-    G::config_file = config_file;
     G::config = Config::getInstance();
-    master = new Master(Config::getInstance()->worker_cout);
+    master = new Master(Config::getInstance()->worker_count);
 //    signals = new BA::signal_set(master->get_io());
     std::set_terminate(Portal::terminate);
 }

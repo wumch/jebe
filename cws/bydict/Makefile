@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/tokenizer
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -28,7 +28,7 @@ ifeq ($(COMPILER), G++)
   INCLUDES = -I../../staging
 # LIBS = -lgc
 #  LIBS = -lluaplus -lboost_system -lboost_thread
-  LIBS = -lboost_system -lboost_thread
+  LIBS = -lboost_system -lboost_thread -lboost_program_options -lboost_filesystem
 # LIBPATH = -L../gc/.libs
   LIBPATH =
   CPPFLAGS = $(COPT) $(INCLUDES)

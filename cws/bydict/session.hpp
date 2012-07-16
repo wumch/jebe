@@ -44,7 +44,7 @@ public:
 
     explicit Session()
         : scene(0), sock(G::mio),
-        request(G::config->max_len, 0), max_match(G::config->max_match),
+        request(G::config->request_max_size, 0), max_match(G::config->max_match),
         transferred(0), write_times(0),
         timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
     {
@@ -52,7 +52,7 @@ public:
 
     explicit Session(Sock& _sock)
         : scene(0), sock(_sock.get_io_service()), 
-        request(G::config->max_len, 0), max_match(G::config->max_match),
+        request(G::config->request_max_size, 0), max_match(G::config->max_match),
         transferred(0), write_times(0),
         timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
     {
@@ -60,7 +60,7 @@ public:
 
     explicit Session(BA::io_service& io)
         : scene(0), sock(io), 
-        request(G::config->max_len, 0), max_match(G::config->max_match),
+        request(G::config->request_max_size, 0), max_match(G::config->max_match),
         transferred(0), write_times(0),
         timer(io)
     {

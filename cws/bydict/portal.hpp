@@ -14,7 +14,7 @@ namespace cws {
 class Portal
 {
 public:
-    explicit Portal(const char* config_file);
+    explicit Portal();
 
     void handle_signals();
 

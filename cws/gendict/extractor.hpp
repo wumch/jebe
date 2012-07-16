@@ -18,7 +18,7 @@
 #	include <limits.h>
 #endif
 
-#define _JEBE_WORD_MAX_LEN		6
+#define _JEBE_WORD_MAX_LEN		5
 #define _JEBE_WORD_MIN_ATIMES	5
 #define _JEBE_PROCESS_STEP		(2 << 20)
 

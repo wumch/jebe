@@ -39,7 +39,7 @@ void Master::run()
         threads.push_back(thread);
     }
 
-    filter = new Filter(Config::getInstance()->patten_file, Config::getInstance()->replacement);
+    filter = new Filter(Config::getInstance()->patten_file.string(), Config::getInstance()->replacement);
     
     listen();
     for (ThreadList::iterator iter = threads.begin(); iter != threads.end(); ++iter)
@@ -72,8 +72,8 @@ void Master::listen()
     acptor->set_option(BA::ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
     acptor->set_option(BA::ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
 
-    Session::header_max_len = config->header_max_len;
-    Session::body_max_len = config->body_max_len;
+    Session::header_max_len = config->header_max_size;
+    Session::body_max_len = config->body_max_size;
     Session::max_len = Session::header_max_len + Session::body_max_len + sizeof(HTTP_SEP);
     Session::timeout = (0 < config->timeout) ? config->timeout : 1;
     Session::max_write_times = (0 < config->max_write_times) ? config->max_write_times : 10;
