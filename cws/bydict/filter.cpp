@@ -55,27 +55,37 @@ std::string Filter::filt(const std::string& str) const
 //}
 
 // 优化算法开关。对 匹配几率大 的情况做小幅度优化。
-#define NO_REWIND_OPTI 0
+#define NO_REWIND_OPTI 1
+#define _JEBE_SCAN_FROM_RIGHT 1
 
 // Filter
 template<typename CallbackType>
 void Filter::find(const AtomList atoms, ContentLen len, CallbackType& callback) const
 {
     Node::NodePtr node = tree.root;
-    ContentLen match_count = 0;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
     bool begin_from_root = true;
 #endif
 //    Cursor wcur = 0;
-    for (Cursor i = len - 1, offset = i - 1; -1 < i; --i)
+#if _JEBE_SCAN_FROM_RIGHT
+    for (Cursor i = len - 1, offset = i - 1; i > -1; --i)
     {
+    	CS_PREFETCH(node->children, 0, 2);
+#else
+    for (ContentLen i = 0, offset = 0; i < len ; ++i)
+    {
+#endif
         if (CS_LIKELY(node = node->children[atoms[i]]))
         {
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
-            if (begin_from_root)
+            if (CS_BUNLIKELY(begin_from_root))
             {
                 begin_from_root = false;
+#	if _JEBE_SCAN_FROM_RIGHT
                 --offset;
+#	else
+                ++offset;
+#	endif
             }
 #endif
             if (CS_BUNLIKELY(node->patten_end))
@@ -102,7 +112,11 @@ void Filter::find(const AtomList atoms, ContentLen len, CallbackType& callback) 
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
             begin_from_root = true;
 #endif
+#if _JEBE_SCAN_FROM_RIGHT
             i = offset--;
+#else
+            i = offset++;
+#endif
         }
     }
 //    res[wcur - 1] = 0;
@@ -137,7 +151,11 @@ void Ftree::attach_word(const char* word)
 {
     const AtomList patten = (AtomList)(word);
     Node::NodePtr node = root;
+#if _JEBE_SCAN_FROM_RIGHT
     for(Cursor i = strlen(word) - 1; -1 < i; --i)
+#else
+    for (WordLen i = 0, end = strlen(word); i < end; ++i)
+#endif
     {
         node = node->attach_child(patten[i]);
     }

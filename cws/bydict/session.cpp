@@ -20,9 +20,9 @@ void Session::handle_read(const BS::error_code& error,
     {
         std::string::size_type header_len = request.find(HTTP_SEP, 0);
         std::size_t body_len = 0;
-        if (header_len == std::string::npos)
+        if (CS_BUNLIKELY(header_len == std::string::npos))
         {
-            if (max_write_times < ++write_times)
+            if (CS_BUNLIKELY(max_write_times < ++write_times))
             {
                 finish();
             }
@@ -34,7 +34,7 @@ void Session::handle_read(const BS::error_code& error,
         else
         {
             std::string::size_type clpos = request.find(HTTP_CONTENT_LENGTH, 0);
-            if (clpos == std::string::npos)
+            if (CS_BUNLIKELY(clpos == std::string::npos))
             {
                 start_receive(bytes_transferred);
             }
@@ -42,7 +42,7 @@ void Session::handle_read(const BS::error_code& error,
             {
                 clpos += sizeof(HTTP_CONTENT_LENGTH) - 1;
                 std::string::size_type clend = request.find(HTTP_LINE_SEP, clpos);
-                if (clend == std::string::npos)
+                if (CS_BUNLIKELY(clend == std::string::npos))
                 {
                     finish();
                 }
@@ -51,13 +51,13 @@ void Session::handle_read(const BS::error_code& error,
                     body_len = boost::lexical_cast<std::size_t>(request.substr(clpos, clend - clpos));
                     std::size_t required = header_len + body_len + sizeof(HTTP_SEP) - 1;
                     transferred += bytes_transferred;
-                    if (required < transferred)
+                    if (CS_BUNLIKELY(required < transferred))
                     {
                         finish();
                     }
-                    else if (transferred < required)
+                    else if (CS_BUNLIKELY(transferred < required))
                     {
-                        if (max_write_times < ++write_times)
+                        if (CS_BUNLIKELY(max_write_times < ++write_times))
                         {
                             finish();
                         }
