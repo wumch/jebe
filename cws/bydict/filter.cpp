@@ -7,21 +7,66 @@
 namespace jebe {
 namespace cws {
 
+class JoinHandler
+{
+	AtomList res;
+	ContentLen cur;
+public:
+	JoinHandler(AtomList res_): res(res_), cur(0) {}
+
+	void operator()(const Node& node)
+	{
+		memcpy(res + cur, node.patten.data(), node.patten.size());
+		cur += node.patten.size();
+		res[cur++] = ' ';
+	}
+};
+
+std::string Filter::filt(const std::string& str) const
+{
+    AtomList res = new Atom[str.size() << 1];
+    memset(res, 0, str.size() << 1);
+    JoinHandler jh(res);
+    find<JoinHandler>(reinterpret_cast<AtomList>(const_cast<char*>((str.c_str()))), str.size(), jh);
+//    CS_SAY(res);
+//	std::cout << str << std::endl
+//		<< res << std::endl;
+    return std::string(reinterpret_cast<char*>(res));
+}
+
+//void Filter::find(const std::string& str, AtomList res,
+//    std::size_t max_match) const
+//{
+//    return find((Atom*)(str.data()), str.size(), res, max_match);
+//}
+//
+//void Filter::find(const char* chs, ContentLen len,
+//    AtomList res, ContentLen max_match) const
+//{
+//    return find((Atom*)(chs), len, res, max_match);
+//}
+//
+//void inline Filter::replace(std::string& str, PosList& poslist) const
+//{
+//    for (PosList::iterator pos = poslist.begin(); pos != poslist.end(); ++pos)
+//    {
+//        str.replace(pos->first, pos->second, pos->second, replacement);
+//    }
+//}
+
 // 优化算法开关。对 匹配几率大 的情况做小幅度优化。
 #define NO_REWIND_OPTI 0
 
 // Filter
-void Filter::find(const AtomList atoms, const ContentLen len,
-    AtomList res, const ContentLen max_match) const
+template<typename CallbackType>
+void Filter::find(const AtomList atoms, ContentLen len, CallbackType& callback) const
 {
-	CS_SAY(max_match);
-
     Node::NodePtr node = tree.root;
     ContentLen match_count = 0;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
     bool begin_from_root = true;
 #endif
-    Cursor wcur = 0;
+//    Cursor wcur = 0;
     for (Cursor i = len - 1, offset = i - 1; -1 < i; --i)
     {
         if (CS_LIKELY(node = node->children[atoms[i]]))
@@ -37,14 +82,11 @@ void Filter::find(const AtomList atoms, const ContentLen len,
             {
                 offset = i;
 //                res.push_back(Pos(i, node->patten.size()));
-                memcpy(res + wcur, node->patten.data(), node->patten.size());
-                wcur += node->patten.size();
-                res[wcur++] = ' ';
+                callback(*node);
+//                memcpy(res + wcur, node->patten.data(), node->patten.size());
+//                wcur += node->patten.size();
+//                res[wcur++] = ' ';
 
-                if (CS_BUNLIKELY(max_match != 0 && max_match < ++match_count))
-                {
-                    break;
-                }
                 if (CS_BLIKELY(node->is_leaf))
                 {
                     node = tree.root;
@@ -63,7 +105,7 @@ void Filter::find(const AtomList atoms, const ContentLen len,
             i = offset--;
         }
     }
-    res[wcur - 1] = 0;
+//    res[wcur - 1] = 0;
 }
 
 void Ftree::build(const std::string& fname)

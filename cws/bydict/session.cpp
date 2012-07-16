@@ -1,5 +1,6 @@
 
 #include "session.hpp"
+#include "filter.hpp"
 
 namespace jebe {
 namespace cws {
@@ -15,7 +16,7 @@ std::size_t Session::max_write_times = 0;
 void Session::handle_read(const BS::error_code& error,
     const std::size_t bytes_transferred)
 {
-    if (!error)
+    if (CS_BLIKELY(!error))
     {
         std::string::size_type header_len = request.find(HTTP_SEP, 0);
         std::size_t body_len = 0;
@@ -70,7 +71,7 @@ void Session::handle_read(const BS::error_code& error,
                         std::string::size_type body_pos = header_len + sizeof(HTTP_SEP) - 1;
                         std::string content(request, body_pos, body_len);
 
-                        std::string res = filter->filt(content, max_match);
+                        std::string res = filter->filt(content);
                         response.append(HEADER(200));
                         response.append(boost::lexical_cast<std::string>(res.size()));
                         response.append(HTTP_SEP);

@@ -39,7 +39,7 @@ void Master::run()
         threads.push_back(thread);
     }
 
-    filter = new Filter(Config::getInstance()->patten_file.string(), Config::getInstance()->replacement);
+    filter = new Filter(Config::getInstance()->patten_file.string());
     
     listen();
     for (ThreadList::iterator iter = threads.begin(); iter != threads.end(); ++iter)

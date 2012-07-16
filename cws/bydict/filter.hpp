@@ -34,6 +34,7 @@ class Node
 public:
     friend class Filter;
     friend class Ftree;
+    friend class JoinHandler;
 
     typedef Node* NodePtr;
     typedef staging::Array<NodePtr, atom_ubound> Children;
@@ -103,11 +104,11 @@ public:
     typedef std::pair<ContentLen, WordLen> Pos;
     typedef std::vector<Pos> PosList;
 
-    explicit Filter(const std::string& fname, const char _replacement = '*')
-        : replacement(_replacement), tree(Ftree::make_ftree(fname))
+    explicit Filter(const std::string& fname)
+        : tree(Ftree::make_ftree(fname))
     {}
 
-    std::string inline filt(const std::string& str, const ContentLen max_match = 100) const;
+    std::string filt(const std::string& str) const;
 
     void inline find(const std::string& str, AtomList res,
         const std::size_t max_match) const;
@@ -115,8 +116,8 @@ public:
     void inline find(const char* chs, ContentLen len,
         AtomList res, ContentLen max_match) const;
 
-    void find(const AtomList atoms, ContentLen len,
-        AtomList res, ContentLen max_match) const;
+    template<typename CallbackType>
+    void find(const AtomList atoms, ContentLen len, CallbackType& callback) const;
 
     void inline replace(std::string& str, PosList& poslist) const;
 
@@ -125,41 +126,8 @@ public:
 private:
     void CS_FORCE_INLINE record(PosList& poslist, const Pos& pos) const;
 
-    const char replacement;
-
     const Ftree& tree;
 };
-
-std::string Filter::filt(const std::string& str, ContentLen max_match) const
-{
-    AtomList res = new Atom[str.size() << 1];
-    memset(res, 0, str.size() << 1);
-    find(str, res, max_match);
-//    CS_SAY(res);
-//	std::cout << str << std::endl
-//		<< res << std::endl;
-    return std::string(reinterpret_cast<char*>(res));
-}
-
-void Filter::find(const std::string& str, AtomList res,
-    std::size_t max_match) const
-{
-    return find((Atom*)(str.data()), str.size(), res, max_match);
-}
-
-void Filter::find(const char* chs, ContentLen len,
-    AtomList res, ContentLen max_match) const
-{
-    return find((Atom*)(chs), len, res, max_match);
-}
-
-void inline Filter::replace(std::string& str, PosList& poslist) const
-{
-    for (PosList::iterator pos = poslist.begin(); pos != poslist.end(); ++pos)
-    {
-        str.replace(pos->first, pos->second, pos->second, replacement);
-    }
-}
 
 }
 }

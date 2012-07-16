@@ -48,7 +48,7 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/shareinfo.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/config.o
+OBJS = $(OBJECT_PATH)/shareinfo.o $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
 
 all: $(OBJS)
 	@echo Linking...
