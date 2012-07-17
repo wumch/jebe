@@ -1,36 +1,20 @@
 
 #include "staging.hpp"
 #include "filter.hpp"
+#include "holders.hpp"
 #include <fstream>
 #include <iomanip>
 
 namespace jebe {
 namespace cws {
 
-class JoinHandler
-{
-	AtomList res;
-	ContentLen cur;
-public:
-	JoinHandler(AtomList res_): res(res_), cur(0) {}
-
-	void operator()(const Node& node)
-	{
-		memcpy(res + cur, node.patten.data(), node.patten.size());
-		cur += node.patten.size();
-		res[cur++] = ' ';
-	}
-};
-
 std::string Filter::filt(const std::string& str) const
 {
-    AtomList res = new Atom[str.size() << 1];
-    memset(res, 0, str.size() << 1);
-    JoinHandler jh(res);
-    find<JoinHandler>(reinterpret_cast<AtomList>(const_cast<char*>((str.c_str()))), str.size(), jh);
-//    CS_SAY(res);
-//	std::cout << str << std::endl
-//		<< res << std::endl;
+    AtomList res = new Atom[str.size() << 2];
+    memset(res, 0, str.size() << 2);
+    JSONHolder jh(res);
+    find<JSONHolder>(reinterpret_cast<AtomList>(const_cast<char*>((str.c_str()))), str.size(), jh);
+    jh.getRes();
     return std::string(reinterpret_cast<char*>(res));
 }
 

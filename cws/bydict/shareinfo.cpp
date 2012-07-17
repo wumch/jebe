@@ -16,7 +16,7 @@ BA::io_service mio;
 
 const char session_ready[sizeof(SESSION_READY)] = SESSION_READY;
 
-const std::string httpsep(HTTP_SEP);
+const std::string httpsep(_JEBE_HTTP_SEP);
 
 }
 }

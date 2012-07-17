@@ -12,13 +12,13 @@ namespace cws {
 // the global container
 namespace G {
 
-#define HTTP_LINE_SEP "\r\n"
-#define HTTP_SEP HTTP_LINE_SEP HTTP_LINE_SEP
-#define HTTP_CONTENT_LENGTH "Content-Length: "
+#define _JEBE_HTTP_LINE_SEP "\r\n"
+#define _JEBE_HTTP_SEP _JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
+#define _JEBE_HTTP_CONTENT_LENGTH "Content-Length: "
 
 #define HEADER_NAME(status) header_##status
 #define HEADER(status) G::HEADER_NAME(status)
-#define HEADER_STRING(status) "HTTP/1.0 "#status" OK"HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"HTTP_LINE_SEP HTTP_CONTENT_LENGTH
+#define HEADER_STRING(status) "HTTP/1.0 "#status" OK"_JEBE_HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH
 #define MAKE_HEADER(status) std::string HEADER_NAME(status)(HEADER_STRING(status))
 #define DECLARE_HEADER(status) extern std::string HEADER_NAME(status)
 
