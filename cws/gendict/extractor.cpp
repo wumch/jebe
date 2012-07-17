@@ -344,7 +344,7 @@ void Extractor::display()
 	#undef _JEBE_CALL_SCAN
 }
 
-#define _JEBE_GB2312_CHAR_NUM 6763
+#define _JEBE_GB2312_CHAR_NUM (6763+63)
 #define _JEBE_EXTRACTOR_INIT(Z, n, N)		BOOST_PP_CAT(map, n)BOOST_PP_LPAREN()1 << MapHashBits<n>::bits BOOST_PP_RPAREN()BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 	: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_EXTRACTOR_INIT, BOOST_PP_EMPTY())

@@ -1,11 +1,13 @@
 
 #pragma once
 
-extern "C" {
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <pthread.h>
-}
+#ifdef __linux
+#	include <sys/prctl.h>
+#	include <unistd.h>
+#	include <sys/syscall.h>
+#	include <pthread.h>
+#endif
+
 #include <boost/asio/io_service.hpp>
 #include <boost/thread.hpp>
 #include "predef.hpp"
@@ -37,6 +39,9 @@ public:
 
     void run()
     {
+#ifdef __linux
+    	prctl(PR_SET_NAME, (G::config->program_name + ":worker").c_str());
+#endif
         io.run();
     }
 

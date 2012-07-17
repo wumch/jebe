@@ -25,6 +25,7 @@ public:
     boost::filesystem::path patten_file;
     boost::filesystem::path pidfile;
 
+    std::string program_name;
     std::size_t worker_count;
     bool reuse_address;
     std::size_t max_connections;

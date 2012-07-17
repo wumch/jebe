@@ -17,6 +17,9 @@ void Config::init(int argc, const char* const argv[])
 			("config", bo::value<std::string>()->default_value("etc/tokenizer.conf"), "config file, defaults to etc/tokenizer.conf.")
 	;
 
+	boost::filesystem::path program_path = argv[0];
+	program_name = program_path.filename().string();
+
 	boost::program_options::variables_map cmdOptions;
 	try
 	{

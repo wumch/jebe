@@ -14,11 +14,12 @@
 #include "hash.hpp"
 #include "array.hpp"
 #include "misc.hpp"
-#ifndef WIN32
+#ifdef __linux
 #	include <limits.h>
 #endif
 
 #define _JEBE_WORD_MAX_LEN		5
+#define _JEBE_ASCII_WORD_MAX_LEN		20
 #define _JEBE_WORD_MIN_ATIMES	5
 #define _JEBE_PROCESS_STEP		(2 << 20)
 
@@ -176,7 +177,7 @@ public:
 };
 
 #define _JEBE_DEF_PHRASE(Z, n, N)		typedef Phrase<n> BOOST_PP_CAT(Ph, n);
-BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DEF_PHRASE, BOOST_PP_EMPTY());
+BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_ASCII_WORD_MAX_LEN, 2), _JEBE_DEF_PHRASE, BOOST_PP_EMPTY());
 #undef _JEBE_DEF_PHRASE
 
 class Extractor
@@ -255,11 +256,11 @@ protected:
 	#undef _JEBE_DECL_MAP
 
 	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(pad, n);
-	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
 	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(prx, n);
-	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
 	boost::array<uint64_t, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)> totalAtimes;

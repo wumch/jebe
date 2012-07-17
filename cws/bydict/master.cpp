@@ -1,6 +1,9 @@
 
 #include <vector>
 #include <boost/thread.hpp>
+#ifdef __linux
+#	include <sys/prctl.h>
+#endif
 #include "master.hpp"
 #include "config.hpp"
 
@@ -31,6 +34,9 @@ void Master::notify_worker(const SessId sid)
 
 void Master::run()
 {
+#ifdef __linux
+	prctl(PR_SET_NAME, (G::config->program_name + ":master").c_str());
+#endif
     ThreadList threads;
     for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
     {
