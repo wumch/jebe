@@ -34,7 +34,7 @@ void Master::run()
     ThreadList threads;
     for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
     {
-        iter->reset(new Worker());
+        iter->reset(new Worker);
         boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&Worker::run, *iter)));
         threads.push_back(thread);
     }
@@ -74,7 +74,7 @@ void Master::listen()
 
     Session::header_max_len = config->header_max_size;
     Session::body_max_len = config->body_max_size;
-    Session::max_len = Session::header_max_len + Session::body_max_len + sizeof(HTTP_SEP);
+    Session::max_len = Session::header_max_len + Session::body_max_len + sizeof(_JEBE_HTTP_SEP);
     Session::timeout = (0 < config->timeout) ? config->timeout : 1;
     Session::max_write_times = (0 < config->max_write_times) ? config->max_write_times : 10;
     

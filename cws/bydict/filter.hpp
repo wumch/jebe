@@ -7,22 +7,7 @@
 #include <string>
 #include <boost/cstdint.hpp>
 #include "predef.hpp"
-#include "../../staging/array.hpp"
-
-#if defined(USE_WCHAR) && USE_WCHAR
-#include <wchar.h>
-typedef wchar_t Atom;
-typedef std::wstring Word;
-#else
-typedef unsigned char Atom;
-typedef std::basic_string<Atom> Word;
-#endif
-
-typedef Atom* AtomList;
-typedef Word Content;
-typedef uint32_t ContentLen;
-typedef uint8_t WordLen;
-typedef int32_t Cursor;
+#include "array.hpp"
 
 namespace jebe {
 namespace cws {
@@ -34,7 +19,6 @@ class Node
 public:
     friend class Filter;
     friend class Ftree;
-    friend class JoinHandler;
 
     typedef Node* NodePtr;
     typedef staging::Array<NodePtr, atom_ubound> Children;
@@ -55,20 +39,26 @@ public:
 
     static NodePtr CS_FORCE_INLINE make_node()
     {
-        return new Node();
+        return new Node;
+    }
+
+    const std::string& str() const
+    {
+    	return patten;
     }
 
 private:
-    bool is_leaf;
-
-    bool patten_end;
+    static const std::size_t word_max_len = atom_ubound;
+    NodePtr children[word_max_len];
 
     std::string patten;
 
-    static const std::size_t word_max_len = atom_ubound;
+    bool is_leaf;
 
-    NodePtr children[word_max_len];
+    bool patten_end;
 };
+
+//bool CS_FORCE_INLINE operator==(const Node* const n1, const Node* const n2);
 
 class Ftree
 {
