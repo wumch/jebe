@@ -24,73 +24,85 @@ namespace jebe {
 namespace cws {
 
 BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
+//#include BOOST_PP_LOCAL_ITERATE()
 
-template<uint8_t plen> CS_FORCE_INLINE uint32_t hfhash(const Phrase<plen>& p)
+template<uint8_t n> CS_FORCE_INLINE uint32_t hfhash(const Phrase<n>& p);
+//{
+//	unsigned int mask = 0;
+//	std::cout << "yundao" << std::endl;
+//	char* res = reinterpret_cast<char*>(&mask);
+//	for (uint i = 0; i < (n); ++i)
+//	{
+//		res[i & 3] ^= p.str[i];
+//	}
+//	return mask;
+//}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<1>(const Phrase<1>& p)
 {
-	uint32_t mask = 0;
-	char* res = reinterpret_cast<char*>(&mask);
-	const char* str_ = reinterpret_cast<const char*>(p.str);
-	for (uint8_t i = 0, end = plen * sizeof(CharType); i < end; ++i)
-	{
-		res[i & 3] ^= str_[i];
-	}
-	return mask;
+	return static_cast<uint16_t>(p.str[0]);
 }
 
-#include BOOST_PP_LOCAL_ITERATE()
-
-template<uint8_t len_1, uint8_t len_2>
-CS_FORCE_INLINE bool match(const CharType prefix[len_1], const CharType rstr[len_2])
+template<> CS_FORCE_INLINE
+uint32_t hfhash<2>(const Phrase<2>& p)
 {
-	BOOST_STATIC_ASSERT(len_1 <= len_2);
-	switch (len_1)
-	{
-	case 1:
-		return prefix[0] == rstr[0];
-	case 2:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1];
-	case 3:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2];
-	case 4:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3];
-	case 5:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4];
-	case 6:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4]
-			 && prefix[5] == rstr[5];
-	case 7:
-		return prefix[0] == rstr[0]
-			 && prefix[1] == rstr[1]
-			 && prefix[2] == rstr[2]
-			 && prefix[3] == rstr[3]
-			 && prefix[4] == rstr[4]
-			 && prefix[5] == rstr[5]
-			 && prefix[6] == rstr[6];
-	default:
-		for (uint8_t i = 0; i < len_1; ++i)
-		{
-			if (prefix[i] != rstr[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8);
 }
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<3>(const Phrase<3>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<4>(const Phrase<4>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<5>(const Phrase<5>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 16);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<6>(const Phrase<6>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<7>(const Phrase<7>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 16);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<8>(const Phrase<8>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 8)  ^ (static_cast<uint16_t>(p.str[7]) << 16);
+}
+
+template<> CS_FORCE_INLINE
+uint32_t hfhash<9>(const Phrase<9>& p)
+{
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ static_cast<uint16_t>(p.str[6]) ^ (static_cast<uint16_t>(p.str[7]) << 8)  ^ (static_cast<uint16_t>(p.str[8]) << 16);
+}
+
+//template<uint8_t n> CS_FORCE_INLINE uint32_t hfhash(const Phrase<n>& p)
+//{
+//	unsigned int mask = 0;
+//	char* res = reinterpret_cast<char*>(&mask);
+//	const char* data = reinterpret_cast<const char*>(p.str);
+//	for (uint i = 0; i < (n); ++i)
+//	{
+//		res[i & 3] ^= p.str[i];
+//	}
+//	return mask;
+//}
 
 }
 }

@@ -13,6 +13,7 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/mpl/map.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 
@@ -25,25 +26,6 @@ std::wstringstream log;
 #else
 #define CS_LOG(...)
 #endif
-
-//template<>
-//void Analyzer::extractWords_<2>(typename Phrase<2>::MapType& map,
-//		const typename Phrase<2 - 1>::MapType& prefixmap,
-//		const typename Phrase<2 - 1>::PadMap& padmap,
-//		const typename Phrase<2 - 1>::PadMap& prxmap
-//	)
-//{
-//	typedef Phrase<1> ShorterPhraseType;
-//	WordExamineRes res = no;
-//	for (typename Phrase<2>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
-//	{
-//		res = judgePad<2>(it->first, map, prefixmap, padmap);
-//		if (CS_BUNLIKELY(res & yes))
-//		{
-//			words.insert(it->first);
-//		}
-//	}
-//}
 
 template<uint8_t plen>
 Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
@@ -205,14 +187,8 @@ template<uint8_t plen> CS_FORCE_INLINE
 bool Analyzer::isTailTypo(const Phrase<plen>& phrase, atimes_t atimes,
 		const typename Phrase<plen - 1>::MapType& shorterMap) const
 {
+	if (plen == 2) return false;
 	return atimes >= MinMiss<plen>::rate * shorterMap.find((Phrase<plen - 1>(phrase.str + 1)))->second;
-}
-
-template<> CS_FORCE_INLINE
-bool Analyzer::isTailTypo<2>(const Phrase<2>& phrase, atimes_t atimes,
-		const typename Phrase<1>::MapType& shorterMap) const
-{
-	return false;
 }
 
 void Analyzer::clean(std::size_t min_atimes)
@@ -251,6 +227,16 @@ void Extractor::extract(const boost::filesystem::path& outfile)
 	const Analyzer::Words& words = azer->getWords();
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
+		if (it->size() == 2)
+		{
+			if (CS_BUNLIKELY(isAscii((*it)[0])))
+			{
+				if (CS_BUNLIKELY(isAscii((*it)[1])))
+				{
+					continue;
+				}
+			}
+		}
 		ofile << it->c_str() << '\n';
 	}
 	ofile.close();
@@ -263,7 +249,7 @@ void Extractor::extract(const boost::filesystem::path& contentfile,
 	extract(outfile);
 }
 
-void Extractor::scan(const CharType* const str, String::size_type len)
+void Extractor::scan(CharType* const str, String::size_type len)
 {
 	CS_SAY(str);
 	String::size_type i = 0, chkPoint = 0;
@@ -298,7 +284,7 @@ void Extractor::scan(const CharType* const str, String::size_type len)
 	}
 }
 
-void Extractor::addSentence(const CharType* const str, String::size_type len)
+void Extractor::addSentence(CharType* const str, String::size_type len)
 {
 	#define _JEBE_CALL_SCAN(Z, n, N)		scanSentence_<n>(str, len, BOOST_PP_CAT(map, n));
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_SCAN, BOOST_PP_EMPTY())
@@ -306,7 +292,7 @@ void Extractor::addSentence(const CharType* const str, String::size_type len)
 }
 
 template<uint8_t plen>
-void Extractor::scanSentence_(const CharType* const str, String::size_type len,
+void Extractor::scanSentence_(CharType* const str, String::size_type len,
 		typename Phrase<plen>::MapType& map)
 {
 	if (CS_BUNLIKELY(len < plen))
@@ -320,6 +306,14 @@ void Extractor::scanSentence_(const CharType* const str, String::size_type len,
 
 		const PhraseType p(str + i);
 		typename PhraseType::MapType::iterator it = map.find(p);
+
+		if (plen == 1)
+		{
+			if (CS_BUNLIKELY(L'A' <= str[i] && str[i] <= L'Z'))
+			{
+				str[i] += 32;
+			}
+		}
 
 		if (CS_BLIKELY(it != map.end()))
 		{
@@ -338,7 +332,7 @@ void Extractor::display()
 	for (BOOST_PP_CAT(Ph, n)::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
 		it != BOOST_PP_CAT(map, n).end(); ++it)												\
 	{																						\
-		CS_SAY("phrase1: [" << it->first.c_str() << "]: " << it->second);					\
+		CS_SAY("phrase" << n << ": [" << it->first.c_str() << "]: " << it->second);					\
 	}
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DO_DISPLAY, BOOST_PP_EMPTY())
 	#undef _JEBE_CALL_SCAN

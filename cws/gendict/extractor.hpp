@@ -11,14 +11,16 @@
 #include <boost/filesystem.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/array.hpp>
+#include <boost/pool/pool_alloc.hpp>
+#include <boost/thread/mutex.hpp>
+#include "utils.hpp"
 #include "hash.hpp"
-#include "array.hpp"
 #include "misc.hpp"
 #ifdef __linux
 #	include <limits.h>
 #endif
 
-#define _JEBE_WORD_MAX_LEN		5
+#define _JEBE_WORD_MAX_LEN		8
 #define _JEBE_ASCII_WORD_MAX_LEN		20
 #define _JEBE_WORD_MIN_ATIMES	5
 #define _JEBE_PROCESS_STEP		(2 << 20)
@@ -33,28 +35,6 @@ void memcpy4(void* const s1, const void* const s2);
 namespace jebe {
 namespace cws {
 
-typedef uint32_t atimes_t;
-typedef wchar_t	CharType;
-BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
-typedef std::wstring String;
-
-template<uint8_t plen> class MapHashBits { public: enum { bits = 13 }; };
-template<> class MapHashBits<1> { public: enum { bits = 12 }; };
-template<> class MapHashBits<2> { public: enum { bits = 24 }; };
-template<> class MapHashBits<3> { public: enum { bits = 24 }; };
-template<> class MapHashBits<4> { public: enum { bits = 22 }; };
-template<> class MapHashBits<5> { public: enum { bits = 20 }; };
-template<> class MapHashBits<6> { public: enum { bits = 18 }; };
-template<> class MapHashBits<7> { public: enum { bits = 15 }; };
-
-template<uint8_t plen> class PadHashBits { public: enum { bits = 12 }; };
-template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
-template<> class PadHashBits<2> { public: enum { bits = 22 }; };
-template<> class PadHashBits<3> { public: enum { bits = 20 }; };
-template<> class PadHashBits<4> { public: enum { bits = 18 }; };
-template<> class PadHashBits<5> { public: enum { bits = 16 }; };
-template<> class PadHashBits<6> { public: enum { bits = 14 }; };
-
 template<uint8_t plen, uint8_t bits>
 class PhraseHash;
 
@@ -65,17 +45,29 @@ class Phrase
 public:
 	enum { len = length };
 	typedef Phrase<length> P;
+	typedef std::equal_to<P> EqualType;
 
-	typedef boost::unordered_map<P, atimes_t, PhraseHash<length, MapHashBits<length>::bits> > MapType;
+	typedef PhraseHash<length, MapHashBits<length>::bits> MapHashType;
+	typedef boost::fast_pool_allocator<P, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << (MapHashBits<length>::bits >> 2)> MapAllocType;
+
+	typedef PhraseHash<length, PadHashBits<length>::bits> PadHashType;
+	typedef boost::fast_pool_allocator<P, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << (PadHashBits<length>::bits >> 2)> PadAllocType;
+
+	typedef boost::unordered_map<P, atimes_t, MapHashType, EqualType, MapAllocType> MapType;
 
 	typedef Phrase<1> Suffix;
 	typedef std::pair<Suffix, atimes_t> Pad;
+
+	typedef boost::fast_pool_allocator<Pad, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 6763> ListElemAllocType;
 
 	template<typename T>
 	class SumedList
 	{
 	public:
-		typedef std::list<T> List;
+		typedef std::list<T, ListElemAllocType> List;
 		typedef typename List::iterator iterator;
 		typedef typename List::const_iterator const_iterator;
 
@@ -102,7 +94,7 @@ public:
 	};
 
 	typedef SumedList<Pad> PadList;
-	typedef boost::unordered_map<P, PadList, PhraseHash<length, PadHashBits<length>::bits> > PadMap;
+	typedef boost::unordered_map<P, PadList, PadHashType, EqualType, PadAllocType> PadMap;
 
 	typedef CharType StrType[length];
 
@@ -117,12 +109,12 @@ public:
 
 	bool eq(const P& rph) const
 	{
-		return match(str, rph.str);
+		return PhraseMatch<length, length>::match(str, rph.str);
 	}
 
 	bool hasPrefix(const Phrase<length - 1>& p) const
 	{
-		return match(p.str, str);
+		return PhraseMatch<length - 1, length>::match(p.str, str);
 	}
 
 	operator String() const
@@ -148,13 +140,13 @@ public:
 #endif
 };
 
-template<uint8_t len_1, uint8_t len_2> CS_FORCE_INLINE
-bool match(const CharType prefix[len_1], const CharType rstr[len_2]);
+//template<uint8_t len_1, uint8_t len_2> CS_FORCE_INLINE
+//bool match(const CharType prefix[len_1], const CharType rstr[len_2]);
 
 template<uint8_t len> CS_FORCE_INLINE
 bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 {
-	return match<len, len>(lph.str, rph.str);
+	return PhraseMatch<len, len>::match(lph.str, rph.str);
 }
 
 template<uint8_t plen> CS_FORCE_INLINE
@@ -172,7 +164,7 @@ public:
 
 	uint32_t operator()(const Ph& ph) const
 	{
-		return hasher(hfhash(ph));
+		return hasher(hfhash<plen>(ph));
 	}
 };
 
@@ -201,17 +193,26 @@ public:
 	Extractor(const boost::filesystem::path& gbfile);
 
 protected:
+	bool isAscii(const CharType c) const
+	{
+		if (CS_BLIKELY(c > 127))
+		{
+			return false;
+		}
+		return (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
+	}
+
 	void fetchContent(const boost::filesystem::path& contentfile,
 			const boost::filesystem::path& outfile, uint32_t max_chars);
 
 	void extract(const boost::filesystem::path& outfile);
 
-	void scan(const CharType* const str, String::size_type len);
+	void scan(CharType* const str, String::size_type len);
 
-	void addSentence(const CharType* const str, String::size_type len);
+	void addSentence(CharType* const str, String::size_type len);
 
 	template<uint8_t plen>
-	void scanSentence_(const CharType* const str, String::size_type len,
+	void scanSentence_(CharType* const str, String::size_type len,
 			typename Phrase<plen>::MapType& map);
 
 	bool isGb2312(CharType c) const
@@ -223,7 +224,7 @@ protected:
 template<uint8_t prefix_len>
 bool padEq(const typename Phrase<prefix_len>::Pad& p1, const typename Phrase<prefix_len>::Pad& p2)
 {
-	return match<prefix_len, prefix_len>(p1.first.str, p2.first.str);	// Phrase
+	return PhraseMatch<prefix_len, prefix_len>::match(p1.first.str, p2.first.str);	// Phrase
 }
 
 template<uint8_t plen>
@@ -248,7 +249,7 @@ public:
 	typedef boost::unordered_set<String> Words;
 
 protected:
-	typedef staging::Array<atimes_t, Extractor::gb_char_max> SuffixMap;
+	typedef boost::array<atimes_t, Extractor::gb_char_max> SuffixMap;
 	SuffixMap smap;
 
 	#define _JEBE_DECL_MAP(Z, n, N)		BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(map, n);
@@ -263,7 +264,7 @@ protected:
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
-	staging::Array<uint64_t, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)> totalAtimes;
+	boost::array<uint64_t, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)> totalAtimes;
 
 	Words words;
 

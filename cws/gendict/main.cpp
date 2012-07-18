@@ -1,6 +1,7 @@
 
 #include "staging.hpp"
 #include <iostream>
+#include <auto_ptr.h>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include "mbswcs.hpp"
@@ -8,6 +9,8 @@
 
 int main(int argc, char* argv[])
 {
+	using namespace jebe::cws;
+
 	boost::filesystem::path contentfile, gbfile, outfile;
 	uint64_t maxchars = 0;
 
@@ -29,8 +32,7 @@ int main(int argc, char* argv[])
 		maxchars = boost::lexical_cast<uint64_t>(argv[4]);
 	}
 
-//	staging::mbswcs::setlocale("zh_CN.utf8");
 	staging::mbswcs::setlocale();
-	jebe::cws::Extractor extractor(gbfile);
-	extractor.extract(contentfile, outfile, maxchars);
+	std::auto_ptr<Extractor> extractor(new Extractor(gbfile));
+	extractor->extract(contentfile, outfile, maxchars);
 }
