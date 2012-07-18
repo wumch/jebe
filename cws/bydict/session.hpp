@@ -12,7 +12,7 @@
 #include <boost/array.hpp>
 
 #include "predef.hpp"
-#include "../../staging/singleton.hpp"
+#include "singleton.hpp"
 #include "shareinfo.hpp"
 #include "filter.hpp"
 

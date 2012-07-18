@@ -4,6 +4,7 @@
 #include "staging.hpp"
 #include <boost/unordered_map.hpp>
 #include "predef.hpp"
+#include "node.hpp"
 
 namespace jebe {
 namespace cws {
@@ -25,9 +26,12 @@ public:
 		res[cur++] = ' ';
 	}
 
-	const Atom* getRes() const
+	void genRes() const
 	{
-		return res;
+		if (cur > 0)
+		{
+			res[cur - 1] = 0;
+		}
 	}
 };
 //
@@ -101,7 +105,7 @@ public:
 	}
 
 //	const Atom*
-	void getRes() const
+	void genRes() const
 	{
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
@@ -121,19 +125,25 @@ public:
 		}
 		*reinterpret_cast<int16_t*>(res + cur) = tail;
 		cur += 1;
-//		return res;
 	}
 
 	void appendAtimes(atimes_t atimes) const
 	{
-		int bytes = 11;
-		while (atimes > 0)
+		if (CS_BLIKELY(atimes < 10))
 		{
-			convbuf[--bytes] = (atimes % 10) + '0';
-			atimes /= 10;
+			res[cur++] = atimes + '0';
 		}
-		memcpy(res + cur, convbuf + bytes, 11 - bytes);
-		cur += 11 - bytes;
+		else
+		{
+			int bytes = 11;
+			while (atimes > 0)
+			{
+				convbuf[--bytes] = (atimes % 10) + '0';
+				atimes /= 10;
+			}
+			memcpy(res + cur, convbuf + bytes, 11 - bytes);
+			cur += 11 - bytes;
+		}
 	}
 
 	void append(const std::string& str)

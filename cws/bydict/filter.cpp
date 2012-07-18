@@ -10,11 +10,11 @@ namespace cws {
 
 std::string Filter::filt(const std::string& str) const
 {
-    AtomList res = new Atom[str.size() << 2];
-    memset(res, 0, str.size() << 2);
-    JSONHolder jh(res);
-    find<JSONHolder>(reinterpret_cast<AtomList>(const_cast<char*>((str.c_str()))), str.size(), jh);
-    jh.getRes();
+//    memset(res, 0, str.size() << 2);
+//    JSONHolder jh(res);
+//    JoinHolder js(res);
+    find<JoinHolder>(reinterpret_cast<const Atom* const>(str.c_str()), str.size(), joinHolder);
+    joinHolder.genRes();
     return std::string(reinterpret_cast<char*>(res));
 }
 
@@ -44,7 +44,7 @@ std::string Filter::filt(const std::string& str) const
 
 // Filter
 template<typename CallbackType>
-void Filter::find(const AtomList atoms, ContentLen len, CallbackType& callback) const
+void Filter::find(const Atom* const atoms, ContentLen len, CallbackType& callback) const
 {
     Node::NodePtr node = tree.root;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
@@ -144,17 +144,6 @@ void Ftree::attach_word(const char* word)
         node = node->attach_child(patten[i]);
     }
     node->endswith(word);
-}
-
-// Node
-inline Node::NodePtr Node::attach_child(const std::size_t _atom)
-{
-    if (!children[_atom])
-    {
-        children[_atom] = make_node();
-    }
-    is_leaf = false;
-    return children[_atom];
 }
 
 }

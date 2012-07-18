@@ -12,12 +12,18 @@ function getContent()
 function request($post)
 {
     global $url;
+    static $echoed_flag = false;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
     $response = curl_exec($ch);
+    if (!$echoed_flag)
+    {
+        $echoed_flag = true;
+        echo 'response: ', $response, PHP_EOL;
+    }
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     return $httpCode;

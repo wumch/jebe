@@ -74,18 +74,6 @@ void Config::initDesc()
 
 void Config::load(const std::string& config_file)
 {
-//    LuaPlus::LuaStateOwner state;
-//    state->DoFile(config_file);
-//
-//    host.assign(state->GetGlobal("host").GetString());
-//    port = state->GetGlobal("port").GetInteger();
-//    pidfile.assign(state->GetGlobal("pidfile").GetString());
-//    patten_file.assign(state->GetGlobal("patten_file").GetString());
-//    reuse_address = state->GetGlobal("reuse_address").GetBoolean();
-//    receive_buffer_size = state->GetGlobal("receive_buffer_size").GetInteger();
-//    send_buffer_size = state->GetGlobal("send_buffer_size").GetInteger();
-//    timeout = state->GetGlobal("timeout").GetInteger();
-//    tcp_nodelay = state->GetGlobal("tcp_nodelay").GetBoolean();
 	try
 	{
 		bo::store(bo::parse_config_file<CharType>(config_file.c_str(), desc), options);
@@ -100,16 +88,16 @@ void Config::load(const std::string& config_file)
 	port = options["port"].as<typeof(port)>();
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
 	patten_file = options["patten-file"].as<typeof(patten_file)>();
-	reuse_address = options["reuse-address"].as<typeof(reuse_address)>();;
-	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>();;
-	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>();;
+	reuse_address = options["reuse-address"].as<typeof(reuse_address)>();
+	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>();
+	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>();
 	timeout = options["timeout"].as<typeof(timeout)>();
-	tcp_nodelay = options["tcp-nodelay"].as<typeof(tcp_nodelay)>();;
-	worker_count = options["worker-count"].as<typeof(worker_count)>();;
-	header_max_size = options["header-max-size"].as<typeof(header_max_size)>();;
-	body_max_size = options["body-max-size"].as<typeof(body_max_size)>();;
-	max_connections = options["max-connections"].as<typeof(max_connections)>();;
-	max_write_times = options["max-write-times"].as<typeof(max_write_times)>();;
+	tcp_nodelay = options["tcp-nodelay"].as<typeof(tcp_nodelay)>();
+	worker_count = options["worker-count"].as<typeof(worker_count)>();
+	header_max_size = options["header-max-size"].as<typeof(header_max_size)>();
+	body_max_size = options["body-max-size"].as<typeof(body_max_size)>();
+	max_connections = options["max-connections"].as<typeof(max_connections)>();
+	max_write_times = options["max-write-times"].as<typeof(max_write_times)>();
 	request_max_size = options["request-max-size"].as<typeof(request_max_size)>();
 
 #if CS_DEBUG

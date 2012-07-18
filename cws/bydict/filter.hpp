@@ -3,60 +3,17 @@
 
 #define USE_WCHAR 0
 
-#include <vector>
+#include "staging.hpp"
+#include "predef.hpp"
 #include <string>
 #include <boost/cstdint.hpp>
-#include "predef.hpp"
+#include "holders.hpp"
 #include "array.hpp"
+#include "node.hpp"
+#include "shareinfo.hpp"
 
 namespace jebe {
 namespace cws {
-
-static const std::size_t atom_ubound = 1 << (sizeof(Atom) * 8);
-
-class Node
-{
-public:
-    friend class Filter;
-    friend class Ftree;
-
-    typedef Node* NodePtr;
-    typedef staging::Array<NodePtr, atom_ubound> Children;
-
-    explicit Node()
-        : is_leaf(true), patten_end(false)
-    {
-        memset(children, 0, sizeof(children));
-    }
-
-    inline NodePtr attach_child(const std::size_t _atom);
-
-    inline void endswith(const std::string& _patten)
-    {
-        patten_end = true;
-        patten = _patten;
-    }
-
-    static NodePtr CS_FORCE_INLINE make_node()
-    {
-        return new Node;
-    }
-
-    const std::string& str() const
-    {
-    	return patten;
-    }
-
-private:
-    static const std::size_t word_max_len = atom_ubound;
-    NodePtr children[word_max_len];
-
-    std::string patten;
-
-    bool is_leaf;
-
-    bool patten_end;
-};
 
 //bool CS_FORCE_INLINE operator==(const Node* const n1, const Node* const n2);
 
@@ -95,8 +52,14 @@ public:
     typedef std::vector<Pos> PosList;
 
     explicit Filter(const std::string& fname)
-        : tree(Ftree::make_ftree(fname))
-    {}
+        : tree(Ftree::make_ftree(fname)),
+          res(new Atom[G::config->body_max_size << 1]),
+          joinHolder(res)
+    {
+//		res = new Atom[G::config->body_max_size << 1];
+    }
+
+    ~Filter() { delete res; }
 
     std::string filt(const std::string& str) const;
 
@@ -107,7 +70,7 @@ public:
         AtomList res, ContentLen max_match) const;
 
     template<typename CallbackType>
-    void find(const AtomList atoms, ContentLen len, CallbackType& callback) const;
+    void find(const Atom* const atoms, ContentLen len, CallbackType& callback) const;
 
     void inline replace(std::string& str, PosList& poslist) const;
 
@@ -117,6 +80,10 @@ private:
     void CS_FORCE_INLINE record(PosList& poslist, const Pos& pos) const;
 
     const Ftree& tree;
+
+    mutable Atom* res;
+
+    mutable JoinHolder joinHolder;
 };
 
 }
