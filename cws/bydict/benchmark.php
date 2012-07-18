@@ -13,12 +13,28 @@ function request($post)
 {
     global $url;
     static $echoed_flag = false;
+    static $first_resp = false;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
     $response = curl_exec($ch);
+    if ($first_resp === false)
+    {
+        $first_resp = $response;
+    }
+    else
+    {
+        if ($first_resp !== $response)
+        {
+            echo 'response not equal to the first one', PHP_EOL;
+        }
+        else
+        {
+            echo 'response match', PHP_EOL;
+        }
+    }
     if (!$echoed_flag)
     {
         $echoed_flag = true;
