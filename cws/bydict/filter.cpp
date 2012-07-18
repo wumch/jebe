@@ -8,13 +8,13 @@
 namespace jebe {
 namespace cws {
 
-std::string Filter::filt(const std::string& str) const
+std::string Filter::filt(const std::string& str, Atom* const res) const
 {
 //    memset(res, 0, str.size() << 2);
 //    JSONHolder jh(res);
-//    JoinHolder js(res);
-    find<JoinHolder>(reinterpret_cast<const Atom* const>(str.c_str()), str.size(), joinHolder);
-    joinHolder.genRes();
+	JoinHolder jh(res);
+    find<JoinHolder>(reinterpret_cast<const Atom* const>(str.c_str()), str.size(), jh);
+    jh.genRes();
     return std::string(reinterpret_cast<char*>(res));
 }
 
@@ -40,17 +40,17 @@ std::string Filter::filt(const std::string& str) const
 
 // 优化算法开关。对 匹配几率大 的情况做小幅度优化。
 #define NO_REWIND_OPTI 1
-#define _JEBE_SCAN_FROM_RIGHT 1
+#define _JEBE_SCAN_FROM_RIGHT 0
 
 // Filter
 template<typename CallbackType>
 void Filter::find(const Atom* const atoms, ContentLen len, CallbackType& callback) const
 {
+	ContentLen matched = 0;
     Node::NodePtr node = tree.root;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
     bool begin_from_root = true;
 #endif
-//    Cursor wcur = 0;
 #if _JEBE_SCAN_FROM_RIGHT
     for (Cursor i = len - 1, offset = i - 1; i > -1; --i)
     {
@@ -75,15 +75,14 @@ void Filter::find(const Atom* const atoms, ContentLen len, CallbackType& callbac
             if (CS_BUNLIKELY(node->patten_end))
             {
                 offset = i;
-//                res.push_back(Pos(i, node->patten.size()));
-                callback(*node);
-//                memcpy(res + wcur, node->patten.data(), node->patten.size());
-//                wcur += node->patten.size();
-//                res[wcur++] = ' ';
-
                 if (CS_BLIKELY(node->is_leaf))
                 {
-                    node = tree.root;
+                	if (CS_BUNLIKELY(++matched > G::config->max_match))
+                	{
+                		break;
+                	}
+					callback(*node);
+					node = tree.root;
 #if defined(NO_REWIND_OPTI) && NO_REWIND_OPTI
                     begin_from_root = true;
 #endif

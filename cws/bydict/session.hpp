@@ -19,6 +19,9 @@
 namespace jebe {
 namespace cws {
 
+#define _JEBE_USE_TIMER 0
+
+namespace BA = ::boost::asio;
 extern const Filter* filter;
 
 extern void destroySock(Sock& sock);
@@ -42,28 +45,49 @@ public:
 #endif
     typedef BA::mutable_buffers_1 ReadBuf;
 
-    explicit Session()
-        : scene(0), sock(G::mio),
-        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-        transferred(0), write_times(0),
-        timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
+//    explicit Session()
+//        : scene(0), sock(G::mio),
+//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
+//        transferred(0), write_times(0)
+//#if _JEBE_USE_TIMER
+//        ,timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
+//#endif
+//    {
+//    }
+//
+//    explicit Session(Sock& _sock)
+//        : scene(0), sock(_sock.get_io_service()),
+//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
+//        transferred(0), write_times(0)
+//#if _JEBE_USE_TIMER
+//    	,timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
+//#endif
+//    {
+//    }
+//
+//    explicit Session(BA::io_service& io)
+//        : scene(0), sock(io),
+//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
+//        transferred(0), write_times(0)
+//#if _JEBE_USE_TIMER
+//    	,timer(io)
+//#endif
+//    {
+//    }
+
+    explicit Session(BA::io_service& io, std::string& request_, Atom* const res_, std::string& response_)
+        : scene(0), sock(io),
+        request(request_), res(res_), response(response_), max_match(G::config->max_match),
+        transferred(0), write_times(0)
+#if _JEBE_USE_TIMER
+    	,timer(io)
+#endif
     {
     }
 
-    explicit Session(Sock& _sock)
-        : scene(0), sock(_sock.get_io_service()), 
-        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-        transferred(0), write_times(0),
-        timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
+    ~Session()
     {
-    }
-
-    explicit Session(BA::io_service& io)
-        : scene(0), sock(io), 
-        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-        transferred(0), write_times(0),
-        timer(io)
-    {
+    	CS_SAY("session destoryed");
     }
 
     inline Sock& getSock()
@@ -97,13 +121,15 @@ private:
 
     Sock sock;
 
-    std::string request;
-    std::string response;
+    std::string& request;
+    Atom* const res;
+    std::string& response;
     const uint16_t max_match;
     std::size_t transferred;
     std::size_t write_times;
-
+#if _JEBE_USE_TIMER
     BA::deadline_timer timer;
+#endif
 };
 
 typedef boost::shared_ptr<Session> SessPtr;
@@ -111,10 +137,12 @@ typedef boost::shared_ptr<Session> SessPtr;
 void inline Session::start()
 {
     start_receive();
+#if _JEBE_USE_TIMER
     timer.expires_from_now(boost::posix_time::millisec(timeout));
     timer.async_wait(
         boost::bind(&Session::finish_by_wait, shared_from_this(), BA::placeholders::error)
     );
+#endif
 }
 
 void inline Session::start_receive()
@@ -143,7 +171,9 @@ void inline Session::finish(const BS::error_code& error)
 {
     if (!error)
     {
+#if _JEBE_USE_TIMER
         timer.cancel();
+#endif
         boost::system::error_code ignored_ec;
         sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
     }

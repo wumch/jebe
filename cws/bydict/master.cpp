@@ -18,7 +18,7 @@ Master::Master(const std::size_t worker_count)
 {
     for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
     {
-        iter->reset(new Worker());
+        iter->reset(new Worker);
     }
 }
 
@@ -91,7 +91,8 @@ void Master::listen()
 
 void Master::start_accept()
 {
-    sess = SessPtr(new Session(get_io()));
+	Worker& w = *(workers[pick_worker()]);
+    sess = SessPtr(new Session(w.get_io(), w.request, w.res, w.response));
     acptor->async_accept(sess->getSock(),
         boost::bind(&Master::handle_accept, this,
             sess, BA::placeholders::error

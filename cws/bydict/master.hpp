@@ -9,13 +9,15 @@
 #include <boost/thread/mutex.hpp>
 
 #include "predef.hpp"
-#include "../../staging/singleton.hpp"
+#include "singleton.hpp"
 #include "worker.hpp"
 #include "session.hpp"
 #include "shareinfo.hpp"
 
 namespace jebe {
 namespace cws {
+
+namespace BA = ::boost::asio;
 
 class Master
 {

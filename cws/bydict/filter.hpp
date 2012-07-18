@@ -52,16 +52,13 @@ public:
     typedef std::vector<Pos> PosList;
 
     explicit Filter(const std::string& fname)
-        : tree(Ftree::make_ftree(fname)),
-          res(new Atom[G::config->body_max_size << 1]),
-          joinHolder(res)
+        : tree(Ftree::make_ftree(fname))
+//    ,res(new Atom[G::config->body_max_size << 1])
     {
 //		res = new Atom[G::config->body_max_size << 1];
     }
 
-    ~Filter() { delete res; }
-
-    std::string filt(const std::string& str) const;
+    std::string filt(const std::string& str, Atom* const res) const;
 
     void inline find(const std::string& str, AtomList res,
         const std::size_t max_match) const;
@@ -81,9 +78,9 @@ private:
 
     const Ftree& tree;
 
-    mutable Atom* res;
+//    mutable Atom* res;
 
-    mutable JoinHolder joinHolder;
+//    mutable JoinHolder joinHolder;
 };
 
 }
