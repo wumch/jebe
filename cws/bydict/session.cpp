@@ -27,7 +27,6 @@ void Session::handle_read(const boost::system::error_code& error,
 				? (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP)) : 0
 		);//, CS_CONST_STRLEN(_JEBE_HTTP_SEP));
 
-        transferred += bytes_transferred;
         std::size_t body_len = 0;
         if (CS_BUNLIKELY(header_len == std::string::npos))
         {
@@ -51,6 +50,7 @@ void Session::handle_read(const boost::system::error_code& error,
             {
                 clpos += sizeof(_JEBE_HTTP_CONTENT_LENGTH) - 1;
                 std::string::size_type clend = request.find(_JEBE_HTTP_LINE_SEP, clpos);//, CS_CONST_STRLEN(_JEBE_HTTP_LINE_SEP));
+                transferred += bytes_transferred;
                 if (CS_BUNLIKELY(clend == std::string::npos))
                 {
                     finish();
@@ -97,26 +97,13 @@ void Session::finish_by_wait(const boost::system::error_code& error)
     finish(error);
 }
 
-void inline Session::start()
+void Session::config()
 {
-    start_receive();
-#if _JEBE_USE_TIMER
-    timer.expires_from_now(boost::posix_time::millisec(timeout));
-    timer.async_wait(
-        boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
-    );
-#endif
-}
-
-void Session::start_receive()
-{
-    sock.async_read_some(
-        boost::asio::buffer(const_cast<char*>(request.data()), max_len),
-        boost::bind(&Session::handle_read, shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred
-        )
-    );
+    header_max_len = Config::getInstance()->header_max_size;
+    body_max_len = Config::getInstance()->body_max_size;
+    max_len = Session::header_max_len + Session::body_max_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
+    timeout = (0 < Config::getInstance()->timeout) ? Config::getInstance()->timeout : 1;
+    max_write_times = (0 < Config::getInstance()->max_write_times) ? Config::getInstance()->max_write_times : 10;
 }
 
 void Session::start_receive(const std::size_t offset)
@@ -128,37 +115,6 @@ void Session::start_receive(const std::size_t offset)
             boost::asio::placeholders::bytes_transferred
         )
     );
-}
-
-void Session::finish(const boost::system::error_code& error)
-{
-    if (!error)
-    {
-#if _JEBE_USE_TIMER
-        timer.cancel();
-#endif
-        boost::system::error_code ignored_ec;
-        sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-    }
-}
-
-void Session::reply()
-{
-    boost::asio::async_write(sock,
-        boost::asio::buffer(response, response.size()),
-        boost::bind(&Session::finish, shared_from_this(),
-            boost::asio::placeholders::error
-        )
-    );
-}
-
-void Session::config()
-{
-    header_max_len = Config::getInstance()->header_max_size;
-    body_max_len = Config::getInstance()->body_max_size;
-    max_len = Session::header_max_len + Session::body_max_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
-    timeout = (0 < Config::getInstance()->timeout) ? Config::getInstance()->timeout : 1;
-    max_write_times = (0 < Config::getInstance()->max_write_times) ? Config::getInstance()->max_write_times : 10;
 }
 
 }

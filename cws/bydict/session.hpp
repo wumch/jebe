@@ -99,5 +99,50 @@ protected:
 #endif
 };
 
+    void Session::start()
+    {
+        start_receive();
+    #if _JEBE_USE_TIMER
+        timer.expires_from_now(boost::posix_time::millisec(timeout));
+        timer.async_wait(
+            boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
+        );
+    #endif
+    }
+
+    void Session::start_receive()
+    {
+        sock.async_read_some(
+            boost::asio::buffer(const_cast<char*>(request.data()), max_len),
+            boost::bind(&Session::handle_read, shared_from_this(),
+                boost::asio::placeholders::error,
+                boost::asio::placeholders::bytes_transferred
+            )
+        );
+    }
+
+    void Session::finish(const boost::system::error_code& error)
+    {
+        if (!error)
+        {
+    #if _JEBE_USE_TIMER
+            timer.cancel();
+    #endif
+            boost::system::error_code ignored_ec;
+            sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+        }
+    }
+
+    void Session::reply()
+    {
+        boost::asio::async_write(sock,
+            boost::asio::buffer(response, response.size()),
+            boost::bind(&Session::finish, shared_from_this(),
+                boost::asio::placeholders::error
+            )
+        );
+    }
+
+
 }
 }
