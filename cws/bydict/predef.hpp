@@ -1,56 +1,23 @@
 
 #pragma once
 
+#define CS_USE_WCS					0
 #include "staging.hpp"
 #include <boost/asio.hpp>
-#if defined(USE_WCHAR) && USE_WCHAR
 extern "C" {
-#	include <wchar.h>
+#include <limits.h>
 }
-#endif
-
-#ifndef HAS_LUAPLUS
-#	define HAS_LUAPLUS 0
-#endif
-
-#define USE_POOL 0
-#if defined(USE_POOL) && USE_POOL
-#	include "allocator.hpp"
-#endif
+#define _JEBE_NO_REWIND_OPTI		0
+#define _JEBE_SCAN_FROM_RIGHT		0
+#define _JEBE_USE_TIMER				0
 
 namespace jebe {
 namespace cws {
 
-namespace BA = boost::asio;
-namespace BS = boost::system;
-
-typedef enum {
-    SUCCESS = 1, FAILD
-} rescode;
-
-typedef std::size_t SessId;
-
-typedef BA::ip::tcp::socket Sock;
-typedef boost::shared_ptr<Sock> SockPtr;
-
-typedef uint8_t SceneId;
-
-typedef wchar_t CharType;
-
-#if defined(USE_WCHAR) && USE_WCHAR
-typedef wchar_t Atom;
-typedef std::wstring Word;
-#else
-typedef unsigned char Atom;
-typedef std::basic_string<Atom> Word;
-#endif
-
-typedef Atom* AtomList;
-typedef Word Content;
-typedef uint32_t ContentLen;
-typedef uint8_t WordLen;
-typedef int32_t Cursor;
-typedef uint32_t atimes_t;
+typedef unsigned char 	byte_t;
+typedef uint32_t 		tsize_t;
+typedef uint8_t 		wsize_t;
+typedef uint32_t 		atimes_t;
 
 }
 }

@@ -13,8 +13,7 @@ namespace cws {
 typedef std::vector<boost::shared_ptr<boost::thread> > ThreadList;
 
 Master::Master(const std::size_t worker_count)
-    : next_worker_index(0), workers(worker_count), sess(),
-    buf_sready(G::session_ready, sizeof(G::session_ready))
+    : next_worker_index(0), workers(worker_count)
 {
     for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
     {
@@ -22,20 +21,10 @@ Master::Master(const std::size_t worker_count)
     }
 }
 
-void Master::notify_worker(const SessId sid)
-{
-    if (!(++next_worker_index < workers.size()))
-    {
-        next_worker_index = 0;
-    }
-    G::sids_map[next_worker_index].push_back(sid);
-    pthread_kill(G::worker_id_list[next_worker_index], SIGUSR1);
-}
-
 void Master::run()
 {
 #ifdef __linux
-	prctl(PR_SET_NAME, (G::config->program_name + ":master").c_str());
+	prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":master").c_str());
 #endif
     ThreadList threads;
     for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
@@ -64,25 +53,19 @@ void Master::stop()
 
 void Master::listen()
 {
-	namespace BA = boost::asio;
-    acptor = new BA::ip::tcp::acceptor(get_io());
-    Config* config = Config::getInstance();
+    acptor = new boost::asio::ip::tcp::acceptor(get_io());
+    const Config* const config = Config::getInstance();
     
-    BA::ip::tcp::resolver resolver(acptor->get_io_service());
-    BA::ip::tcp::resolver::query query(config->host,
-    boost::lexical_cast<std::string>(config->port));
-    BA::ip::tcp::endpoint ep = *resolver.resolve(query);
+    boost::asio::ip::tcp::resolver resolver(acptor->get_io_service());
+    boost::asio::ip::tcp::resolver::query query(config->host, boost::lexical_cast<std::string>(config->port));
+    boost::asio::ip::tcp::endpoint ep = *resolver.resolve(query);
     acptor->open(ep.protocol());
 
-    acptor->set_option(BA::ip::tcp::acceptor::reuse_address(config->reuse_address));
-    acptor->set_option(BA::ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
-    acptor->set_option(BA::ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
+    acptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(config->reuse_address));
+    acptor->set_option(boost::asio::ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
+    acptor->set_option(boost::asio::ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
 
-    Session::header_max_len = config->header_max_size;
-    Session::body_max_len = config->body_max_size;
-    Session::max_len = Session::header_max_len + Session::body_max_len + sizeof(_JEBE_HTTP_SEP);
-    Session::timeout = (0 < config->timeout) ? config->timeout : 1;
-    Session::max_write_times = (0 < config->max_write_times) ? config->max_write_times : 10;
+    Session::config();
     
     acptor->bind(ep);
     acptor->listen();
@@ -92,15 +75,15 @@ void Master::listen()
 void Master::start_accept()
 {
 	Worker& w = *(workers[pick_worker()]);
-    sess = SessPtr(new Session(w.get_io(), w.request, w.res, w.response));
+    SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
     acptor->async_accept(sess->getSock(),
         boost::bind(&Master::handle_accept, this,
-            sess, BA::placeholders::error
+            sess, boost::asio::placeholders::error
         )
     );
 }
 
-BA::io_service& Master::get_io()
+boost::asio::io_service& Master::get_io()
 {
     return workers[pick_worker()]->get_io();
 }
@@ -116,42 +99,13 @@ std::size_t Master::pick_worker()
 }
 
 void Master::handle_accept(SessPtr& sess,
-    const BS::error_code& err_code)
+    const boost::system::error_code& err_code)
 {
     if (!err_code)
     {
         sess->start();
     }
     start_accept();
-}
-
-void Master::handle_sessid(SockPtr& sock, const Session::ReadBuf& buf,
-    const BS::error_code& err_code, const std::size_t bytes_transfered)
-{
-    SessId sid = peek_sess_id(sock, buf, bytes_transfered);
-    if (err_code || sid == 0)
-    {
-        destroySock(sock);
-    }
-    else
-    {
-        BA::async_write(*sock, buf_sready,
-            boost::bind(&Master::test_handle_write, this,
-                BA::placeholders::error
-            )
-        );
-    }
-}
-
-void Master::test_handle_write(const BS::error_code& error)
-{
-    
-}
-
-SessId Master::peek_sess_id(SockPtr& sock, const Session::ReadBuf& buf,
-    const std::size_t bytes_transfered) const
-{
-    return 1;
 }
 
 }

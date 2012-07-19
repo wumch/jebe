@@ -1,10 +1,14 @@
 
 #include "config.hpp"
-#include <boost/program_options.hpp>
 #include <iostream>
+#include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/dynamic_bitset.hpp>
+extern "C" {
 #include <unistd.h>
-//#include <LuaPlus/LuaPlus.h>
+#include <sys/mman.h>
+#include <sched.h>
+}
 
 namespace jebe {
 namespace cws {
@@ -14,7 +18,7 @@ void Config::init(int argc, const char* const argv[])
 	boost::program_options::options_description cmdDesc("allowed options");
 	cmdDesc.add_options()
 			("help", "show this help and exit.")
-			("config", bo::value<std::string>()->default_value("etc/tokenizer.conf"), "config file, defaults to etc/tokenizer.conf.")
+			("config", boost::program_options::value<std::string>()->default_value("etc/tokenizer.conf"), "config file, defaults to etc/tokenizer.conf.")
 	;
 
 	boost::filesystem::path program_path = argv[0];
@@ -23,13 +27,13 @@ void Config::init(int argc, const char* const argv[])
 	boost::program_options::variables_map cmdOptions;
 	try
 	{
-		bo::store(bo::parse_command_line(argc, argv, cmdDesc, bo::command_line_style::unix_style), cmdOptions);
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdDesc, boost::program_options::command_line_style::unix_style), cmdOptions);
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << "\n" << cmdDesc << std::endl;
+		CS_DIE(e.what() << "\n" << cmdDesc);
 	}
-	bo::notify(cmdOptions);
+	boost::program_options::notify(cmdOptions);
 
 	if (cmdOptions.count("help"))
 	{
@@ -45,30 +49,32 @@ void Config::init(int argc, const char* const argv[])
 void Config::initDesc()
 {
 	desc.add_options()
-			("host", bo::value<typeof(host)>()->default_value("0.0.0.0"),
+			("host", boost::program_options::value<typeof(host)>()->default_value("0.0.0.0"),
 					"host, defaults to 0.0.0.0")
-			("port", bo::value<typeof(port)>()->default_value(10087),
+			("port", boost::program_options::value<typeof(port)>()->default_value(10087),
 					"port, defaults to 10087")
-			("pid-file", bo::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
+			("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
 					"pid file, defaults to /var/run/tokenizer.pid")
-			("patten-file", bo::value<typeof(patten_file)>()->default_value("etc/words.txt"),
+			("patten-file", boost::program_options::value<typeof(patten_file)>()->default_value("etc/words.txt"),
 					"pattens file, defaults to etc/words.txt")
-			("reuse-address", bo::value<typeof(reuse_address)>()->default_value(true),
+			("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
 					"whether reuse-address on startup or not")
-			("receive-buffer-size", bo::value<typeof(receive_buffer_size)>()->default_value((4 << 10)),
+			("receive-buffer-size", boost::program_options::value<typeof(receive_buffer_size)>()->default_value((4 << 10)),
 					"siz eof receive buffer (in bytes)")
-			("send-buffer-size", bo::value<typeof(send_buffer_size)>()->default_value((4 << 10)),
+			("send-buffer-size", boost::program_options::value<typeof(send_buffer_size)>()->default_value((4 << 10)),
 					"size of send buffer (in bytes)")
-			("timeout", bo::value<typeof(timeout)>()->default_value(3000),
+			("timeout", boost::program_options::value<typeof(timeout)>()->default_value(3000),
 					"timeout for incoming conections (in ms), 0 stands for never timeout, defaults to 3000")
-			("tcp-nodelay", bo::value<typeof(tcp_nodelay)>()->default_value(true),
+			("tcp-nodelay", boost::program_options::value<typeof(tcp_nodelay)>()->default_value(true),
 					"enables tcp-nodelay feature or not, defaults is on")
-			("worker-count", bo::value<typeof(worker_count)>()->default_value(sysconf(_SC_NPROCESSORS_CONF)))
-			("header-max-size", bo::value<typeof(header_max_size)>()->default_value(1024))
-			("body-max-size", bo::value<typeof(body_max_size)>()->default_value(64000))
-			("max-connections", bo::value<typeof(max_connections)>()->default_value(10000))
-			("max-write-times", bo::value<typeof(max_write_times)>()->default_value(100))
-			("request-max-size", bo::value<typeof(request_max_size)>()->default_value(64000 + 1024))
+			("memlock", boost::program_options::value<typeof(memlock)>()->default_value(false))
+			("cpuaffinity", boost::program_options::value<std::string>()->default_value(""))
+			("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(sysconf(_SC_NPROCESSORS_CONF)))
+			("header-max-size", boost::program_options::value<typeof(header_max_size)>()->default_value(1024))
+			("body-max-size", boost::program_options::value<typeof(body_max_size)>()->default_value(64000))
+			("max-connections", boost::program_options::value<typeof(max_connections)>()->default_value(10000))
+			("max-write-times", boost::program_options::value<typeof(max_write_times)>()->default_value(100))
+			("request-max-size", boost::program_options::value<typeof(request_max_size)>()->default_value(64000 + 1024))
 			;
 }
 
@@ -76,13 +82,13 @@ void Config::load(const std::string& config_file)
 {
 	try
 	{
-		bo::store(bo::parse_config_file<CharType>(config_file.c_str(), desc), options);
+		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.c_str(), desc), options);
 	}
 	catch (std::exception& e)
 	{
 		CS_DIE(L"faild on read/parse config-file: " << config_file.c_str() << L"\n" << e.what());
 	}
-	bo::notify(options);
+	boost::program_options::notify(options);
 
 	host = options["host"].as<typeof(host)>();
 	port = options["port"].as<typeof(port)>();
@@ -100,39 +106,39 @@ void Config::load(const std::string& config_file)
 	max_write_times = options["max-write-times"].as<typeof(max_write_times)>();
 	request_max_size = options["request-max-size"].as<typeof(request_max_size)>();
 
-#if CS_DEBUG
-	std::cout << host << std::endl
-			<< port << std::endl
-			<< pidfile << std::endl
-			<< patten_file << std::endl
-			<< reuse_address << std::endl
-			<< receive_buffer_size << std::endl
-			<< send_buffer_size << std::endl
-			<< timeout << std::endl
-			<< tcp_nodelay << std::endl
-			<< worker_count << std::endl
-			<< header_max_size << std::endl
-			<< body_max_size << std::endl
-			<< max_connections << std::endl
-			<< max_write_times << std::endl
-			<< request_max_size << std::endl;
-#endif
+	memlock = options["memlock"].as<typeof(memlock)>();
+	if (memlock)
+	{
+		assert(!mlockall(MCL_CURRENT | MCL_FUTURE));
+	}
+	std::string cpumask = options["cpuaffinity"].as<std::string>();
+	if (cpumask.size())
+	{
+		uint cpunum = sysconf(_SC_NPROCESSORS_CONF);
+		uint bits = cpunum * worker_count;
+		if (cpumask.size() < bits)
+		{
+			cpumask.append(bits - cpumask.size(), '0');
+		}
+		cpuaffinity = boost::dynamic_bitset<>(cpumask);
+	}
 
-//    worker_cout = state->GetGlobal("worker_count").GetInteger();
-//    header_max_len = state->GetGlobal("header_max_len").GetInteger();
-//    body_max_len = state->GetGlobal("body_max_len").GetInteger();
-//    max_match = state->GetGlobal("max_match").GetInteger();
-//    max_connections = state->GetGlobal("max_connections").GetInteger();
-//    max_write_times = state->GetGlobal("max_write_times").GetInteger();
-//
-//    replacement = state->GetGlobal("replacement").GetString()[0];
-//
-//    request_max_size = header_max_size + body_max_size;
-}
-
-namespace G {
-const char* config_file = NULL;
-const Config* config = NULL;
+	CS_SAY(host << std::endl
+		<< port << std::endl
+		<< pidfile << std::endl
+		<< patten_file << std::endl
+		<< reuse_address << std::endl
+		<< receive_buffer_size << std::endl
+		<< send_buffer_size << std::endl
+		<< timeout << std::endl
+		<< tcp_nodelay << std::endl
+		<< worker_count << std::endl
+		<< header_max_size << std::endl
+		<< body_max_size << std::endl
+		<< max_connections << std::endl
+		<< max_write_times << std::endl
+		<< request_max_size << std::endl
+	);
 }
 
 }

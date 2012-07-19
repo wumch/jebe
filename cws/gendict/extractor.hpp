@@ -20,9 +20,9 @@
 #	include <limits.h>
 #endif
 
-#define _JEBE_WORD_MAX_LEN		8
+#define _JEBE_WORD_MAX_LEN		7
 #define _JEBE_ASCII_WORD_MAX_LEN		20
-#define _JEBE_WORD_MIN_ATIMES	5
+#define _JEBE_WORD_MIN_ATIMES	10
 #define _JEBE_PROCESS_STEP		(2 << 20)
 
 namespace staging {
@@ -195,11 +195,8 @@ public:
 protected:
 	bool isAscii(const CharType c) const
 	{
-		if (CS_BLIKELY(c > 127))
-		{
-			return false;
-		}
-		return (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
+		return c < 128;
+		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
 	}
 
 	void fetchContent(const boost::filesystem::path& contentfile,
@@ -270,15 +267,15 @@ protected:
 
 	static const double entropyThresholdLower	= 0.2;
 	static const double entropyThresholdUpper	= 1.5;
-	static const double joinThresholdLower		= 10.;
-	static const double joinThresholdUpper		= 600.;
-	static const double firstCharMaxMiss		= 80;	// atimes(str[0]) < 50*atimes(str[1:]
+	static const double joinThresholdLower		= 50.;
+	static const double joinThresholdUpper		= 1000.;
+	static const uint32_t atimesThreshold		= 200;
 
 	enum WordExamineRes {
 		no 					= 1,					// it's not a word.
 		yes 				= 1 << 1,				// it's a word.
-		typo_prefix 		= 1 << 2, 							// it's a word, and str[:-1] is not a typo.
-		typo_suffix 		= 1 << 3,							// it's a word, and str[1:] is not a typo.
+		typo_prefix 		= 1 << 2, 							// it's a word, and str[:-1] is a typo.
+		typo_suffix 		= 1 << 3,							// it's a word, and str[1:] is a typo.
 		typo_prefix_suffix 	= yes | typo_prefix | typo_suffix,	// it's a word, and both str[:-1] and str[1:] are typo.
 	};
 
@@ -377,7 +374,6 @@ protected:
 
 	void caltureTotalAtimes()
 	{
-		totalAtimes.fill(0);
 		#define _JEBE_CALL_TOTALATIMES(Z, n, N)		caltureTotalAtimes_<n>(BOOST_PP_CAT(map, n));
 		BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_TOTALATIMES, BOOST_PP_EMPTY())
 		#undef _JEBE_CALL_TOTALATIMES
@@ -483,7 +479,6 @@ protected:
 	{
 		typedef Phrase<1> PhraseType;
 		typedef PhraseType::Suffix::MapType MapType;
-		smap.fill(0);
 		for (MapType::const_iterator it = map1.begin(); it != map1.end(); ++it)
 		{
 			smap[it->first] = it->second;

@@ -1,15 +1,12 @@
 
 #pragma once
 
-#include "staging.hpp"
 #include "predef.hpp"
 #include <string>
-#include "array.hpp"
+#include <boost/array.hpp>
 
 namespace jebe {
 namespace cws {
-
-static const std::size_t atom_ubound = 1 << (sizeof(Atom) * 8);
 
 class Node
 {
@@ -17,8 +14,8 @@ public:
     friend class Filter;
     friend class Ftree;
 
-    typedef Node* NodePtr;
-    typedef staging::Array<NodePtr, atom_ubound> Children;
+    enum { word_max_len = UCHAR_MAX + 1 };
+    typedef boost::array<Node*, word_max_len> Children;
 
     explicit Node()
         : is_leaf(true), patten_end(false)
@@ -26,7 +23,7 @@ public:
         memset(children, 0, sizeof(children));
     }
 
-    inline NodePtr attach_child(const std::size_t _atom)
+    inline Node* attach_child(byte_t _atom)
     {
     	if (!children[_atom])
 		{
@@ -42,19 +39,23 @@ public:
         patten = _patten;
     }
 
-    static NodePtr CS_FORCE_INLINE make_node()
+    CS_FORCE_INLINE static Node* make_node()
     {
         return new Node;
     }
 
-    const std::string& str() const
+    CS_FORCE_INLINE const std::string& str() const
     {
     	return patten;
     }
 
+    CS_FORCE_INLINE const Node* const cichildat(byte_t atom) const
+    {
+    	return CS_BUNLIKELY('A' <= atom && atom <= 'Z') ? children[atom + 32] : children[atom];
+    }
+
 private:
-    static const std::size_t word_max_len = atom_ubound;
-    NodePtr children[word_max_len];
+    Node* children[word_max_len];
 
     std::string patten;
 

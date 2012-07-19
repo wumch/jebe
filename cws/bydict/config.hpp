@@ -5,21 +5,29 @@
 #include "predef.hpp"
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/dynamic_bitset.hpp>
+
+extern int main(int, char*[]);
 
 namespace jebe {
 namespace cws {
 
-namespace G {
-extern const char* config_file;
-}
-
-namespace bo = boost::program_options;
-
 class Config
 {
-    mksingleton(Config)
+	friend int ::main(int, char*[]);
+	template<typename T> friend T* staging::getInstance();
 public:
+	CS_FORCE_INLINE static const Config* getInstance()
+	{
+		return staging::getInstance<Config>();
+	}
 
+	CS_FORCE_INLINE static Config* getInst()
+	{
+		return staging::getInstance<Config>();
+	}
+
+public:
     std::string host;
     uint16_t port;
     boost::filesystem::path patten_file;
@@ -39,24 +47,27 @@ public:
     std::size_t body_max_size;
     std::size_t request_max_size;
     std::size_t max_match;
-    char replacement;
+
+    bool memlock;
+    boost::dynamic_bitset<> cpuaffinity;
 
     boost::program_options::variables_map options;
     boost::program_options::options_description desc;
 
     void initDesc();
 
+    static void initialize()
+    {
+
+    }
+
+protected:
     void init(int argc, const char* const argv[]);
 
-private:
     Config(): desc("allowed config options") {}
 
     void load(const std::string& config_file);
 };
-
-namespace G {
-extern const Config* config;
-}
 
 }
 }

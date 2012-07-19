@@ -6,9 +6,8 @@ int main(int argc, char* argv[])
 {
 	using namespace jebe::cws;
 
-	Config::getInstance()->init(argc, argv);
-	Portal portal;
-    portal.run();
+	Config::getInst()->init(argc, argv);
+	(new Portal)->run();
     
     return 0;
 }

@@ -1,26 +1,32 @@
 
-#include "staging.hpp"
-#include "memory.hpp"
 #include "session.hpp"
 #include "filter.hpp"
+#include "memory.hpp"
 
 namespace jebe {
 namespace cws {
 
 const Filter* filter = NULL;
 
+_JEBE_MAKE_HEADER(200, Session);
+_JEBE_MAKE_HEADER(400, Session);
+const std::string Session::httpsep(_JEBE_HTTP_SEP);
 std::size_t Session::header_max_len = 0;
 std::size_t Session::body_max_len = 0;
 std::size_t Session::max_len = 0;
 std::size_t Session::timeout = 0;
 std::size_t Session::max_write_times = 0;
 
-void Session::handle_read(const BS::error_code& error,
+void Session::handle_read(const boost::system::error_code& error,
     const std::size_t bytes_transferred)
 {
     if (CS_BLIKELY(!error))
     {
-        std::string::size_type header_len = request.find(_JEBE_HTTP_SEP, 0);//, CS_CONST_STRLEN(_JEBE_HTTP_SEP));
+        std::string::size_type header_len = request.find(
+			httpsep, CS_BUNLIKELY(transferred > CS_CONST_STRLEN(_JEBE_HTTP_SEP))
+				? (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP)) : 0
+		);//, CS_CONST_STRLEN(_JEBE_HTTP_SEP));
+
         transferred += bytes_transferred;
         std::size_t body_len = 0;
         if (CS_BUNLIKELY(header_len == std::string::npos))
@@ -52,7 +58,7 @@ void Session::handle_read(const BS::error_code& error,
                 else
                 {
                     body_len = boost::lexical_cast<std::size_t>(request.substr(clpos, clend - clpos));
-                    std::size_t required = header_len + body_len + sizeof(_JEBE_HTTP_SEP) - 1;
+                    std::size_t required = header_len + body_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
                     if (CS_BUNLIKELY(required < transferred))
                     {
                         finish();
@@ -70,11 +76,11 @@ void Session::handle_read(const BS::error_code& error,
                     }
                     else
                     {
-                        std::string::size_type body_pos = header_len + sizeof(_JEBE_HTTP_SEP) - 1;
+                        std::string::size_type body_pos = header_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
                         std::string content(request, body_pos, body_len);
 
                         std::string res_ = filter->filt(content, res);
-                        response.append(HEADER(200));
+                        response.append(_JEBE_HEADER(200));
                         response.append(boost::lexical_cast<std::string>(res_.size()));
                         response.append(_JEBE_HTTP_SEP);
                         response.append(res_);
@@ -86,21 +92,73 @@ void Session::handle_read(const BS::error_code& error,
     }
 }
 
-void Session::finish_by_wait(const BS::error_code& error)
+void Session::finish_by_wait(const boost::system::error_code& error)
 {
     finish(error);
 }
 
-void destroySock(Sock& sock)
+void inline Session::start()
 {
-    sock.cancel();
-    sock.close();
+    start_receive();
+#if _JEBE_USE_TIMER
+    timer.expires_from_now(boost::posix_time::millisec(timeout));
+    timer.async_wait(
+        boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
+    );
+#endif
 }
 
-void destroySock(SockPtr& sock)
+void Session::start_receive()
 {
-    sock->cancel();
-    sock->close();
+    sock.async_read_some(
+        boost::asio::buffer(const_cast<char*>(request.data()), max_len),
+        boost::bind(&Session::handle_read, shared_from_this(),
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred
+        )
+    );
+}
+
+void Session::start_receive(const std::size_t offset)
+{
+    sock.async_read_some(
+        boost::asio::buffer(const_cast<char*>(request.data()) + offset, max_len - offset),
+        boost::bind(&Session::handle_read, shared_from_this(),
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred
+        )
+    );
+}
+
+void Session::finish(const boost::system::error_code& error)
+{
+    if (!error)
+    {
+#if _JEBE_USE_TIMER
+        timer.cancel();
+#endif
+        boost::system::error_code ignored_ec;
+        sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+    }
+}
+
+void Session::reply()
+{
+    boost::asio::async_write(sock,
+        boost::asio::buffer(response, response.size()),
+        boost::bind(&Session::finish, shared_from_this(),
+            boost::asio::placeholders::error
+        )
+    );
+}
+
+void Session::config()
+{
+    header_max_len = Config::getInstance()->header_max_size;
+    body_max_len = Config::getInstance()->body_max_size;
+    max_len = Session::header_max_len + Session::body_max_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
+    timeout = (0 < Config::getInstance()->timeout) ? Config::getInstance()->timeout : 1;
+    max_write_times = (0 < Config::getInstance()->max_write_times) ? Config::getInstance()->max_write_times : 10;
 }
 
 }

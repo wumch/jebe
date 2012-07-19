@@ -1,9 +1,8 @@
 
 #pragma once
 
-#include "staging.hpp"
-#include <boost/unordered_map.hpp>
 #include "predef.hpp"
+#include <boost/unordered_map.hpp>
 #include "node.hpp"
 
 namespace jebe {
@@ -14,10 +13,10 @@ class Node;
 // join pattens with space.
 class JoinHolder
 {
-	AtomList res;
-	ContentLen cur;
+	byte_t* res;
+	tsize_t cur;
 public:
-	JoinHolder(AtomList res_): res(res_), cur(0) {}
+	JoinHolder(byte_t* res_): res(res_), cur(0) {}
 
 	void operator()(const Node& node)
 	{
@@ -28,18 +27,12 @@ public:
 
 	void genRes() const
 	{
-		if (cur > 0)
+		if (CS_BLIKELY(cur > 0))
 		{
 			res[cur - 1] = 0;
 		}
 	}
 };
-//
-//extern bool CS_FORCE_INLINE operator==(const Node* const n1, const Node* const n2);
-//static bool operator==(const Node* const n1, const Node* const n2)
-//{
-//	return n1 == n2;
-//}
 
 class NodeHash
 {
@@ -57,8 +50,8 @@ class JSONHolder
 public:
 	typedef boost::unordered_map<const Node* const, atimes_t, NodeHash> Words;
 	Words words;
-	AtomList res;
-	mutable ContentLen cur;
+	byte_t* res;
+	mutable tsize_t cur;
 	static const int16_t mid_joiner =
 #if CS_IS_LITTLE_ENDIAN
 			(':' << CHAR_BIT) + '"';
@@ -84,7 +77,7 @@ public:
 	mutable char convbuf[11];
 
 public:
-	JSONHolder(AtomList res_):
+	JSONHolder(byte_t* res_):
 		words(128), res(res_), cur(1), word_atime(NULL, 1)
 	{
 		res[0] = '{';
@@ -104,7 +97,7 @@ public:
 		}
 	}
 
-//	const Atom*
+//	const byte_t*
 	void genRes() const
 	{
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
@@ -152,7 +145,7 @@ public:
 		cur += str.size();
 	}
 
-	ContentLen size() const
+	tsize_t size() const
 	{
 		return cur;
 	}

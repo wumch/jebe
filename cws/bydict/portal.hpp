@@ -2,11 +2,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-//#include <boost/asio/signal_set.hpp>
-//#include <boost/signals.hpp>
 #include "predef.hpp"
 #include "master.hpp"
-#include "shareinfo.hpp"
 
 namespace jebe {
 namespace cws {
@@ -37,7 +34,7 @@ private:
 
     Master* master;
 
-    boost::shared_ptr<BA::ip::tcp::endpoint> ep;
+    boost::shared_ptr<boost::asio::ip::tcp::endpoint> ep;
 };
 
 }

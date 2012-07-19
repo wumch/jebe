@@ -10,9 +10,8 @@ namespace cws {
 
 Portal::Portal()
 {
-    G::config = Config::getInstance();
     master = new Master(Config::getInstance()->worker_count);
-//    signals = new BA::signal_set(master->get_io());
+//    signals = new boost::asio::signal_set(master->get_io());
     std::set_terminate(Portal::terminate);
 }
 

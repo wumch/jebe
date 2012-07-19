@@ -53,7 +53,7 @@ Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
 	const atimes_t
 		atimes = map.find(phrase)->second,
 		prefix_atimes = (plen == 2) ?  smap[prefix] : prefixmap.find(prefix)->second;
-	const double overRate = std::log10(atimes) * atimes / prefix_atimes * totalAtimes[SuffixType::len - 1] / smap[suffix];
+	const double overRate = static_cast<double>(atimes) / prefix_atimes * totalAtimes[SuffixType::len - 1] / smap[suffix];
 	CS_LOG("\tatimes/patimes:" << atimes << "," << prefix_atimes << "\toverRate: " << overRate);
 
 	if (CS_BLIKELY(overRate < joinThresholdLower))
@@ -83,7 +83,7 @@ Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
 	}
 	else
 	{
-		res |= yes;
+		res |=  CS_BLIKELY(atimes > atimesThreshold) ? yes : no;
 		if (CS_BUNLIKELY(entropy < entropyThresholdLower))
 		{
 			res |= typo_prefix;
@@ -120,7 +120,7 @@ Analyzer::WordExamineRes Analyzer::judgePrx(const Phrase<plen>& phrase,
 	const atimes_t
 		atimes = map.find(phrase)->second,
 		suffix_atimes = (plen == 2) ?  smap[suffix] : suffixmap.find(suffix)->second;
-	const double overRate = std::log10(atimes) * atimes / suffix_atimes * totalAtimes[PhraseType::len - 1] / smap[prefix];
+	const double overRate = static_cast<double>(atimes) / suffix_atimes * totalAtimes[PhraseType::len - 1] / smap[prefix];
 	CS_LOG("\tatimes/patimes:" << atimes << "," << suffix_atimes << "\toverRate: " << overRate);
 
 	if (CS_BLIKELY(overRate < joinThresholdLower))
@@ -150,7 +150,7 @@ Analyzer::WordExamineRes Analyzer::judgePrx(const Phrase<plen>& phrase,
 	}
 	else
 	{
-		res |= yes;
+		res |= CS_BLIKELY(atimes > atimesThreshold) ? yes : no;
 		if (CS_BUNLIKELY(entropy < entropyThresholdLower))
 		{
 			res |= typo_suffix;

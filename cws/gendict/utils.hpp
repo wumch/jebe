@@ -34,7 +34,6 @@ public:
 	bool match(const CharType prefix[len_1], const CharType rstr[len_2])
 	{
 		BOOST_STATIC_ASSERT(len_2 >= len_1);
-		std::cout << "normal PhraseMatch::match called" << std::endl;
 		for (uint8_t i = 0; i < len_1; ++i)
 		{
 			if (prefix[i] != rstr[i])

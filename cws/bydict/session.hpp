@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "predef.hpp"
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -8,76 +9,38 @@
 #include <boost/assert.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/preprocessor/cat.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/array.hpp>
 
-#include "predef.hpp"
 #include "singleton.hpp"
-#include "shareinfo.hpp"
 #include "filter.hpp"
+
+#define _JEBE_HTTP_LINE_SEP "\r\n"
+#define _JEBE_HTTP_SEP _JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
+#define _JEBE_HTTP_CONTENT_LENGTH "Content-Length: "
+
+#define _JEBE_HEADER_NAME(status) BOOST_PP_CAT(header_, status)
+#define _JEBE_HEADER(status) _JEBE_HEADER_NAME(status)
+#define _JEBE_HEADER_STRING(status) "HTTP/1.0 "#status" OK"_JEBE_HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH
+#define _JEBE_MAKE_HEADER(status, klass)	const std::string klass::_JEBE_HEADER_NAME(status)(_JEBE_HEADER_STRING(status))
+#define _JEBE_DECLARE_HEADER(status)		static const std::string _JEBE_HEADER_NAME(status)
 
 namespace jebe {
 namespace cws {
 
-#define _JEBE_USE_TIMER 0
-
-namespace BA = ::boost::asio;
 extern const Filter* filter;
 
-extern void destroySock(Sock& sock);
-extern void destroySock(SockPtr& sock);
-
-#if defined(USE_POOL) && USE_POOL
-class Session;
-typedef Creator<Session, 1 << 12, 1 << 6> SessCreator;
-#endif
-
 class Session:
-#if defined(USE_POOL) && USE_POOL
-    public SessCreator,
-#endif
     public boost::enable_shared_from_this<Session>,
     public boost::noncopyable
 {
 public:
-#if defined(USE_POOL) && USE_POOL
-    using SessCreator::allocator;
-#endif
-    typedef BA::mutable_buffers_1 ReadBuf;
+    typedef boost::asio::mutable_buffers_1 ReadBuf;
 
-//    explicit Session()
-//        : scene(0), sock(G::mio),
-//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-//        transferred(0), write_times(0)
-//#if _JEBE_USE_TIMER
-//        ,timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
-//#endif
-//    {
-//    }
-//
-//    explicit Session(Sock& _sock)
-//        : scene(0), sock(_sock.get_io_service()),
-//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-//        transferred(0), write_times(0)
-//#if _JEBE_USE_TIMER
-//    	,timer(sock.get_io_service(), boost::posix_time::millisec(timeout))
-//#endif
-//    {
-//    }
-//
-//    explicit Session(BA::io_service& io)
-//        : scene(0), sock(io),
-//        request(G::config->request_max_size, 0), max_match(G::config->max_match),
-//        transferred(0), write_times(0)
-//#if _JEBE_USE_TIMER
-//    	,timer(io)
-//#endif
-//    {
-//    }
-
-    explicit Session(BA::io_service& io, std::string& request_, Atom* const res_, std::string& response_)
-        : scene(0), sock(io),
-        request(request_), res(res_), response(response_), max_match(G::config->max_match),
+    explicit Session(boost::asio::io_service& io, std::string& request_, byte_t* const res_, std::string& response_)
+        : sock(io),
+        request(request_), res(res_), response(response_),
         transferred(0), write_times(0)
 #if _JEBE_USE_TIMER
     	,timer(io)
@@ -87,107 +50,54 @@ public:
 
     ~Session()
     {
-    	CS_SAY("session destoryed");
+    	CS_SAY("session destroyed");
     }
 
-    inline Sock& getSock()
+    boost::asio::ip::tcp::socket& getSock()
     {
         return sock;
     }
 
     void inline start();
-    
+
+    static void config();
+
+protected:
+    static const std::string httpsep;
+    _JEBE_DECLARE_HEADER(200);
+    _JEBE_DECLARE_HEADER(400);
+
     static std::size_t body_max_len;
     static std::size_t header_max_len;
     static std::size_t max_len;
     static std::size_t timeout;
     static std::size_t max_write_times;
     
-private:
+protected:
     void inline start_receive();
 
     void start_receive(const std::size_t offset);
 
-    void handle_read(const BS::error_code& error,
+    void handle_read(const boost::system::error_code& error,
         const std::size_t bytes_transferred);
 
-    void inline finish(const BS::error_code& error = BS::error_code());
+    void inline finish(const boost::system::error_code& error = boost::system::error_code());
 
-    void finish_by_wait(const BS::error_code& error = BS::error_code());
+    void finish_by_wait(const boost::system::error_code& error = boost::system::error_code());
 
     void inline reply();
 
-    SceneId scene;
-
-    Sock sock;
+    boost::asio::ip::tcp::socket sock;
 
     std::string& request;
-    Atom* const res;
+    byte_t* const res;
     std::string& response;
-    const uint16_t max_match;
     std::size_t transferred;
     std::size_t write_times;
 #if _JEBE_USE_TIMER
-    BA::deadline_timer timer;
+    boost::asio::deadline_timer timer;
 #endif
 };
-
-typedef boost::shared_ptr<Session> SessPtr;
-
-void inline Session::start()
-{
-    start_receive();
-#if _JEBE_USE_TIMER
-    timer.expires_from_now(boost::posix_time::millisec(timeout));
-    timer.async_wait(
-        boost::bind(&Session::finish_by_wait, shared_from_this(), BA::placeholders::error)
-    );
-#endif
-}
-
-void inline Session::start_receive()
-{
-    sock.async_read_some(
-        BA::buffer(const_cast<char*>(request.data()), max_len),
-        boost::bind(&Session::handle_read, shared_from_this(),
-            BA::placeholders::error,
-            BA::placeholders::bytes_transferred
-        )
-    );
-}
-
-void inline Session::start_receive(const std::size_t offset)
-{
-    sock.async_read_some(
-        BA::buffer(const_cast<char*>(request.data()) + offset, max_len - offset),
-        boost::bind(&Session::handle_read, shared_from_this(),
-            BA::placeholders::error,
-            BA::placeholders::bytes_transferred
-        )
-    );
-}
-
-void inline Session::finish(const BS::error_code& error)
-{
-    if (!error)
-    {
-#if _JEBE_USE_TIMER
-        timer.cancel();
-#endif
-        boost::system::error_code ignored_ec;
-        sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-    }
-}
-
-void inline Session::reply()
-{
-    BA::async_write(sock,
-        BA::buffer(response, response.size()),
-        boost::bind(&Session::finish, shared_from_this(),
-            BA::placeholders::error
-        )
-    );
-}
 
 }
 }
