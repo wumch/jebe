@@ -50,7 +50,7 @@ public:
     {
     }
 
-    std::string filt(const std::string& str, byte_t* const res) const;
+    std::string filt(const byte_t* const str, tsize_t size, byte_t* const res) const;
 
     template<typename CallbackType>
     void find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const;

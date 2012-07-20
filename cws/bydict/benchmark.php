@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-$counts = 5000;
-$url = "http://localhost:10087";
+$counts = 20000;
+$url = "http://localhost:10086";
 
 function getContent()
 {
@@ -30,10 +30,6 @@ function request($post)
         {
             echo 'response not equal to the first one', PHP_EOL;
         }
-        else
-        {
-            echo 'response match', PHP_EOL;
-        }
     }
     if (!$echoed_flag)
     {
@@ -50,9 +46,10 @@ function bench($counts, $post)
     $begin = microtime(true);
     for ($i = 0; $i < $counts; ++$i)
     {
-        if (request($post) !== 200)
+        $respCode = request($post);
+        if ($respCode !== 200)
         {
-            die('error occured' . PHP_EOL);
+            die("{$i} response code: {$respCode}" . PHP_EOL);
         }
     }
     $end = microtime(true);

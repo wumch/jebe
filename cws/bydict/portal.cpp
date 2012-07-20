@@ -23,7 +23,7 @@ void Portal::signals_init()
 
 void Portal::handle_signals()
 {
-    std::cout << "will shoutdown after all works done" << std::endl;
+    CS_SAY("will shoutdown after all works done");
     stop();
 }
 

@@ -7,10 +7,10 @@
 namespace jebe {
 namespace cws {
 
-std::string Filter::filt(const std::string& str, byte_t* const res) const
+std::string Filter::filt(const byte_t* const str, tsize_t size, byte_t* const res) const
 {
-	JoinHolder jh(res);
-    find<JoinHolder>(reinterpret_cast<const byte_t* const>(str.c_str()), str.size(), jh);
+	JSONHolder jh(res);
+    find<>(str, size, jh);
     jh.genRes();
     return std::string(reinterpret_cast<char*>(res));
 }
@@ -19,7 +19,9 @@ std::string Filter::filt(const std::string& str, byte_t* const res) const
 template<typename CallbackType>
 void Filter::find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const
 {
+#if _JEBE_ENABLE_MAXMATCH
 	tsize_t matched = 0;
+#endif
     const Node* node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     bool begin_from_root = true;
@@ -50,10 +52,15 @@ void Filter::find(const byte_t* const atoms, tsize_t len, CallbackType& callback
                 offset = i;
                 if (CS_BLIKELY(node->is_leaf))
                 {
-                	if (CS_BUNLIKELY(++matched > Config::getInstance()->max_match))
+#if _JEBE_ENABLE_MAXMATCH
+                	if (CS_BUNLIKELY(Config::getInstance()->max_match))
                 	{
-                		break;
+						if (CS_BUNLIKELY(++matched > Config::getInstance()->max_match))
+						{
+							break;
+						}
                 	}
+#endif
 					callback(*node);
 					node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI

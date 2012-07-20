@@ -74,7 +74,7 @@ void Master::listen()
 
 void Master::start_accept()
 {
-	Worker& w = *(workers[pick_worker()]);
+	Worker& w = pick_worker();
     SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
     acptor->async_accept(sess->getSock(),
         boost::bind(&Master::handle_accept, this,
@@ -85,17 +85,33 @@ void Master::start_accept()
 
 boost::asio::io_service& Master::get_io()
 {
-    return workers[pick_worker()]->get_io();
+    return pick_worker().get_io();
 }
 
-std::size_t Master::pick_worker()
+Worker& Master::pick_worker()
 {
     ++next_worker_index;
     if (next_worker_index == workers.size())
     {
         next_worker_index = 0;
     }
-    return next_worker_index;
+    if (CS_BLIKELY(!workers[next_worker_index]->busy))
+    {
+    	workers[next_worker_index]->busy = true;
+    	return *workers[next_worker_index];
+    }
+    else
+    {
+    	while (workers[next_worker_index]->busy)
+    	{
+    	    ++next_worker_index;
+    	    if (next_worker_index == workers.size())
+    	    {
+    	        next_worker_index = 0;
+    	    }
+    	}
+    }
+    return *workers[next_worker_index];
 }
 
 void Master::handle_accept(SessPtr& sess,

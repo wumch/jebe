@@ -26,6 +26,7 @@ void Session::handle_read(const boost::system::error_code& error,
 			httpsep, CS_BUNLIKELY(transferred > CS_CONST_STRLEN(_JEBE_HTTP_SEP))
 				? (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP)) : 0
 		);//, CS_CONST_STRLEN(_JEBE_HTTP_SEP));
+        transferred += bytes_transferred;
 
         std::size_t body_len = 0;
         if (CS_BUNLIKELY(header_len == std::string::npos))
@@ -48,9 +49,8 @@ void Session::handle_read(const boost::system::error_code& error,
             }
             else
             {
-                clpos += sizeof(_JEBE_HTTP_CONTENT_LENGTH) - 1;
+                clpos += CS_CONST_STRLEN(_JEBE_HTTP_CONTENT_LENGTH);
                 std::string::size_type clend = request.find(_JEBE_HTTP_LINE_SEP, clpos);//, CS_CONST_STRLEN(_JEBE_HTTP_LINE_SEP));
-                transferred += bytes_transferred;
                 if (CS_BUNLIKELY(clend == std::string::npos))
                 {
                     finish();
@@ -63,7 +63,7 @@ void Session::handle_read(const boost::system::error_code& error,
                     {
                         finish();
                     }
-                    else if (CS_BUNLIKELY(transferred < required))
+                    else if (CS_BUNLIKELY(transferred != required))
                     {
                         if (CS_BUNLIKELY(max_write_times < ++write_times))
                         {
@@ -77,12 +77,12 @@ void Session::handle_read(const boost::system::error_code& error,
                     else
                     {
                         std::string::size_type body_pos = header_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
-                        std::string content(request, body_pos, body_len);
+//                        std::string content(request, body_pos, body_len);
 
-                        std::string res_ = filter->filt(content, res);
-                        response.append(_JEBE_HEADER(200));
+                        std::string res_ = filter->filt(reinterpret_cast<const byte_t*>(request.data() + body_pos), body_len, res);
+                        response.assign(_JEBE_HEADER(200));
                         response.append(boost::lexical_cast<std::string>(res_.size()));
-                        response.append(_JEBE_HTTP_SEP);
+                        response.append(httpsep);
                         response.append(res_);
                         reply();
                     }

@@ -12,7 +12,6 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/array.hpp>
-
 #include "singleton.hpp"
 #include "filter.hpp"
 
@@ -50,7 +49,11 @@ public:
 
     ~Session()
     {
-    	CS_SAY("session destroyed");
+    	sock.cancel();
+    	sock.close();
+    	request.assign(request.size(), 0);
+    	response.assign(response.size(), 0);
+    	memset(res, 0, Config::getInstance()->body_max_size << 1);
     }
 
     boost::asio::ip::tcp::socket& getSock()

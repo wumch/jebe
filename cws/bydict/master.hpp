@@ -1,14 +1,13 @@
 
 #pragma once
 
+#include "predef.hpp"
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
-
-#include "predef.hpp"
 #include "singleton.hpp"
 #include "worker.hpp"
 #include "session.hpp"
@@ -28,7 +27,7 @@ public:
 
     boost::asio::io_service& get_io();
 
-private:
+protected:
     void listen();
 
     void start_accept();
@@ -37,7 +36,7 @@ private:
 
     void handle_accept(SessPtr& sock, const boost::system::error_code& error);
 
-    std::size_t pick_worker();
+    Worker& pick_worker();
 
     boost::asio::ip::tcp::acceptor* acptor;
 
