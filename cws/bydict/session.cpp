@@ -2,6 +2,7 @@
 #include "session.hpp"
 #include "filter.hpp"
 #include "memory.hpp"
+#include "worker.hpp"
 
 namespace jebe {
 namespace cws {
@@ -85,6 +86,7 @@ void Session::handle_read(const boost::system::error_code& error,
                         response.append(httpsep);
                         response.append(res_);
                         reply();
+                        finish();
                     }
                 }
             }
@@ -117,5 +119,27 @@ void Session::start_receive(const std::size_t offset)
     );
 }
 
+Session::Session(Worker* const w)
+	: worker(w), sock(worker->get_io()),
+	 request(worker->request), res(worker->res), response(worker->response),
+	transferred(0), write_times(0)
+#if _JEBE_USE_TIMER
+	,timer(io)
+#endif
+{
+}
+
+void Session::finish(const boost::system::error_code& error)
+{
+    if (!error)
+    {
+#if _JEBE_USE_TIMER
+        timer.cancel();
+#endif
+        boost::system::error_code ignored_ec;
+        sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+    }
+    worker->busy = false;
+}
 }
 }

@@ -4,8 +4,9 @@
 #ifdef __linux
 #	include <sys/prctl.h>
 #endif
-#include "master.hpp"
 #include "config.hpp"
+#include "master.hpp"
+#include "worker.hpp"
 
 namespace jebe {
 namespace cws {
@@ -74,8 +75,9 @@ void Master::listen()
 
 void Master::start_accept()
 {
-	Worker& w = pick_worker();
-    SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
+//	Worker& w = pick_worker();
+	SessPtr sess(new Session(&pick_worker()));
+//    SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
     acptor->async_accept(sess->getSock(),
         boost::bind(&Master::handle_accept, this,
             sess, boost::asio::placeholders::error

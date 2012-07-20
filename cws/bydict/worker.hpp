@@ -24,8 +24,6 @@ public:
           response(Config::getInstance()->request_max_size * 2, 0),
           res(new byte_t[Config::getInstance()->body_max_size << 1])
     {
-//    	request.reserve(Config::getInstance()->request_max_size);
-//    	response.reserve(Config::getInstance()->body_max_size << 1);
     }
 
     void run()

@@ -29,6 +29,7 @@ namespace jebe {
 namespace cws {
 
 extern const Filter* filter;
+class Worker;
 
 class Session:
     public boost::enable_shared_from_this<Session>,
@@ -37,15 +38,17 @@ class Session:
 public:
     typedef boost::asio::mutable_buffers_1 ReadBuf;
 
-    explicit Session(boost::asio::io_service& io, std::string& request_, byte_t* const res_, std::string& response_)
-        : sock(io),
-        request(request_), res(res_), response(response_),
-        transferred(0), write_times(0)
-#if _JEBE_USE_TIMER
-    	,timer(io)
-#endif
-    {
-    }
+//    explicit Session(boost::asio::io_service& io, std::string& request_, byte_t* const res_, std::string& response_)
+//        : sock(io),
+//        request(request_), res(res_), response(response_),
+//        transferred(0), write_times(0)
+//#if _JEBE_USE_TIMER
+//    	,timer(io)
+//#endif
+//    {
+//    }
+
+    explicit Session(Worker* const w);
 
     ~Session()
     {
@@ -90,6 +93,8 @@ protected:
 
     void inline reply();
 
+    Worker* const worker;
+
     boost::asio::ip::tcp::socket sock;
 
     std::string& request;
@@ -124,17 +129,7 @@ protected:
         );
     }
 
-    void Session::finish(const boost::system::error_code& error)
-    {
-        if (!error)
-        {
-    #if _JEBE_USE_TIMER
-            timer.cancel();
-    #endif
-            boost::system::error_code ignored_ec;
-            sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-        }
-    }
+//    void Session::finish(const boost::system::error_code& error);
 
     void Session::reply()
     {
