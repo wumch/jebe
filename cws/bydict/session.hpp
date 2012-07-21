@@ -9,21 +9,23 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/find.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/array.hpp>
 #include "unit.hpp"
 #include "singleton.hpp"
 #include "filter.hpp"
+#include "sendbuff.hpp"
 
-#define _JEBE_HTTP_LINE_SEP 				"\r\n"
-#define _JEBE_HTTP_SEP 						_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
 #define _JEBE_HTTP_CONTENT_LENGTH 			"Content-Length: "
 
 #define _JEBE_HEADER_NAME(status)			BOOST_PP_CAT(header_, status)
 #define _JEBE_HEADER(status) 				_JEBE_HEADER_NAME(status)
-#define _JEBE_HEADER_STRING(status) 		"HTTP/1.0 "#status" OK"_JEBE_HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH
-#define _JEBE_MAKE_HEADER(status, klass)	const std::string klass::_JEBE_HEADER_NAME(status)(_JEBE_HEADER_STRING(status))
-#define _JEBE_DECLARE_HEADER(status)		static const std::string _JEBE_HEADER_NAME(status)
+#define _JEBE_HEADER_STRING(status) 		"HTTP/1.0 "BOOST_PP_STRINGIZE(status)" OK"_JEBE_HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH
+#define _JEBE_MAKE_HEADER(status, klass)	const byte_t klass::_JEBE_HEADER_NAME(status)[] = _JEBE_HEADER_STRING(status)
+#define _JEBE_DECLARE_HEADER(status)		static const byte_t _JEBE_HEADER_NAME(status)[CS_CONST_STRLEN(_JEBE_HEADER_STRING(status)) + 1]
 
 namespace jebe {
 namespace cws {
@@ -96,11 +98,21 @@ public:
     static void config();
 
 protected:
-    static const std::string httpsep;
-    static const std::string bodysep;
-    static const std::string contentLength;
+    static const byte_t httpsep[CS_CONST_STRLEN(_JEBE_HTTP_LINE_SEP) + 1];
+    static const byte_t bodysep[CS_CONST_STRLEN(_JEBE_HTTP_SEP) + 1];
+    static const byte_t content_length[CS_CONST_STRLEN(_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH) + 1];
     _JEBE_DECLARE_HEADER(200);
     _JEBE_DECLARE_HEADER(400);
+
+    typedef boost::iterator_range<const byte_t*> Range;
+    typedef boost::algorithm::detail::first_finderF<
+            boost::range_const_iterator<Range>::type,
+			boost::algorithm::is_equal> Matcher;
+
+    static const Matcher httpsep_matcher;
+    static const Matcher bodysep_matcher;
+    static const Matcher content_length_matcher;
+    static const boost::algorithm::is_equal equaler;
 
     static std::size_t body_max_len;
     static std::size_t header_max_len;
@@ -134,49 +146,65 @@ protected:
 
     boost::asio::ip::tcp::socket sock;
 
-    std::size_t transferred;
-    std::size_t write_times;
-    char* request;
+    tsize_t transferred;
+    uint16_t write_times;
+
+    tsize_t header_end;
+    tsize_t content_length_begin;
+    tsize_t body_len;
+
+    byte_t* request;
     byte_t* const res;
-    byte_t* const response;
+    SendBuff response;
+
+    typedef std::vector<boost::asio::mutable_buffer> Buffers;
+    Buffers buffers;
+
 #if _JEBE_USE_TIMER
     boost::asio::deadline_timer timer;
 #endif
 };
 
-    void Session::start()
-    {
-        start_receive();
+void Session::start()
+{
+	start_receive();
 #if _JEBE_USE_TIMER
-        timer.expires_from_now(boost::posix_time::millisec(timeout));
-        timer.async_wait(
-            boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
-        );
+	timer.expires_from_now(boost::posix_time::millisec(timeout));
+	timer.async_wait(
+		boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
+	);
 #endif
-    }
+}
 
-    void Session::start_receive()
-    {
-        sock.async_read_some(
-            boost::asio::buffer(const_cast<char*>(request.data()), max_len),
-            boost::bind(&Session::handle_read, shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred
-            )
-        );
-    }
+
+
+
+
+
+
+void Session::start_receive()
+{
+	buffers[0]
+//	sock.async_read_some(
+//		boost::asio::buffer(const_cast<char*>(request.data()), max_len),
+//		boost::bind(&Session::handle_read, shared_from_this(),
+//			boost::asio::placeholders::error,
+//			boost::asio::placeholders::bytes_transferred
+//		)
+//	);
+}
 
 //    void Session::finish(const boost::system::error_code& error);
 
-    void Session::reply()
-    {
-        boost::asio::async_write(sock,
-            boost::asio::buffer(response, response.size()),
-            boost::bind(&Session::finish, shared_from_this(),
-                boost::asio::placeholders::error
-            )
-        );
-    }
+void Session::reply()
+{
+//	boost::asio::async_write(sock,
+//		boost::asio::buffer(response, response.size()),
+//		boost::bind(&Session::finish, shared_from_this(),
+//			boost::asio::placeholders::error
+//		)
+//	);
+}
 
 
 }

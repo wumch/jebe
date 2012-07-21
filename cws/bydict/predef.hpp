@@ -19,16 +19,15 @@ extern "C" {
 #define _JEBE_USE_TIMER				0
 #define _JEBE_ENABLE_MAXMATCH		0
 
-#define _JEBE_SESS_POOL_INC_STEP	16
-#define _JEBE_SESS_POOL_MAX_SIZE	1024
-
-#define _JEBE_RW_BUF_RATE			2
-
-#define _JEBE_SESS_RBUF_UNIT		2048
-#define _JEBE_SESS_RBUF_SIZE		1024
+#define _JEBE_BUFF_UNIT				1024
+#define _JEBE_SESS_RBUF_UNIT		1024
+#define _JEBE_SESS_SBUF_UNIT		_JEBE_SESS_RBUF_UNIT
 
 #define _JEBE_SESS_POOL_INC_STEP	32
 #define _JEBE_SESS_POOL_MAX_SIZE	1024
+
+#define _JEBE_HTTP_LINE_SEP 				"\r\n"
+#define _JEBE_HTTP_SEP 						(_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP)
 
 namespace jebe {
 namespace cws {

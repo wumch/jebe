@@ -4,13 +4,14 @@
 #include <fstream>
 #include <iomanip>
 #include <boost/tuple/detail/tuple_basic.hpp>
+#include "sendbuff.hpp"
 
 namespace jebe {
 namespace cws {
 
-tsize_t Filter::filt(const byte_t* const str, tsize_t size, byte_t* const res) const
+tsize_t Filter::filt(const byte_t* const str, tsize_t size, SendBuff& buff) const
 {
-	JSONHolder jh(res);
+	JSONHolder jh(buff);
     find<>(str, size, jh);
     jh.genRes();
     return jh.size();

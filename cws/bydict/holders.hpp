@@ -50,7 +50,7 @@ class JSONHolder
 public:
 	typedef boost::unordered_map<const Node* const, atimes_t, NodeHash> Words;
 	Words words;
-	byte_t* res;
+	SendBuff& res;
 	mutable tsize_t cur;
 	static const int16_t mid_joiner =
 #if CS_IS_LITTLE_ENDIAN
@@ -77,10 +77,10 @@ public:
 	mutable char convbuf[11];
 
 public:
-	JSONHolder(byte_t* res_):
-		words(128), res(res_), cur(1), word_atime(NULL, 1)
+	JSONHolder(SendBuff& buff):
+		words(128), res(buff), cur(1), word_atime(NULL, 1)
 	{
-		res[0] = '{';
+		res.write('{');
 	}
 
 	void operator()(const Node& node)
@@ -103,14 +103,15 @@ public:
 		{
 			if (CS_BLIKELY(it != words.begin()))
 			{
-				res[cur++] = ',';
+				res.write(',');
 			}
-			res[cur++] = '"';
+			res.write('"');
 
-			memcpy(res + cur, it->first->str().data(), it->first->str().size());
-			cur += it->first->str().size();
+			res.write(it->first->str().data(), it->first->str().size());
+//			cur += it->first->str().size();
 
-			*reinterpret_cast<int16_t*>(res + cur) = mid_joiner;
+//			*reinterpret_cast<int16_t*>(res + cur) = mid_joiner;
+			res.write(mid_joiner);
 			cur += sizeof(mid_joiner);
 
 			appendAtimes(it->second);

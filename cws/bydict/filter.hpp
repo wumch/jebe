@@ -50,7 +50,7 @@ public:
     {
     }
 
-    tsize_t filt(const byte_t* const str, tsize_t size, byte_t* const res) const;
+    tsize_t filt(const byte_t* const str, tsize_t size, SendBuff& buff) const;
 
     template<typename CallbackType>
     void find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const;
