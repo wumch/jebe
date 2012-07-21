@@ -97,7 +97,6 @@ public:
 		}
 	}
 
-//	const byte_t*
 	void genRes() const
 	{
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
@@ -139,7 +138,7 @@ public:
 		}
 	}
 
-	void append(const std::string& str)
+	void append(const pstr& str)
 	{
 		memcpy(res + cur, str.data(), str.size());
 		cur += str.size();

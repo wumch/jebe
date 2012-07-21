@@ -32,7 +32,7 @@ private:
 
     void attach_word(const char* word);
 
-    void attach_word(std::string& word);
+    void attach_word(pstr& word);
 
     Node* root;
 
@@ -50,7 +50,7 @@ public:
     {
     }
 
-    std::string filt(const byte_t* const str, tsize_t size, byte_t* const res) const;
+    tsize_t filt(const byte_t* const str, tsize_t size, byte_t* const res) const;
 
     template<typename CallbackType>
     void find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const;

@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-$counts = 20000;
+$counts = 2000;
 $url = "http://localhost:10086";
 
 function getContent()

@@ -3,16 +3,18 @@
 #include "holders.hpp"
 #include <fstream>
 #include <iomanip>
+#include <boost/tuple/detail/tuple_basic.hpp>
 
 namespace jebe {
 namespace cws {
 
-std::string Filter::filt(const byte_t* const str, tsize_t size, byte_t* const res) const
+tsize_t Filter::filt(const byte_t* const str, tsize_t size, byte_t* const res) const
 {
 	JSONHolder jh(res);
     find<>(str, size, jh);
     jh.genRes();
-    return std::string(reinterpret_cast<char*>(res));
+    return jh.size();
+//    return reinterpret_cast<char*>(res);
 }
 
 // Filter

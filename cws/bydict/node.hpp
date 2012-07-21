@@ -33,7 +33,7 @@ public:
 		return children[_atom];
     }
 
-    inline void endswith(const std::string& _patten)
+    inline void endswith(const pstr& _patten)
     {
         patten_end = true;
         patten = _patten;
@@ -44,7 +44,7 @@ public:
         return new Node;
     }
 
-    CS_FORCE_INLINE const std::string& str() const
+    CS_FORCE_INLINE const pstr& str() const
     {
     	return patten;
     }
@@ -57,7 +57,7 @@ public:
 private:
     Node* children[word_max_len];
 
-    std::string patten;
+    pstr patten;
 
     bool is_leaf;
 

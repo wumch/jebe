@@ -22,11 +22,6 @@ public:
 		return staging::getInstance<Config>();
 	}
 
-	CS_FORCE_INLINE static Config* getInst()
-	{
-		return staging::getInstance<Config>();
-	}
-
 public:
     std::string host;
     uint16_t port;
@@ -62,6 +57,11 @@ public:
     }
 
 protected:
+	CS_FORCE_INLINE static Config* getInst()
+	{
+		return staging::getInstance<Config>();
+	}
+
     void init(int argc, const char* const argv[]);
 
     Config(): desc("allowed config options") {}

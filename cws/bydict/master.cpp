@@ -1,6 +1,9 @@
 
+#include "predef.hpp"
 #include <vector>
 #include <boost/thread.hpp>
+#include <boost/bind.hpp>
+#include <boost/asio.hpp>
 #ifdef __linux
 #	include <sys/prctl.h>
 #endif
@@ -11,15 +14,9 @@
 namespace jebe {
 namespace cws {
 
-typedef std::vector<boost::shared_ptr<boost::thread> > ThreadList;
-
-Master::Master(const std::size_t worker_count)
-    : next_worker_index(0), workers(worker_count)
+Master::Master(std::size_t worker_count_)
+    : next_io(0), worker_count(worker_count_)
 {
-    for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
-    {
-        iter->reset(new Worker);
-    }
 }
 
 void Master::run()
@@ -28,10 +25,13 @@ void Master::run()
 	prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":master").c_str());
 #endif
     ThreadList threads;
-    for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
+    for (std::size_t i = 0; i < worker_count; ++i)
     {
-        iter->reset(new Worker);
-        boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&Worker::run, *iter)));
+    	boost::asio::io_service* io = new boost::asio::io_service;
+    	ios.push_back(io);
+    	works.push_back(new boost::asio::io_service::work(*io));
+
+        boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, io)));
         threads.push_back(thread);
     }
 
@@ -46,7 +46,7 @@ void Master::run()
 
 void Master::stop()
 {
-    for (WorkerPool::iterator iter = workers.begin(); iter != workers.end(); ++iter)
+    for (IoPool::iterator iter = ios.begin(); iter != ios.end(); ++iter)
     {
         (*iter)->stop();
     }
@@ -54,66 +54,62 @@ void Master::stop()
 
 void Master::listen()
 {
-    acptor = new boost::asio::ip::tcp::acceptor(get_io());
+	namespace ip = boost::asio::ip;
+
+    acptor = new ip::tcp::acceptor(getio());
     const Config* const config = Config::getInstance();
     
-    boost::asio::ip::tcp::resolver resolver(acptor->get_io_service());
-    boost::asio::ip::tcp::resolver::query query(config->host, boost::lexical_cast<std::string>(config->port));
-    boost::asio::ip::tcp::endpoint ep = *resolver.resolve(query);
+    ip::tcp::resolver resolver(acptor->get_io_service());
+    ip::tcp::resolver::query query(config->host, boost::lexical_cast<std::string>(config->port));
+    ip::tcp::endpoint ep = *resolver.resolve(query);
     acptor->open(ep.protocol());
 
-    acptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(config->reuse_address));
-    acptor->set_option(boost::asio::ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
-    acptor->set_option(boost::asio::ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
+    acptor->set_option(ip::tcp::acceptor::reuse_address(config->reuse_address));
+    acptor->set_option(ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
+    acptor->set_option(ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
 
     Session::config();
     
     acptor->bind(ep);
-    acptor->listen();
+    acptor->listen(Config::getInstance()->max_connections);
     start_accept();
 }
+
+//void Master::release_session(Session* sess)
+//{
+//	sess->~Session();
+//}
 
 void Master::start_accept()
 {
 //	Worker& w = pick_worker();
-	SessPtr sess(new Session(&pick_worker()));
-//    SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
-    acptor->async_accept(sess->getSock(),
-        boost::bind(&Master::handle_accept, this,
-            sess, boost::asio::placeholders::error
-        )
-    );
+	Session* s = new (sess_alloc.allocate()) Session(getio());
+	SessPtr sess(s, boost::bind(&Master::release_session, this, s));
+//	SessPtr sess(new Session(getio()), releaseSession);
+	if (CS_LIKELY(sess))
+	{
+//		SessPtr sess(new Session(getio()));
+//    	SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
+		acptor->async_accept(sess->getSock(),
+			boost::bind(&Master::handle_accept, this,
+				sess, boost::asio::placeholders::error
+			)
+		);
+	}
+	else
+	{
+		start_accept();
+	}
 }
 
-boost::asio::io_service& Master::get_io()
+boost::asio::io_service& Master::getio()
 {
-    return pick_worker().get_io();
-}
-
-Worker& Master::pick_worker()
-{
-    ++next_worker_index;
-    if (next_worker_index == workers.size())
+    ++next_io;
+    if (next_io == ios.size())
     {
-        next_worker_index = 0;
+        next_io = 0;
     }
-    if (CS_BLIKELY(!workers[next_worker_index]->busy))
-    {
-    	workers[next_worker_index]->busy = true;
-    	return *workers[next_worker_index];
-    }
-    else
-    {
-    	while (workers[next_worker_index]->busy)
-    	{
-    	    ++next_worker_index;
-    	    if (next_worker_index == workers.size())
-    	    {
-    	        next_worker_index = 0;
-    	    }
-    	}
-    }
-    return *workers[next_worker_index];
+    return *ios[next_io];
 }
 
 void Master::handle_accept(SessPtr& sess,
@@ -124,6 +120,14 @@ void Master::handle_accept(SessPtr& sess,
         sess->start();
     }
     start_accept();
+}
+
+void Master::runio(boost::asio::io_service& io)
+{
+#ifdef __linux
+	prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":worker").c_str());
+#endif
+    io.run();
 }
 
 }
