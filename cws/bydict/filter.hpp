@@ -7,6 +7,7 @@
 #include "holders.hpp"
 #include "node.hpp"
 #include "config.hpp"
+#include "sendbuff.hpp"
 
 namespace jebe {
 namespace cws {
@@ -32,7 +33,7 @@ private:
 
     void attach_word(const char* word);
 
-    void attach_word(pstr& word);
+    void attach_word(std::string& word);
 
     Node* root;
 

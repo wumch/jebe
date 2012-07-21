@@ -18,7 +18,8 @@ void Config::init(int argc, const char* const argv[])
 	boost::program_options::options_description cmdDesc("allowed options");
 	cmdDesc.add_options()
 			("help", "show this help and exit.")
-			("config", boost::program_options::value<std::string>()->default_value("etc/tokenizer.conf"), "config file, defaults to etc/tokenizer.conf.")
+			("config", boost::program_options::value<std::string>()->default_value("etc/tokenizer.conf"),
+					"config file, defaults to etc/tokenizer.conf.")
 	;
 
 	boost::filesystem::path program_path = argv[0];

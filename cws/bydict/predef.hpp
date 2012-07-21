@@ -27,7 +27,7 @@ extern "C" {
 #define _JEBE_SESS_POOL_MAX_SIZE	1024
 
 #define _JEBE_HTTP_LINE_SEP 				"\r\n"
-#define _JEBE_HTTP_SEP 						(_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP)
+#define _JEBE_HTTP_SEP 						_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
 
 namespace jebe {
 namespace cws {
@@ -37,7 +37,6 @@ typedef boost::fast_pool_allocator<staging::CSUnit<1>, boost::default_user_alloc
 		boost::details::pool::default_mutex,
 		_JEBE_SESS_POOL_INC_STEP * _JEBE_SESS_RBUF_UNIT,
 		_JEBE_SESS_POOL_MAX_SIZE * _JEBE_SESS_RBUF_UNIT> RecvBuffAlloc;
-typedef std::basic_string<char, std::char_traits<char>, RecvBuffAlloc> pstr;
 
 // the buffer-descripter which hold a pair of (data-ptr,data-size).
 typedef std::pair<char* const, std::size_t> BuffDesc;

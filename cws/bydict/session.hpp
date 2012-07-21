@@ -44,13 +44,10 @@ class Session:
     public boost::noncopyable
 {
 public:
-	typedef boost::fast_pool_allocator<staging::CSUnit<1>, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex,
-			_JEBE_SESS_POOL_INC_STEP * _JEBE_SESS_RBUF_UNIT,
-			_JEBE_SESS_POOL_MAX_SIZE * _JEBE_SESS_RBUF_UNIT> RecvBuffAlloc;
+	typedef boost::singleton_pool<staging::CSUnit<1>, sizeof(char) * _JEBE_SESS_RBUF_UNIT,
+			boost::default_user_allocator_new_delete, boost::details::pool::null_mutex,
+			_JEBE_SESS_POOL_INC_STEP> RecvBuffAlloc;
 //	static RecvBuffAlloc recv_buff_alloc;
-
-	typedef std::basic_string<char, std::char_traits<char>, RecvBuffAlloc> pstr;
 
 	typedef boost::singleton_pool<staging::CSUnit<2>, sizeof(char), boost::default_user_allocator_new_delete,
 			boost::details::pool::null_mutex,
@@ -66,7 +63,7 @@ public:
 
     typedef boost::asio::mutable_buffers_1 ReadBuf;
 
-//    explicit Session(boost::asio::io_service& io, pstr& request_, byte_t* const res_, pstr& response_)
+//    explicit Session(boost::asio::io_service& io, std::string& request_, byte_t* const res_, std::string& response_)
 //        : sock(io),
 //        request(request_), res(res_), response(response_),
 //        transferred(0), write_times(0)
@@ -82,7 +79,7 @@ public:
     {
 //		request.assign(request.size(), 0);
 //		SendBuffAlloc::free(const_cast<char*>(request.data()), Config::getInstance()->receive_buffer_size);
-    	ResBuffAlloc::ordered_free(res, Config::getInstance()->send_buffer_size);
+//    	ResBuffAlloc::ordered_free(res, Config::getInstance()->send_buffer_size);
 //		SendBuffAlloc::free(const_cast<char*>(response.data()), Config::getInstance()->send_buffer_size);
 //		response.assign(response.size(), 0);
 //		memset(res, 0, Config::getInstance()->body_max_size << 1);
@@ -157,13 +154,19 @@ protected:
     byte_t* const res;
     SendBuff response;
 
-    typedef std::vector<boost::asio::mutable_buffer> Buffers;
-    Buffers buffers;
-
 #if _JEBE_USE_TIMER
     boost::asio::deadline_timer timer;
 #endif
 };
+
+
+
+
+
+
+
+
+
 
 void Session::start()
 {
@@ -176,34 +179,27 @@ void Session::start()
 #endif
 }
 
-
-
-
-
-
-
 void Session::start_receive()
 {
-	buffers[0]
-//	sock.async_read_some(
-//		boost::asio::buffer(const_cast<char*>(request.data()), max_len),
-//		boost::bind(&Session::handle_read, shared_from_this(),
-//			boost::asio::placeholders::error,
-//			boost::asio::placeholders::bytes_transferred
-//		)
-//	);
+	sock.async_read_some(
+		boost::asio::buffer(request, Config::getInstance()->receive_buffer_size),
+		boost::bind(&Session::handle_read, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred
+		)
+	);
 }
 
 //    void Session::finish(const boost::system::error_code& error);
 
 void Session::reply()
 {
-//	boost::asio::async_write(sock,
-//		boost::asio::buffer(response, response.size()),
-//		boost::bind(&Session::finish, shared_from_this(),
-//			boost::asio::placeholders::error
-//		)
-//	);
+	boost::asio::async_write(sock,
+		response.getBuffers(),
+		boost::bind(&Session::finish, shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
 }
 
 

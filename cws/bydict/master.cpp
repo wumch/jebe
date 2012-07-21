@@ -10,6 +10,8 @@
 #include "config.hpp"
 #include "master.hpp"
 #include "worker.hpp"
+#include "session.hpp"
+#include "sendbuff.hpp"
 
 namespace jebe {
 namespace cws {
@@ -69,6 +71,7 @@ void Master::listen()
     acptor->set_option(ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
 
     Session::config();
+    SendBuff::config();
     
     acptor->bind(ep);
     acptor->listen(Config::getInstance()->max_connections);

@@ -4,6 +4,7 @@
 #include "predef.hpp"
 #include <boost/unordered_map.hpp>
 #include "node.hpp"
+#include "sendbuff.hpp"
 
 namespace jebe {
 namespace cws {
@@ -13,23 +14,25 @@ class Node;
 // join pattens with space.
 class JoinHolder
 {
-	byte_t* res;
+	SendBuff res;
 	tsize_t cur;
 public:
-	JoinHolder(byte_t* res_): res(res_), cur(0) {}
+	JoinHolder(SendBuff& buff): res(buff), cur(0) {}
 
 	void operator()(const Node& node)
 	{
-		memcpy(res + cur, node.str().data(), node.str().size());
-		cur += node.str().size();
-		res[cur++] = ' ';
+		res.write(node.str().data(), node.str().size());
+		res.write(' ');
+//		memcpy(res + cur, node.str().data(), node.str().size());
+//		cur += node.str().size();
+//		res[cur++] = ' ';
 	}
 
 	void genRes() const
 	{
 		if (CS_BLIKELY(cur > 0))
 		{
-			res[cur - 1] = 0;
+//			res[cur - 1] = 0;
 		}
 	}
 };
@@ -48,7 +51,7 @@ public:
 class JSONHolder
 {
 public:
-	typedef boost::unordered_map<const Node* const, atimes_t, NodeHash> Words;
+	typedef boost::unordered_map<const Node*, atimes_t, NodeHash> Words;
 	Words words;
 	SendBuff& res;
 	mutable tsize_t cur;
@@ -112,38 +115,35 @@ public:
 
 //			*reinterpret_cast<int16_t*>(res + cur) = mid_joiner;
 			res.write(mid_joiner);
-			cur += sizeof(mid_joiner);
+//			cur += sizeof(mid_joiner);
 
-			appendAtimes(it->second);
+			res.insertNumber(it->second);
+//			appendAtimes(it->second);
 		}
-		*reinterpret_cast<int16_t*>(res + cur) = tail;
-		cur += 1;
+		res.write(tail);
+//		*reinterpret_cast<int16_t*>(res + cur) = tail;
+//		cur += 1;
 	}
 
-	void appendAtimes(atimes_t atimes) const
-	{
-		if (CS_BLIKELY(atimes < 10))
-		{
-			res[cur++] = atimes + '0';
-		}
-		else
-		{
-			int bytes = 11;
-			while (atimes > 0)
-			{
-				convbuf[--bytes] = (atimes % 10) + '0';
-				atimes /= 10;
-			}
-			memcpy(res + cur, convbuf + bytes, 11 - bytes);
-			cur += 11 - bytes;
-		}
-	}
-
-	void append(const pstr& str)
-	{
-		memcpy(res + cur, str.data(), str.size());
-		cur += str.size();
-	}
+//	void appendAtimes(atimes_t atimes) const
+//	{
+//		if (CS_BLIKELY(atimes < 10))
+//		{
+//			res[cur++] = atimes + '0';
+//		}
+//		else
+//		{
+//			int bytes = 11;
+//			while (atimes > 0)
+//			{
+//				convbuf[--bytes] = (atimes % 10) + '0';
+//				atimes /= 10;
+//			}
+//			memcpy(res + cur, convbuf + bytes, 11 - bytes);
+//			cur += 11 - bytes;
+//		}
+//	}
+//
 
 	tsize_t size() const
 	{

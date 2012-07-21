@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/tokenizer
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -49,7 +49,7 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/shareinfo.o $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
+OBJS = $(OBJECT_PATH)/shareinfo.o $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/sendbuff.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
 
 all: $(OBJS)
 	@echo Linking...
@@ -70,6 +70,10 @@ GLOBAL_DEPEND = $(SOURCE_PATH)/predef.hpp $(SOURCE_PATH)/shareinfo.hpp
 $(SOURCE_PATH)/predef.hpp: $(SOURCE_PATH)/allocator.hpp
 
 $(OBJECT_PATH)/main.o: $(SOURCE_PATH)/main.cpp $(SOURCE_PATH)/portal.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/sendbuff.o: $(SOURCE_PATH)/sendbuff.cpp $(SOURCE_PATH)/sendbuff.hpp $(SOURCE_PATH)/config.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

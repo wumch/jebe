@@ -6,6 +6,7 @@
 #include <boost/asio/buffer.hpp>
 #include <vector>
 #include "config.hpp"
+#include "numcast.hpp"
 
 namespace jebe {
 namespace cws {
@@ -13,7 +14,7 @@ namespace cws {
 class SendBuff
 {
 public:
-	typedef std::vector<byte_t* const> ChunkList;
+	typedef std::vector<byte_t*> ChunkList;
 	typedef std::vector<boost::asio::const_buffer> BufferList;
 
 protected:
@@ -35,11 +36,11 @@ protected:
 	byte_t content_length[32];
 
 public:
-	static void init()
+	static void config()
 	{
 		chunkSize = Config::getInstance()->send_buffer_size * _JEBE_BUFF_UNIT;
-		httpsep = *reinterpret_cast<const uint32_t>(_JEBE_HTTP_SEP _JEBE_HTTP_SEP);
-		Alloc::free(Alloc::malloc());		// to prepare memory pool before any request reaches.
+		httpsep = *reinterpret_cast<const uint32_t*>(_JEBE_HTTP_SEP _JEBE_HTTP_SEP);
+//		Alloc::free(Alloc::malloc());		// to prepare memory pool before any request reaches.
 	}
 
 public:
@@ -50,19 +51,32 @@ public:
 		{
 			grow();
 		}
-		*cursor() = c;
+//		*reinterpret_cast<char_t*>(cursor()) = c;
 	}
 
 	template<typename char_t>
 	void write(const char_t* const bytes, tsize_t n)
 	{
-		if (CS_BLIKELY(lastSize + n <= chunkSize))
+		if (CS_BLIKELY(lastSize + n * sizeof(char_t) <= chunkSize))
 		{
 			memcpy(cursor(), bytes, n * sizeof(char_t));
 		}
 		else
 		{
-			growWrite(reinterpret_cast<byte_t*>(bytes), n * sizeof(char_t));
+			growWrite(reinterpret_cast<const byte_t*>(bytes), n * sizeof(char_t));
+		}
+	}
+
+	void insertNumber(const uint32_t number)
+	{
+		if (CS_BLIKELY(lastSize + CS_CONST_STRLEN(BOOST_PP_STRINGIZE(INT_MAX)) <= chunkSize))
+		{
+			staging::NumCast::ultostr(number, cursor());
+		}
+		else
+		{
+			// `content_length` must not be used at this time.
+			write(content_length, staging::NumCast::ultostr(number, content_length));
 		}
 	}
 
@@ -83,7 +97,7 @@ public:
 
 	byte_t* cursor() const
 	{
-		return *(chunkList.end()) + lastSize;
+		return *(chunkList.end() - 1) + lastSize;
 	}
 
 	tsize_t remains() const
@@ -122,7 +136,7 @@ public:
 	{
 		for (ChunkList::iterator it = chunkList.begin(); it != chunkList.end(); ++it)
 		{
-			Alloc::ordered_free(*it, chunkSize);
+			Alloc::ordered_free(*it, chunkSize / _JEBE_BUFF_UNIT);
 		}
 	}
 
@@ -146,7 +160,7 @@ public:
 protected:
 	void grow()
 	{
-		chunkList.push_back(reinterpret_cast<byte_t*>(Alloc::ordered_malloc(chunkSize)));
+		chunkList.push_back(reinterpret_cast<byte_t*>(Alloc::malloc()));
 		lastSize = 0;
 	}
 
