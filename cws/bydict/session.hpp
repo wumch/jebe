@@ -22,8 +22,8 @@
 #define _JEBE_HEADER_NAME(status)			BOOST_PP_CAT(header_, status)
 #define _JEBE_HEADER(status) 				_JEBE_HEADER_NAME(status)
 #define _JEBE_HEADER_STRING(status) 		"HTTP/1.0 "#status" OK"_JEBE_HTTP_LINE_SEP"Content-Type: text/plain; charset=utf-8"_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH
-#define _JEBE_MAKE_HEADER(status, klass)	const Session::pstr klass::_JEBE_HEADER_NAME(status)(_JEBE_HEADER_STRING(status))
-#define _JEBE_DECLARE_HEADER(status)		static const Session::pstr _JEBE_HEADER_NAME(status)
+#define _JEBE_MAKE_HEADER(status, klass)	const std::string klass::_JEBE_HEADER_NAME(status)(_JEBE_HEADER_STRING(status))
+#define _JEBE_DECLARE_HEADER(status)		static const std::string _JEBE_HEADER_NAME(status)
 
 namespace jebe {
 namespace cws {
@@ -96,8 +96,9 @@ public:
     static void config();
 
 protected:
-    static const pstr httpsep;
-    static const pstr contentLength;
+    static const std::string httpsep;
+    static const std::string bodysep;
+    static const std::string contentLength;
     _JEBE_DECLARE_HEADER(200);
     _JEBE_DECLARE_HEADER(400);
 
@@ -135,7 +136,7 @@ protected:
 
     std::size_t transferred;
     std::size_t write_times;
-    pstr request;
+    char* request;
     byte_t* const res;
     byte_t* const response;
 #if _JEBE_USE_TIMER

@@ -1,6 +1,6 @@
 
-#include <boost/algorithm/string/find.hpp>
 #include "session.hpp"
+#include <boost/algorithm/string/find.hpp>
 #include "filter.hpp"
 #include "memory.hpp"
 #include "worker.hpp"
@@ -11,10 +11,12 @@ namespace cws {
 
 const Filter* filter = NULL;
 
+const unsigned char* s = reinterpret_cast<unsigned char>("");
+
 _JEBE_MAKE_HEADER(200, Session);
 _JEBE_MAKE_HEADER(400, Session);
-const Session::pstr Session::httpsep(_JEBE_HTTP_SEP);
-const Session::pstr Session::contentLength(_JEBE_HTTP_CONTENT_LENGTH);
+const std::string Session::httpsep(_JEBE_HTTP_SEP);
+const std::string Session::contentLength(_JEBE_HTTP_LINE_SEP _JEBE_HTTP_CONTENT_LENGTH);
 std::size_t Session::header_max_len = 0;
 std::size_t Session::body_max_len = 0;
 std::size_t Session::max_len = 0;
@@ -26,10 +28,19 @@ void Session::handle_read(const boost::system::error_code& error,
 {
     if (CS_BLIKELY(!error))
     {
-        pstr::size_type header_len = request.find(httpsep,
-        		CS_BUNLIKELY(transferred > CS_CONST_STRLEN(_JEBE_HTTP_SEP)) ?
-        				(transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP)) : 0
-		);//, CS_CONST_STRLEN(_JEBE_HTTP_SEP));
+    	boost::iterator_range<const char*> range(
+			request + (transferred < CS_CONST_STRLEN(_JEBE_HTTP_SEP) ? 0 : (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP))),
+			request + std::min(transferred + bytes_transferred, header_max_len)
+		);
+    	boost::iterator_range<const char*> httpsep_itr(httpsep.begin(), httpsep.end());
+    	std::string s;
+    	boost::algorithm::find_first(
+    			s,
+    			"ffdf");
+//        pstr::size_type header_len = request.find(httpsep,
+//			CS_BLIKELY(transferred < CS_CONST_STRLEN(_JEBE_HTTP_SEP)) ?
+//				0 : (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP))
+//		);
         transferred += bytes_transferred;
 
         std::size_t body_len = 0;
@@ -94,6 +105,8 @@ void Session::handle_read(const boost::system::error_code& error,
                         response.append(res, res_size);
                         reply();
                         finish();
+                        boost::iterator_range<char*> it;
+                        boost::algorithm::find_first(reinterpret_cast<char*>(const_cast<char*>(response)), "f");
                     }
                 }
             }
