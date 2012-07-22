@@ -14,13 +14,18 @@ class Node;
 // join pattens with space.
 class SplitHolder
 {
-	SendBuff res;
+	SendBuff& res;
 	tsize_t cur;
 public:
-	SplitHolder(SendBuff& buff): res(buff), cur(0) {}
+	explicit SplitHolder(SendBuff& buff)
+		: res(buff), cur(0)
+	{
+		CS_SAY("address of buff in SplitHolder: [" << &res << "]");
+	}
 
 	void operator()(const Node& node)
 	{
+		CS_SAY("address of buff operator(): [" << &res << "]");
 		res.write(node.str().data(), node.str().size());
 		res.write(' ');
 //		memcpy(res + cur, node.str().data(), node.str().size());
@@ -57,7 +62,7 @@ public:
 	std::pair<const Node*, atimes_t> word_atime;		// assit to make no stack alloc.
 
 public:
-	CompareHolder(SendBuff& buff):
+	explicit CompareHolder(SendBuff& buff):
 		words(128), res(buff), word_atime(NULL, 1)
 	{
 		res.write('{');
@@ -116,7 +121,7 @@ public:
 	mutable char convbuf[11];
 
 public:
-	CountHolder(SendBuff& buff):
+	explicit CountHolder(SendBuff& buff):
 		words(128), res(buff), cur(1), word_atime(NULL, 1)
 	{
 		res.write('{');
@@ -138,6 +143,7 @@ public:
 
 	void genRes() const
 	{
+		CS_SAY(words.size());
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
 			if (CS_BLIKELY(it != words.begin()))

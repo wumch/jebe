@@ -4,7 +4,7 @@
 namespace jebe {
 namespace cws {
 
-Filter* RequestHandler::filter;
+const Filter* RequestHandler::filter;
 std::size_t RequestHandler::chunkSize;
 
 const RequestHandler::ActionList RequestHandler::actionList= {{

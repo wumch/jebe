@@ -22,7 +22,7 @@ enum Action {
 class RequestHandler
 {
 protected:
-	static Filter* filter;
+	static const Filter* filter;
 	static std::size_t chunkSize;
 
 	typedef boost::array<uint64_t, 3> ActionList;
@@ -41,9 +41,10 @@ protected:
 
 public:
     RequestHandler(byte_t* const chunk_, SendBuff& buff_)
-    	: chunk(chunk_), buff(buff_), action(unknown)
+    	: chunk(chunk_), buff(buff_), action(unknown),
+    	  spliter(NULL), counter(NULL), comparer(NULL)
     {
-
+    	CS_SAY("address of buff in RequestHandler: [" << &buff << "]");
     }
 
     static void init(std::size_t chunkSize_)
@@ -108,12 +109,24 @@ public:
 			switch (action)
 			{
 			case split:
+    			if (CS_BUNLIKELY(!spliter))
+				{
+    				spliter = new SplitHolder(buff);
+				}
 				return spliter->genRes();
 				break;
 			case count:
+    			if (CS_BUNLIKELY(!spliter))
+				{
+    				spliter = new SplitHolder(buff);
+				}
 				return counter->genRes();
 				break;
 			case compare:
+    			if (CS_BUNLIKELY(!comparer))
+				{
+    				comparer = new CompareHolder(buff);
+				}
 				return comparer->genRes();
 				break;
 			default:
@@ -124,6 +137,7 @@ public:
 
     ~RequestHandler()
     {
+    	CS_SAY("request-handler destroyed");
     	boost::checked_delete(spliter);
     	boost::checked_delete(counter);
     	boost::checked_delete(comparer);
@@ -139,7 +153,7 @@ protected:
     		const byte_t* bytes = data + actionBegins;
     		for (std::size_t i = 0; i < actionMaxLen; ++i)
     		{
-    			if (bytes[i] == ' ')
+    			if (bytes[i] == ' ' || bytes[i] == '/' || bytes[i] == '?' || bytes[i] == '#')
     			{
     				break;
     			}
@@ -148,12 +162,13 @@ protected:
     		CS_SAY("[" << act << "]");
 
     		std::size_t actname = *reinterpret_cast<uint64_t*>(act);
-    		for (std::size_t i = 0, end = actionList.size() - 1; i < end; ++i)
+    		for (std::size_t i = 0; i < actionList.size(); ++i)
     		{
     			CS_SAY(actionList[i] << "," << actname);
     			if (actionList[i] == actname)
     			{
     				action = static_cast<Action>(i);
+    				break;
     			}
     		}
     	}

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "predef.hpp"
+#include <new>
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -58,6 +59,7 @@ protected:
     	if (CS_BLIKELY(sess_count < Config::getInstance()->max_connections))
     	{
 			Session* sess = new (SessAlloc::malloc()) Session(getio());
+//			Session* sess = new Session(getio());
 			if (CS_LIKELY(sess))
 			{
 				++sess_count;
@@ -75,12 +77,13 @@ protected:
 
     typedef std::vector<boost::asio::io_service*> IoPool;
     IoPool ios;
+    boost::asio::io_service* io_service;
 
     typedef std::vector<boost::asio::io_service::work*> WorkPool;
     WorkPool works;
 
     typedef boost::singleton_pool<Session, sizeof(Session), boost::default_user_allocator_new_delete,
-    		boost::details::pool::null_mutex, _JEBE_SESS_POOL_INC_STEP> SessAlloc;
+    		boost::details::pool::default_mutex, _JEBE_SESS_POOL_INC_STEP> SessAlloc;
 
     std::size_t sess_count;
 };

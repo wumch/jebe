@@ -4,6 +4,7 @@
 #include "predef.hpp"
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/asio/buffer.hpp>
+#include <boost/noncopyable.hpp>
 #include <vector>
 #include "config.hpp"
 #include "numcast.hpp"
@@ -12,6 +13,7 @@ namespace jebe {
 namespace cws {
 
 class SendBuff
+	: boost::noncopyable
 {
 public:
 	typedef std::vector<byte_t*> ChunkList;
@@ -32,7 +34,7 @@ protected:
 	BufferList bufferList;
 	tsize_t lastSize;
 
-	const byte_t* header;
+	const byte_t* const header;
 	tsize_t header_size;
 
 	byte_t content_length[32];
@@ -65,14 +67,14 @@ public:
 		if (CS_BLIKELY(lastSize + n * sizeof(char_t) <= chunkSize))
 		{
 			memcpy(cursor(), bytes, n * sizeof(char_t));
-//			CS_SAY(cursor());
+			CS_SAY(cursor());
 			lastSize += n * sizeof(char_t);
-//			CS_SAY(cursor() - lastSize);
+			CS_SAY(cursor() - lastSize);
 		}
 		else
 		{
 			growWrite(reinterpret_cast<const byte_t*>(bytes), n * sizeof(char_t));
-//			CS_SAY(cursor() - lastSize);
+			CS_SAY(cursor() - lastSize);
 		}
 	}
 
@@ -87,7 +89,7 @@ public:
 			// `content_length` must not be used at this time.
 			write(content_length, staging::NumCast::ultostr(number, content_length));
 		}
-//		CS_SAY(cursor() - lastSize);
+		CS_SAY(cursor() - lastSize);
 	}
 
 	byte_t* cursor() const
@@ -115,16 +117,10 @@ public:
 		return bufferList;
 	}
 
-//	SendBuff()
-//		: lastSize(0), header(NULL), header_size(0)
-//	{
-//		grow();
-//	}
-
 	explicit SendBuff(const byte_t* const header_, tsize_t header_size_)
 		: lastSize(0), header(header_), header_size(header_size_)
 	{
-//		CS_SAY("[" << header << "]");
+		CS_SAY("[" << header << "]");
 		grow();
 	}
 
@@ -164,6 +160,7 @@ protected:
 		}
 		else
 		{
+			CS_SAY("rescursion grow-write");
 			growWrite(bytes + brk, remaining);	// TODO: solve memory leaks.
 		}
 		memcpy(cursor(), bytes + brk, remaining);
@@ -172,6 +169,7 @@ protected:
 
 	void grow()
 	{
+		CS_SAY("grow for " << this);
 		chunkList.push_back(reinterpret_cast<byte_t*>(Alloc::ordered_malloc(chunkRate)));
 		lastSize = 0;
 	}

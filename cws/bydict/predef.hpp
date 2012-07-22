@@ -2,7 +2,11 @@
 #pragma once
 
 #ifndef CS_DEBUG
-#	define CS_DEBUG					0
+#	ifndef NDEBUG
+#		define CS_DEBUG				1
+#	else
+#		define CS_DEBUG				0
+#	endif
 #endif
 #define CS_LOG_ON					0
 

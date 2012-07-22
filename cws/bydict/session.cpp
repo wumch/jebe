@@ -82,14 +82,14 @@ void Session::handle_read(const boost::system::error_code& error,
 				{
 					if (CS_BLIKELY(transferred < chunkSize))
 					{
-						start_receive(transferred);
-					}
-					else
-					{
+//						start_receive(transferred);
+//					}
+//					else
+//					{
 						tsize_t remains = handler.handle(request + body_begin, transferred - body_begin);
 						if (CS_BLIKELY(remains <= chunkSize))
 						{
-							start_receive();
+							start_receive(remains);
 						}
 					}
 				}

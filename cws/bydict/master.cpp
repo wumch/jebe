@@ -27,19 +27,21 @@ void Master::run()
 	prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":master").c_str());
 #endif
     ThreadList threads;
+	io_service = new boost::asio::io_service;
+	new boost::asio::io_service::work(*io_service);
+//	ios.push_back(io);
+//	works.push_back(new boost::asio::io_service::work(*io));
     for (std::size_t i = 0; i < worker_count; ++i)
     {
-    	boost::asio::io_service* io = new boost::asio::io_service;
-    	ios.push_back(io);
-    	works.push_back(new boost::asio::io_service::work(*io));
 
-        boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, io)));
+        boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, io_service)));
         threads.push_back(thread);
     }
 
     Session::config();
 
     listen();
+    start_accept();
     for (ThreadList::iterator iter = threads.begin(); iter != threads.end(); ++iter)
     {
         (*iter)->join();
@@ -72,7 +74,6 @@ void Master::listen()
     
     acptor->bind(ep);
     acptor->listen(Config::getInstance()->max_connections);
-    start_accept();
 }
 
 void Master::start_accept()
@@ -96,25 +97,26 @@ void Master::start_accept()
 void Master::delay_accept()
 {
 	CS_SAY("connections: " << sess_count);
-	static const std::size_t max_mills = 200;
-	static std::size_t cur_mills = 2;
+	static const std::size_t max_interval = 200;
+	static std::size_t cur_interval = 2;
 	static boost::asio::deadline_timer timer(getio());
 
-	timer.expires_from_now(boost::posix_time::millisec(cur_mills));
+	timer.expires_from_now(boost::posix_time::millisec(cur_interval));
 	timer.async_wait(boost::bind(&Master::start_accept, this));
 
-	if (cur_mills < max_mills)
+	if (cur_interval < max_interval)
 	{
-		cur_mills <<= 1;
-		if (cur_mills > max_mills)
+		cur_interval <<= 1;
+		if (cur_interval > max_interval)
 		{
-			cur_mills = max_mills;
+			cur_interval = max_interval;
 		}
 	}
 }
 
 boost::asio::io_service& Master::getio()
 {
+	return *io_service;
     ++next_io;
     if (next_io == ios.size())
     {

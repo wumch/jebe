@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-$counts = 2000;
-$url = "http://localhost:10086";
+$counts = 10000;
+$url = "http://localhost:10086/count";
 
 function getContent()
 {
@@ -57,7 +57,7 @@ function bench($counts, $post)
 }
 
 $post = getContent();
-$post = mb_substr($post, 0, intval(1024 / 3));
+$post = mb_substr($post, 0, intval(256));
 $time = bench($counts, $post);
 echo "post: [{$post}]", PHP_EOL,
      "{$counts} finished in {$time}", PHP_EOL,

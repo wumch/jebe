@@ -15,7 +15,7 @@ ifeq ($(COMPILER), G++)
     OBJ = o
   endif
   ifeq ($(DEBUG), 1)
-  COPT = -DCS_DEBUG=2 -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
+  COPT = -DCS_DEBUG=1 -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
   LDOPT = -g -rdynamic
   else
 # -fno-rtti is no useable since boost::program_options...

@@ -36,8 +36,8 @@ class Session:
     public boost::noncopyable
 {
 public:
-	typedef boost::singleton_pool<staging::CSUnit<1>, sizeof(char) * _JEBE_SESS_RBUF_UNIT,
-			boost::default_user_allocator_new_delete, boost::details::pool::null_mutex,
+	typedef boost::singleton_pool<Session, sizeof(char) * _JEBE_SESS_RBUF_UNIT,
+			boost::default_user_allocator_new_delete, boost::details::pool::default_mutex,
 			_JEBE_SESS_POOL_INC_STEP> RecvBuffAlloc;
 
     explicit Session(boost::asio::io_service& io);
@@ -50,12 +50,12 @@ public:
     void start()
     {
     	start_receive();
-    #if _JEBE_USE_TIMER
+#if _JEBE_USE_TIMER
     	timer.expires_from_now(boost::posix_time::millisec(timeout));
     	timer.async_wait(
     		boost::bind(&Session::finish_by_wait, shared_from_this(), boost::asio::placeholders::error)
     	);
-    #endif
+#endif
     }
 
     static void config();
@@ -123,8 +123,11 @@ protected:
 #if _JEBE_USE_TIMER
             timer.cancel();
 #endif
-//            boost::system::error_code ignored_ec;
-            sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            if (sock.is_open())
+            {
+            	boost::system::error_code ignored_ec;
+            	sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+            }
         }
     }
 
