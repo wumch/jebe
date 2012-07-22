@@ -16,7 +16,7 @@ namespace jebe {
 namespace cws {
 
 Master::Master(std::size_t worker_count_)
-    : next_io(0), worker_count(worker_count_), sess_count(0)
+    : worker_count(worker_count_), sess_count(0)
 {
 	CS_SAY("construct master");
 }
@@ -26,14 +26,10 @@ void Master::run()
 #ifdef __linux
 	prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":master").c_str());
 #endif
-    ThreadList threads;
 	io_service = new boost::asio::io_service;
 	new boost::asio::io_service::work(*io_service);
-//	ios.push_back(io);
-//	works.push_back(new boost::asio::io_service::work(*io));
     for (std::size_t i = 0; i < worker_count; ++i)
     {
-
         boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, io_service)));
         threads.push_back(thread);
     }
@@ -50,10 +46,7 @@ void Master::run()
 
 void Master::stop()
 {
-    for (IoPool::iterator iter = ios.begin(); iter != ios.end(); ++iter)
-    {
-        (*iter)->stop();
-    }
+	io_service->stop();
 }
 
 void Master::listen()
@@ -117,12 +110,6 @@ void Master::delay_accept()
 boost::asio::io_service& Master::getio()
 {
 	return *io_service;
-    ++next_io;
-    if (next_io == ios.size())
-    {
-        next_io = 0;
-    }
-    return *ios[next_io];
 }
 
 void Master::handle_accept(SessPtr& sess,

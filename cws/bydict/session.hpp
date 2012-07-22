@@ -60,17 +60,11 @@ public:
 
     static void config();
 
-    // release memory, should be only called by <Master> in single thread.
     void release()
     {
+    	handler.~RequestHandler();
     	response.~SendBuff();
     	RecvBuffAlloc::ordered_free(request, chunkRate);
-    }
-
-    ~Session()
-    {
-    	CS_SAY("destroy session");
-//    	RecvBuffAlloc::ordered_free(request, chunkRate);
     }
 
 protected:
@@ -115,20 +109,27 @@ protected:
     void handle_read(const boost::system::error_code& error,
         const std::size_t bytes_transferred);
 
-    void finish(const boost::system::error_code& error = boost::system::error_code())
+    void finish(const boost::system::error_code& error)
     {
-    	CS_SAY("finish session");
         if (!error)
         {
 #if _JEBE_USE_TIMER
             timer.cancel();
 #endif
-            if (sock.is_open())
-            {
-            	boost::system::error_code ignored_ec;
-            	sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-            }
+			boost::system::error_code ignored_ec;
+			sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+			sock.close();
         }
+    }
+
+    void finish()
+    {
+#if _JEBE_USE_TIMER
+		timer.cancel();
+#endif
+		boost::system::error_code ignored_ec;
+		sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+		sock.close();
     }
 
     void finish_by_wait(const boost::system::error_code& error = boost::system::error_code());
@@ -160,6 +161,8 @@ protected:
 #if _JEBE_USE_TIMER
     boost::asio::deadline_timer timer;
 #endif
+
+    ~Session() {}	// prevent from creating <Session> on stack.
 };
 
 }

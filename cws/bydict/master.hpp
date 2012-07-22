@@ -49,8 +49,8 @@ protected:
 
     void release_session(Session* sess)
     {
+    	CS_SAY("release session");
     	sess->release();
-    	SessAlloc::free(sess);
     	--sess_count;
     }
 
@@ -69,18 +69,11 @@ protected:
     	return NULL;
     }
 
+    boost::asio::io_service* io_service;
     boost::asio::ip::tcp::acceptor* acptor;
 
-    // hold informations for manage workers
-    std::size_t next_io;
+    ThreadList threads;
     std::size_t worker_count;
-
-    typedef std::vector<boost::asio::io_service*> IoPool;
-    IoPool ios;
-    boost::asio::io_service* io_service;
-
-    typedef std::vector<boost::asio::io_service::work*> WorkPool;
-    WorkPool works;
 
     typedef boost::singleton_pool<Session, sizeof(Session), boost::default_user_allocator_new_delete,
     		boost::details::pool::default_mutex, _JEBE_SESS_POOL_INC_STEP> SessAlloc;

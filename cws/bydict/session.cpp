@@ -80,16 +80,21 @@ void Session::handle_read(const boost::system::error_code& error,
 				}
 				else if (CS_BUNLIKELY(transferred != required))
 				{
+					// should optimize io-times.
 					if (CS_BLIKELY(transferred < chunkSize))
 					{
-//						start_receive(transferred);
-//					}
-//					else
-//					{
+						start_receive(transferred);
+					}
+					else
+					{
 						tsize_t remains = handler.handle(request + body_begin, transferred - body_begin);
 						if (CS_BLIKELY(remains <= chunkSize))
 						{
 							start_receive(remains);
+						}
+						else
+						{
+							finish();	// the /<action> is wrong.
 						}
 					}
 				}
