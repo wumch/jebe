@@ -1,10 +1,14 @@
 
 #pragma once
 
-#define CS_DEBUG					1
-#define CS_LOG_ON					1
+#ifndef CS_DEBUG
+#	define CS_DEBUG					0
+#endif
+#define CS_LOG_ON					0
 
 #define CS_USE_WCS					0
+
+#define BOOST_EXCEPTION_DIABLE		// no guy should throw exceptions to me!
 
 #include "staging.hpp"
 #include <string>
@@ -31,15 +35,6 @@ extern "C" {
 
 namespace jebe {
 namespace cws {
-
-// pooled string.
-typedef boost::fast_pool_allocator<staging::CSUnit<1>, boost::default_user_allocator_new_delete,
-		boost::details::pool::default_mutex,
-		_JEBE_SESS_POOL_INC_STEP * _JEBE_SESS_RBUF_UNIT,
-		_JEBE_SESS_POOL_MAX_SIZE * _JEBE_SESS_RBUF_UNIT> RecvBuffAlloc;
-
-// the buffer-descripter which hold a pair of (data-ptr,data-size).
-typedef std::pair<char* const, std::size_t> BuffDesc;
 
 typedef unsigned char 	byte_t;
 typedef uint32_t 		tsize_t;	// text-size type.

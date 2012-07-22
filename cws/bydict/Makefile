@@ -15,11 +15,11 @@ ifeq ($(COMPILER), G++)
     OBJ = o
   endif
   ifeq ($(DEBUG), 1)
-  COPT = -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
+  COPT = -DCS_DEBUG=2 -O0 -g3 -rdynamic -pipe -Wall -fstack-protector
   LDOPT = -g -rdynamic
   else
 # -fno-rtti is no useable since boost::program_options...
-  COPT = -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
+  COPT = -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
   LDOPT = $(COPT)
   endif
   CCMD = g++
@@ -49,7 +49,7 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/shareinfo.o $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/sendbuff.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
+OBJS = $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/request_handler.o $(OBJECT_PATH)/session.o $(OBJECT_PATH)/sendbuff.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/portal.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
 
 all: $(OBJS)
 	@echo Linking...
@@ -81,7 +81,7 @@ $(OBJECT_PATH)/portal.o: $(SOURCE_PATH)/portal.cpp $(SOURCE_PATH)/portal.hpp $(S
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
-$(OBJECT_PATH)/worker.o: $(SOURCE_PATH)/worker.cpp $(SOURCE_PATH)/worker.hpp $(SOURCE_PATH)/session.hpp $(GLOBAL_DEPEND)
+$(OBJECT_PATH)/request_handler.o: $(SOURCE_PATH)/request_handler.cpp $(SOURCE_PATH)/request_handler.hpp $(SOURCE_PATH)/holders.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
@@ -93,15 +93,20 @@ $(OBJECT_PATH)/master.o: $(SOURCE_PATH)/master.cpp $(SOURCE_PATH)/master.hpp $(S
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
-$(OBJECT_PATH)/shareinfo.o: $(SOURCE_PATH)/shareinfo.cpp $(SOURCE_PATH)/shareinfo.hpp $(SOURCE_PATH)/predef.hpp
-	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
-
 $(OBJECT_PATH)/filter.o: $(SOURCE_PATH)/filter.cpp $(SOURCE_PATH)/filter.hpp  $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/config.o: $(SOURCE_PATH)/config.cpp $(SOURCE_PATH)/config.hpp $(SOURCE_PATH)/predef.hpp
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+
+$(OBJECT_PATH)/worker.o: $(SOURCE_PATH)/worker.cpp $(SOURCE_PATH)/worker.hpp $(SOURCE_PATH)/session.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/shareinfo.o: $(SOURCE_PATH)/shareinfo.cpp $(SOURCE_PATH)/shareinfo.hpp $(SOURCE_PATH)/predef.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

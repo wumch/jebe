@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-$counts = 200;
+$counts = 2000;
 $url = "http://localhost:10086";
 
 function getContent()
@@ -49,7 +49,7 @@ function bench($counts, $post)
         $respCode = request($post);
         if ($respCode !== 200)
         {
-#            die("{$i} response code: {$respCode}" . PHP_EOL);
+            die("{$i} response code: {$respCode}" . PHP_EOL);
         }
     }
     $end = microtime(true);

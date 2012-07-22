@@ -9,8 +9,6 @@
 namespace jebe {
 namespace cws {
 
-const Filter* filter = NULL;
-
 _JEBE_MAKE_HEADER(200, Session);
 _JEBE_MAKE_HEADER(400, Session);
 const byte_t Session::httpsep[] = _JEBE_HTTP_LINE_SEP;
@@ -22,9 +20,11 @@ const Session::Matcher Session::content_length_matcher(content_length, content_l
 
 std::size_t Session::header_max_len = 0;
 std::size_t Session::body_max_len = 0;
-std::size_t Session::max_len = 0;
 std::size_t Session::timeout = 0;
 std::size_t Session::max_write_times = 0;
+
+std::size_t Session::chunkRate;
+std::size_t Session::chunkSize;
 
 void Session::handle_read(const boost::system::error_code& error,
     const std::size_t bytes_transferred)
@@ -43,11 +43,6 @@ void Session::handle_read(const boost::system::error_code& error,
 				header_end = res.begin() - request;
 			}
     	}
-
-//        std::string::size_type header_pos = request.find(bodysep,
-//			CS_BLIKELY(transferred < CS_CONST_STRLEN(_JEBE_HTTP_SEP)) ?
-//				0 : (transferred - CS_CONST_STRLEN(_JEBE_HTTP_SEP))
-//		);
         transferred += bytes_transferred;
 
         if (CS_BUNLIKELY(header_end == 0))
@@ -65,7 +60,7 @@ void Session::handle_read(const boost::system::error_code& error,
         			content_length_begin = res.end() - request;
         			byte_t* clbegin = request + content_length_begin;
         			body_len = staging::NumCast::strtoul(clbegin);
-					if (CS_BUNLIKELY(body_len == 0))
+					if (CS_BUNLIKELY(body_len == 0 || body_len > body_max_len))
 					{
 						finish();
 					}
@@ -77,38 +72,36 @@ void Session::handle_read(const boost::system::error_code& error,
             }
             else
             {
-				std::size_t required = header_end + (sizeof(bodysep) - 1) + body_len;
-				if (CS_BUNLIKELY(body_len > Config::getInstance()->body_max_size))
-				{
-					finish();
-				}
-				else if (CS_BUNLIKELY(required < transferred))
+				std::size_t body_begin = header_end + (sizeof(bodysep) - 1),
+						required = body_begin + body_len;
+				if (CS_BUNLIKELY(transferred > required))
 				{
 					finish();
 				}
 				else if (CS_BUNLIKELY(transferred != required))
 				{
-					start_receive(transferred);
+					if (CS_BLIKELY(transferred < chunkSize))
+					{
+						start_receive(transferred);
+					}
+					else
+					{
+						tsize_t remains = handler.handle(request + body_begin, transferred - body_begin);
+						if (CS_BLIKELY(remains <= chunkSize))
+						{
+							start_receive();
+						}
+					}
 				}
 				else
 				{
-					tsize_t body_begin = header_end + (sizeof(bodysep) - 1);
-
-//					tsize_t res_size =
-					filter->filt(request + body_begin, body_len, response);
-//					response.assign(_JEBE_HEADER(200));
-//					response.append(boost::lexical_cast<std::string>(res_size));
-//					response.append(bodysep);
-//					response.append(res, res_size);
+					handler.handle(request + body_begin, transferred - body_begin);
 					reply();
-					finish();
 				}
             }
         }
     }
 }
-
-
 
 void Session::finish_by_wait(const boost::system::error_code& error)
 {
@@ -119,21 +112,22 @@ void Session::config()
 {
     header_max_len = Config::getInstance()->header_max_size;
     body_max_len = Config::getInstance()->body_max_size;
-    max_len = Session::header_max_len + Session::body_max_len + CS_CONST_STRLEN(_JEBE_HTTP_SEP);
     timeout = (Config::getInstance()->timeout > 0) ? Config::getInstance()->timeout : 0;
     max_write_times = (0 < Config::getInstance()->max_write_times) ? Config::getInstance()->max_write_times : 10;
+
+    chunkRate = Config::getInstance()->receive_buffer_size;
+    chunkSize = chunkRate * _JEBE_BUFF_UNIT;
+
+    SendBuff::config();
+    RequestHandler::init(chunkSize);
 }
 
 void Session::start_receive(std::size_t offset)
 {
-	if (CS_BUNLIKELY(max_write_times < ++write_times))
-	{
-		finish();
-	}
-	else
+	if (CS_BLIKELY(++write_times < max_write_times))
 	{
 		sock.async_read_some(
-			boost::asio::buffer(request + offset, Config::getInstance()->receive_buffer_size - offset),
+			boost::asio::buffer(request + offset, chunkSize - offset),
 			boost::bind(&Session::handle_read, shared_from_this(),
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::bytes_transferred
@@ -144,12 +138,13 @@ void Session::start_receive(std::size_t offset)
 
 Session::Session(boost::asio::io_service& io)
 	: sock(io), transferred(0), write_times(0), header_end(0), content_length_begin(0), body_len(0),
-	  request(reinterpret_cast<byte_t*>(RecvBuffAlloc::malloc())),
-	  res(NULL)
+	  request(reinterpret_cast<byte_t*>(RecvBuffAlloc::ordered_malloc(chunkRate))),
+	  response(header_200, sizeof(header_200) - 1), handler(request, response)
 #if _JEBE_USE_TIMER
 	,timer(io)
 #endif
 {
+	CS_SAY("session constructed");
 }
 
 }

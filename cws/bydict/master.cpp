@@ -1,5 +1,5 @@
 
-#include "predef.hpp"
+#include "master.hpp"
 #include <vector>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -8,7 +8,6 @@
 #	include <sys/prctl.h>
 #endif
 #include "config.hpp"
-#include "master.hpp"
 #include "worker.hpp"
 #include "session.hpp"
 #include "sendbuff.hpp"
@@ -17,8 +16,9 @@ namespace jebe {
 namespace cws {
 
 Master::Master(std::size_t worker_count_)
-    : next_io(0), worker_count(worker_count_)
+    : next_io(0), worker_count(worker_count_), sess_count(0)
 {
+	CS_SAY("construct master");
 }
 
 void Master::run()
@@ -37,8 +37,8 @@ void Master::run()
         threads.push_back(thread);
     }
 
-    filter = new Filter(Config::getInstance()->patten_file.string());
-    
+    Session::config();
+
     listen();
     for (ThreadList::iterator iter = threads.begin(); iter != threads.end(); ++iter)
     {
@@ -69,31 +69,19 @@ void Master::listen()
     acptor->set_option(ip::tcp::acceptor::reuse_address(config->reuse_address));
     acptor->set_option(ip::tcp::acceptor::send_buffer_size(config->send_buffer_size));
     acptor->set_option(ip::tcp::acceptor::receive_buffer_size(config->receive_buffer_size));
-
-    Session::config();
-    SendBuff::config();
     
     acptor->bind(ep);
     acptor->listen(Config::getInstance()->max_connections);
     start_accept();
 }
 
-//void Master::release_session(Session* sess)
-//{
-//	sess->~Session();
-//}
-
 void Master::start_accept()
 {
-//	Worker& w = pick_worker();
-	Session* s = new (sess_alloc.allocate()) Session(getio());
-	SessPtr sess(s, boost::bind(&Master::release_session, this, s));
-//	SessPtr sess(new Session(getio()), releaseSession);
-	if (CS_LIKELY(sess))
+	Session* s = alloc_session();
+	if (CS_LIKELY(s))
 	{
-//		SessPtr sess(new Session(getio()));
-//    	SessPtr sess(new Session(w.get_io(), w.request, w.res, w.response));
-		acptor->async_accept(sess->getSock(),
+		SessPtr sess(s, boost::bind(&Master::release_session, this, s));
+		acptor->async_accept(s->getSock(),
 			boost::bind(&Master::handle_accept, this,
 				sess, boost::asio::placeholders::error
 			)
@@ -101,7 +89,27 @@ void Master::start_accept()
 	}
 	else
 	{
-		start_accept();
+		delay_accept();
+	}
+}
+
+void Master::delay_accept()
+{
+	CS_SAY("connections: " << sess_count);
+	static const std::size_t max_mills = 200;
+	static std::size_t cur_mills = 2;
+	static boost::asio::deadline_timer timer(getio());
+
+	timer.expires_from_now(boost::posix_time::millisec(cur_mills));
+	timer.async_wait(boost::bind(&Master::start_accept, this));
+
+	if (cur_mills < max_mills)
+	{
+		cur_mills <<= 1;
+		if (cur_mills > max_mills)
+		{
+			cur_mills = max_mills;
+		}
 	}
 }
 

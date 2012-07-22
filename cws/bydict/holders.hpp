@@ -12,12 +12,12 @@ namespace cws {
 class Node;
 
 // join pattens with space.
-class JoinHolder
+class SplitHolder
 {
 	SendBuff res;
 	tsize_t cur;
 public:
-	JoinHolder(SendBuff& buff): res(buff), cur(0) {}
+	SplitHolder(SendBuff& buff): res(buff), cur(0) {}
 
 	void operator()(const Node& node)
 	{
@@ -47,8 +47,44 @@ public:
 	}
 };
 
+class CompareHolder
+{
+public:
+	typedef boost::unordered_map<const Node*, atimes_t, NodeHash> Words;
+	Words words;
+	SendBuff& res;
+
+	std::pair<const Node*, atimes_t> word_atime;		// assit to make no stack alloc.
+
+public:
+	CompareHolder(SendBuff& buff):
+		words(128), res(buff), word_atime(NULL, 1)
+	{
+		res.write('{');
+	}
+
+	void operator()(const Node& node)
+	{
+		Words::iterator it = words.find(&node);
+		if (CS_BUNLIKELY(it == words.end()))
+		{
+			word_atime.first = &node;
+			words.insert(word_atime);
+		}
+		else
+		{
+			it->second++;
+		}
+	}
+
+	void genRes()
+	{
+
+	}
+};
+
 // hold words and format to JSON.
-class JSONHolder
+class CountHolder
 {
 public:
 	typedef boost::unordered_map<const Node*, atimes_t, NodeHash> Words;
@@ -80,7 +116,7 @@ public:
 	mutable char convbuf[11];
 
 public:
-	JSONHolder(SendBuff& buff):
+	CountHolder(SendBuff& buff):
 		words(128), res(buff), cur(1), word_atime(NULL, 1)
 	{
 		res.write('{');

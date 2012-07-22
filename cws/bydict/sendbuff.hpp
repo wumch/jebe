@@ -21,9 +21,11 @@ protected:
 	typedef boost::singleton_pool<staging::CSUnit<2>, sizeof(byte_t) * _JEBE_BUFF_UNIT,
 		boost::default_user_allocator_new_delete, boost::details::pool::default_mutex,
 		_JEBE_SESS_POOL_INC_STEP> Alloc;
+	BOOST_STATIC_ASSERT(sizeof(byte_t) == 1);
 
 protected:
 	static tsize_t chunkSize;
+	static tsize_t chunkRate;
 	static uint32_t httpsep;
 
 	ChunkList chunkList;
@@ -38,20 +40,23 @@ protected:
 public:
 	static void config()
 	{
-		chunkSize = Config::getInstance()->send_buffer_size * _JEBE_BUFF_UNIT;
+		chunkRate = Config::getInstance()->send_buffer_size;
+		chunkSize = chunkRate * _JEBE_BUFF_UNIT;
 		httpsep = *reinterpret_cast<const uint32_t*>(_JEBE_HTTP_SEP _JEBE_HTTP_SEP);
-//		Alloc::free(Alloc::malloc());		// to prepare memory pool before any request reaches.
+		Alloc::ordered_free(Alloc::ordered_malloc(chunkRate), chunkRate);		// to prepare memory pool before any request reaches.
 	}
 
 public:
 	template<typename char_t>
 	void write(char_t c)
 	{
-		if (CS_BUNLIKELY(lastSize + sizeof(char_t) <= chunkSize))
+		if (CS_BUNLIKELY(lastSize + sizeof(char_t) > chunkSize))
 		{
 			grow();
 		}
-//		*reinterpret_cast<char_t*>(cursor()) = c;
+		*reinterpret_cast<char_t*>(cursor()) = c;
+		lastSize += sizeof(char_t);
+//		CS_SAY(cursor() - lastSize);
 	}
 
 	template<typename char_t>
@@ -60,10 +65,14 @@ public:
 		if (CS_BLIKELY(lastSize + n * sizeof(char_t) <= chunkSize))
 		{
 			memcpy(cursor(), bytes, n * sizeof(char_t));
+//			CS_SAY(cursor());
+			lastSize += n * sizeof(char_t);
+//			CS_SAY(cursor() - lastSize);
 		}
 		else
 		{
 			growWrite(reinterpret_cast<const byte_t*>(bytes), n * sizeof(char_t));
+//			CS_SAY(cursor() - lastSize);
 		}
 	}
 
@@ -71,28 +80,14 @@ public:
 	{
 		if (CS_BLIKELY(lastSize + CS_CONST_STRLEN(BOOST_PP_STRINGIZE(INT_MAX)) <= chunkSize))
 		{
-			staging::NumCast::ultostr(number, cursor());
+			lastSize += staging::NumCast::ultostr(number, cursor());
 		}
 		else
 		{
 			// `content_length` must not be used at this time.
 			write(content_length, staging::NumCast::ultostr(number, content_length));
 		}
-	}
-
-	void growWrite(const byte_t* const bytes, tsize_t n)
-	{
-		tsize_t brk = chunkSize - lastSize, remains = n - brk;
-		memcpy(cursor(), bytes, brk);
-		if (CS_BLIKELY(remains < chunkSize))
-		{
-			grow();
-		}
-		else
-		{
-			grow(std::ceil(static_cast<double>(remains) / chunkSize));
-		}
-		memcpy(cursor(), bytes + brk, remains);
+//		CS_SAY(cursor() - lastSize);
 	}
 
 	byte_t* cursor() const
@@ -120,23 +115,24 @@ public:
 		return bufferList;
 	}
 
-	SendBuff()
-		: lastSize(0), header(NULL), header_size(0)
-	{
-		grow();
-	}
+//	SendBuff()
+//		: lastSize(0), header(NULL), header_size(0)
+//	{
+//		grow();
+//	}
 
 	explicit SendBuff(const byte_t* const header_, tsize_t header_size_)
 		: lastSize(0), header(header_), header_size(header_size_)
 	{
-
+//		CS_SAY("[" << header << "]");
+		grow();
 	}
 
 	~SendBuff()
 	{
 		for (ChunkList::iterator it = chunkList.begin(); it != chunkList.end(); ++it)
 		{
-			Alloc::ordered_free(*it, chunkSize / _JEBE_BUFF_UNIT);
+			Alloc::ordered_free(*it, chunkRate);
 		}
 	}
 
@@ -158,9 +154,25 @@ public:
 	}
 
 protected:
+	void growWrite(const byte_t* const bytes, tsize_t n)
+	{
+		tsize_t brk = chunkSize - lastSize, remaining = n - brk;
+		memcpy(cursor(), bytes, brk);
+		if (CS_BLIKELY(remaining <= chunkSize))
+		{
+			grow();
+		}
+		else
+		{
+			growWrite(bytes + brk, remaining);	// TODO: solve memory leaks.
+		}
+		memcpy(cursor(), bytes + brk, remaining);
+		lastSize = remaining;
+	}
+
 	void grow()
 	{
-		chunkList.push_back(reinterpret_cast<byte_t*>(Alloc::malloc()));
+		chunkList.push_back(reinterpret_cast<byte_t*>(Alloc::ordered_malloc(chunkRate)));
 		lastSize = 0;
 	}
 
@@ -188,7 +200,7 @@ protected:
 	{
 		std::size_t len = staging::NumCast::ultostr(size(), content_length);
 		*reinterpret_cast<uint32_t*>(content_length + len) = httpsep;
-		bufferList.push_back(boost::asio::const_buffer(content_length, len));
+		bufferList.push_back(boost::asio::const_buffer(content_length, len + sizeof(httpsep)));
 	}
 };
 

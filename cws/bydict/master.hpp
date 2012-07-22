@@ -30,10 +30,17 @@ public:
 
     boost::asio::io_service& getio();
 
+    ~Master()
+    {
+    	CS_SAY("destruct master");
+    }
+
 protected:
     void listen();
 
     void start_accept();
+
+    void delay_accept();
 
     void runio(boost::asio::io_service& io);
 
@@ -41,8 +48,23 @@ protected:
 
     void release_session(Session* sess)
     {
-    	sess->~Session();
-    	sess_alloc.deallocate(sess);
+    	sess->release();
+    	SessAlloc::free(sess);
+    	--sess_count;
+    }
+
+    Session* alloc_session()
+    {
+    	if (CS_BLIKELY(sess_count < Config::getInstance()->max_connections))
+    	{
+			Session* sess = new (SessAlloc::malloc()) Session(getio());
+			if (CS_LIKELY(sess))
+			{
+				++sess_count;
+				return sess;
+			}
+    	}
+    	return NULL;
     }
 
     boost::asio::ip::tcp::acceptor* acptor;
@@ -57,9 +79,10 @@ protected:
     typedef std::vector<boost::asio::io_service::work*> WorkPool;
     WorkPool works;
 
-    typedef boost::fast_pool_allocator<Session, boost::default_user_allocator_new_delete,
-    		boost::details::pool::default_mutex, _JEBE_SESS_POOL_INC_STEP, _JEBE_SESS_POOL_MAX_SIZE> SessAlloc;
-    SessAlloc sess_alloc;
+    typedef boost::singleton_pool<Session, sizeof(Session), boost::default_user_allocator_new_delete,
+    		boost::details::pool::null_mutex, _JEBE_SESS_POOL_INC_STEP> SessAlloc;
+
+    std::size_t sess_count;
 };
 
 }
