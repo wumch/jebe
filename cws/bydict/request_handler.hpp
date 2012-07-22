@@ -59,6 +59,7 @@ public:
     	if (CS_BLIKELY(action != unknown))
     	{
     		tsize_t offset = chunkSize + 1;
+    		bool solved_flag = false;
     		switch (action)
     		{
     		case split:
@@ -67,6 +68,7 @@ public:
     				spliter = new SplitHolder(buff);
 				}
     			offset = filter->find<SplitHolder>(data, dataSize, *spliter);
+    			solved_flag = true;
     			break;
     		case count:
     			if (CS_BLIKELY(!counter))
@@ -74,6 +76,7 @@ public:
     				counter = new CountHolder(buff);
 				}
     			offset = filter->find<CountHolder>(data, dataSize, *counter);
+    			solved_flag = true;
     			break;
     		case compare:
     			if (CS_BLIKELY(!comparer))
@@ -81,23 +84,27 @@ public:
     				comparer = new CompareHolder(buff);
 				}
     			offset = filter->find<CompareHolder>(data, dataSize, *comparer);
+    			solved_flag = true;
     			break;
     		default:
     			break;
     		}
-    		std::size_t remains = chunkSize - offset;
-    		if (CS_BLIKELY(remains <= offset))
-			{
-    			memcpy(chunk, data + offset, remains);
-			}
-    		else
+    		if (CS_BLIKELY(solved_flag))
     		{
-    			byte_t* mem = new byte_t[remains];
-    			memcpy(mem, data + offset, remains);
-    			memcpy(chunk, mem, remains);
-    			delete[] mem;
+				std::size_t remains = dataSize - offset;
+				if (CS_BLIKELY(remains <= offset))
+				{
+					memcpy(chunk, data + offset, remains);
+				}
+				else
+				{
+					byte_t* mem = new byte_t[remains];
+					memcpy(mem, data + offset, remains);
+					memcpy(chunk, mem, remains);
+					delete[] mem;
+				}
+				return remains;
     		}
-    		return remains;
     	}
     	return chunkSize + 1;
     }

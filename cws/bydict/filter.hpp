@@ -118,7 +118,11 @@ public:
 #endif
 			}
 		}
-		return offset;
+#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
+		return std::min(offset, _JEBE_WORD_MAX_LEN);
+#else
+		return std::max(offset, len > _JEBE_WORD_MAX_LEN ? len - _JEBE_WORD_MAX_LEN : len);
+#endif
 	}
 
 };

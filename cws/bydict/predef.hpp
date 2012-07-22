@@ -27,6 +27,8 @@ extern "C" {
 #define _JEBE_USE_TIMER				0
 #define _JEBE_ENABLE_MAXMATCH		0
 
+#define _JEBE_WORD_MAX_LEN			(8U*3)
+
 #define _JEBE_BUFF_UNIT				1024
 #define _JEBE_SESS_RBUF_UNIT		1024
 #define _JEBE_SESS_SBUF_UNIT		_JEBE_SESS_RBUF_UNIT
