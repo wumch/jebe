@@ -226,13 +226,13 @@ class Bucket {
 
         # Handle the response...
         if ($response == NULL) {
-            throw \Exception("Error setting bucket properties.");
+            throw new \Exception("Error setting bucket properties.");
         }
 
         # Check the response value...
         $status = $response[0]['http_code'];
         if ($status != 204) {
-            throw \Exception("Error setting bucket properties.");
+            throw new \Exception("Error setting bucket properties.");
         }
     }
 

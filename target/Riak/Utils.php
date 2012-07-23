@@ -129,17 +129,25 @@ class Utils {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $request_headers);
 
+        var_dump($method . ' ' . $url);
+        var_export($request_headers);
+
         if ($method == 'GET') {
             curl_setopt($ch, CURLOPT_HTTPGET, 1);
         } else if ($method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $obj);
+            var_export($obj);
         } else if ($method == 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             curl_setopt($ch, CURLOPT_POSTFIELDS, $obj);
+            var_export($obj);
         } else if ($method == 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
         }
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 100);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1500);
+        curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
 
         # Capture the response headers...
         $response_headers_io = new StringIO();
