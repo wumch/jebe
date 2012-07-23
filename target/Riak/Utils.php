@@ -129,8 +129,8 @@ class Utils {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $request_headers);
 
-        var_dump($method . ' ' . $url);
-        var_export($request_headers);
+//        var_dump($method . ' ' . $url);
+//        var_export($request_headers);
 
         if ($method == 'GET') {
             curl_setopt($ch, CURLOPT_HTTPGET, 1);

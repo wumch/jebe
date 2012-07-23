@@ -16,6 +16,7 @@ if (strtolower($encoding) !== $encoding_required)
 }
 
 $info = array(
+    'origin' => $_GET['c'],
     'turn' => $turn,
     'text' => $text,
 );
