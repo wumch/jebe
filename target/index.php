@@ -18,11 +18,13 @@ spl_autoload_register('target\autoload_riak');
 class PageHolder
 {
     protected $server = array(
+        'tokenizer' => array('http://192.168.88.2:10086/split', 'http://192.168.88.4:10086/split'),
         'host' => '192.168.88.2',
         'port' => '8098',
         'raw_name' => 'riak',
         'mapred_name' => 'mapred',
         // test only
+        'tokenizer' => array('http://127.0.0.1:10086/split'),
         'host' => '211.154.172.172',
         'port' => '18098',
         'host' => '127.0.0.1',
@@ -40,7 +42,7 @@ class PageHolder
 
     const R_VALUE = 1;
     const W_VALUE = 1;
-    const DW_VALUE = 1;
+    const DW_VALUE = 0;
 
     protected $persistBucket;
 
@@ -58,7 +60,7 @@ class PageHolder
 
     public $client = null;
 
-    protected $url = 'http://www.sina.com/';
+    protected $url;
 
     public function __construct()
     {
@@ -90,9 +92,9 @@ class PageHolder
         $this->metaBucket->setNVal($this->paraNVal);
         $this->persistBucket->setNVal($this->paraNVal);
 
-        $this->paraBucket->newBinary('useless_key', 'useless_value')->store(self::W_VALUE, self::DW_VALUE);
-        $this->metaBucket->newBinary('useless_key', 'useless_value')->store(self::W_VALUE, self::DW_VALUE);
-        $this->persistBucket->newBinary('useless_key', 'useless_value')->store(self::W_VALUE, self::DW_VALUE);
+        $this->paraBucket->newBinary('useless_key', 'useless_value', 'text/plain')->store(self::W_VALUE, self::DW_VALUE);
+        $this->metaBucket->newBinary('useless_key', 'useless_value', 'text/plain')->store(self::W_VALUE, self::DW_VALUE);
+        $this->persistBucket->newBinary('useless_key', 'useless_value', 'text/plain')->store(self::W_VALUE, self::DW_VALUE);
         var_dump($this->metaBucket->get('useless_key', self::W_VALUE));
         var_dump($this->persistBucket->get('useless_key', self::W_VALUE));
     }
@@ -142,7 +144,7 @@ class PageHolder
         }
         else
         {
-            if (array_search($this->curPara['turn'], $metaData['reached'], true) === false)
+            if (!in_array($this->curPara['turn'], $metaData['reached'], true))
             {
                 $this->savePara();
                 $this->updateMeta($metaData);
@@ -153,12 +155,19 @@ class PageHolder
     // TODO: solve parallel save one day...
     public function savePage($pageContent)
     {
-        $this->persistBucket->newBinary($this->genPageKey(), $pageContent)->store(self::W_VALUE, self::DW_VALUE);
+        $words = $this->tokenize($pageContent);
+        $pageData = array(
+            'location' => $this->url,
+            'words' => strlen($words) ? $words : ' ',
+        );
+        $this->persistBucket->newObject($this->genPageKey(), $pageData)->store(self::W_VALUE, self::DW_VALUE);
     }
 
     public function savePara()
     {
-        $this->paraBucket->newBinary($this->genParaKey($this->curPara['turn']), $this->curPara['content'])->store(self::W_VALUE, self::DW_VALUE);
+        // forced `json_decode($this->data, true)` call sucks, newBinary doesnot work...
+        $data = array('content' => $this->curPara['content'], );
+        $this->paraBucket->newObject($this->genParaKey($this->curPara['turn']), $data)->store(self::W_VALUE, self::DW_VALUE);
     }
 
     public function clean()
@@ -191,6 +200,7 @@ class PageHolder
 
     public function updateMeta(array $metaData)
     {
+
         array_push($metaData['reached'], $this->curPara['turn']);
         $this->metaObject->setData($metaData);
         $this->metaObject->store(self::W_VALUE, self::DW_VALUE);
@@ -207,12 +217,8 @@ class PageHolder
         {
             $info = $this->retrieveMetaData();
         }
-        if (isset($info['pending']) && $info['pending'] === 1)
-        {
-            return (count($info['reached']) + 1 === $info['total'])
-                    and array_search($turn, $info['reached'], true) === false;
-        }
-        return false;
+        return (count($info['reached']) + 1 === $info['total'])
+                and !in_array($turn, $info['reached'], true);
     }
 
     public function getPageContent($metaData = null)
@@ -238,12 +244,37 @@ class PageHolder
         {
             return false;
         }
-        $pageContent = '';
-        foreach ($paras as $para)
+        $paras[$this->curPara['turn']] = $this->curPara['content'];
+        ksort($paras, SORT_NUMERIC | SORT_ASC);
+        $pageContent = implode('', $paras);
+        if (strlen($pageContent) === 0)
         {
-            $pageContent .= $para;
+            return false;
         }
         return $pageContent;
+    }
+
+    protected function tokenize($content)
+    {
+        foreach ($this->server['tokenizer'] as $url)
+        {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $content);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 150);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 2000);
+            curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($httpCode === 200)
+            {
+                return $response;
+            }
+        }
+        return false;
     }
 
     protected function retrieveMetaData()
@@ -254,16 +285,16 @@ class PageHolder
 
     public function retrieveParaList(array $reached)
     {
-        $bucket = $this->client->bucket($this->paraBucket);
         $paras = array();
         foreach ($reached as $turn)
         {
-            $obj = $bucket->get($this->genParaKey($turn), self::R_VALUE);
+            $obj = $this->paraBucket->get($this->genParaKey($turn), self::R_VALUE);
             if (!$obj->exists())
             {
                 return false;
             }
-            $paras[] = $obj->getData();
+            $data = $obj->getData();
+            $paras[$turn] = $data['content'];
         }
         return $paras;
     }
@@ -287,6 +318,11 @@ class PageHolder
     {
         return $turn . ':' . $this->url;
     }
+
+    public function isack()
+    {
+        return $this->curPara['turn'] <= 0;
+    }
 }
 
 // reply client with an error to notify something like that the page already exists in database.
@@ -300,32 +336,28 @@ function responseError($exit = false)
 }
 
 function responseSuccess()
-{header ('Content-Type: image/png');
-$im = @imagecreatetruecolor(120, 20)
-      or die('Cannot Initialize new GD image stream');
-$text_color = imagecolorallocate($im, 233, 14, 91);
-imagestring($im, 1, 5, 5,  'A Simple Text String', $text_color);
-imagepng($im);
-imagedestroy($im);
-    exit(0);
-    header('Content-Type: image/png');
-//    header('Cache-Control: no-store, no-cache, must-revalidate');
-    $image = imagecreatetruecolor(100,100);
-//    imageColorAllocate($image,0,0,0);
-    imagepng($image);
-    imagedestroy($image);
-//    $filesize = filesize('px.gif');
-//    header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-//    header('Cache-Control: no-store, no-cache, must-revalidate');
-//    header('Content-length: '.$filesize);
-//    readfile('px.gif');
+{
+    if (function_exists('imagecreate'))
+    {
+        header('Content-Type: image/png');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        $image = imagecreate(1,1);
+        imagepng($image);
+        imagedestroy($image);
+    }
+    else
+    {
+        header('Content-Type: image/gif');
+        $filesize = filesize('px.gif');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Content-length: '.$filesize);
+        readfile('px.gif');
+    }
 }
 
 function process()
 {
-    responseSuccess();
-//    fastcgi_finish_request();
-    exit(0);
     $pageHolder = new PageHolder();
     if ($pageHolder->pageExists())
     {
@@ -335,11 +367,12 @@ function process()
     else
     {
         responseSuccess();
-//        fastcgi_finish_request();
-        $pageHolder->process();
+        if (!$pageHolder->isack())
+        {
+            fastcgi_finish_request();
+            $pageHolder->process();
+        }
     }
-    // test only
-    $pageHolder->process();
 }
 
 process();

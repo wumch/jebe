@@ -137,11 +137,11 @@ class Utils {
         } else if ($method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $obj);
-            var_export($obj);
+//            var_export($obj);
         } else if ($method == 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             curl_setopt($ch, CURLOPT_POSTFIELDS, $obj);
-            var_export($obj);
+//            var_export($obj);
         } else if ($method == 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
         }

