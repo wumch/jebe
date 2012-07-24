@@ -78,6 +78,12 @@ public:
 		}
 	}
 
+	void backspace(byte_t byte)
+	{
+		byte_t* end = cursor();
+		*(end - 1) = byte;
+	}
+
 	void insertNumber(const uint32_t number)
 	{
 		if (CS_BLIKELY(lastSize + CS_CONST_STRLEN(BOOST_PP_STRINGIZE(INT_MAX)) <= chunkSize))
@@ -147,6 +153,11 @@ public:
 			}
 			return size_;
 		}
+	}
+
+	bool empty() const
+	{
+		return !(lastSize > 0 || chunkList.size() > 1);
 	}
 
 protected:

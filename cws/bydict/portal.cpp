@@ -43,7 +43,7 @@ void Portal::run()
 
 void Portal::store_pid()
 {
-    std::ofstream pidfile(Config::getInstance()->pidfile.c_str());
+    std::ofstream pidfile(Config::getInstance()->pidfile.string().c_str());
     if (!pidfile)
     {
         std::cerr << "faild on create pifile" << std::endl;
@@ -54,7 +54,7 @@ void Portal::store_pid()
 
 void Portal::clean_pid()
 {
-    std::ifstream pidfin(Config::getInstance()->pidfile.c_str());
+    std::ifstream pidfin(Config::getInstance()->pidfile.string().c_str());
     if (!pidfin)
     {
         std::cerr << "faild on clean pifile" << std::endl;
@@ -66,7 +66,7 @@ void Portal::clean_pid()
     
     if (boost::lexical_cast<int>(pid) == getpid())
     {
-        std::ofstream pidfout(Config::getInstance()->pidfile.c_str());
+        std::ofstream pidfout(Config::getInstance()->pidfile.string().c_str());
         pidfout.close();
     }
 }

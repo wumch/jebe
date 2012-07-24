@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include <string>
+#include <string.h>
 #include <boost/array.hpp>
 
 namespace jebe {
@@ -55,6 +56,7 @@ public:
     }
 
 private:
+    // maybe, should introduce a pack(sizeof(all))?
     Node* children[word_max_len];
 
     std::string patten;

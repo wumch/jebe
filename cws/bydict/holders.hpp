@@ -18,7 +18,7 @@ class SplitHolder
 	tsize_t cur;
 public:
 	explicit SplitHolder(SendBuff& buff)
-		: res(buff), cur(0)
+		: res(buff)
 	{
 		CS_SAY("address of buff in SplitHolder: [" << &res << "]");
 	}
@@ -35,9 +35,9 @@ public:
 
 	void genRes() const
 	{
-		if (CS_BLIKELY(cur > 0))
+		if (CS_BLIKELY(!res.empty()))
 		{
-//			res[cur - 1] = 0;
+			res.backspace(0);
 		}
 	}
 };
