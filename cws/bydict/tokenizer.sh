@@ -4,12 +4,14 @@
 # rc-script for service `tcmd`
 #
 
+PROGRAM_NAME="tokenizer"
 USER="$(whoami)"
-OUTLOG=/var/log/tokenizer.output.log
-ERRLOG=/var/log/tokenizer.error.log
-pidfile=/var/run/tokenizer.pid
+OUTLOG=/var/log/${PROGRAM_NAME}.output.log
+ERRLOG=/var/log/${PROGRAM_NAME}.error.log
+pidfile=/var/run/${PROGRAM_NAME}.pid
 
-ROOT_PATH="$(dirname $(dirname $(realpath ${0})))"
+ROOT_PATH="$(dirname $(realpath ${0}))"
+ROOT_PATH=${ROOT_PATH%/bin}
 if [ ! -n "${ROOT_PATH}" ]; then
     echo -e "\033[32;31;5mcan not resolve home directory for tokenizer! maybe you do not have 'realpath'.\033[0m"
     exit 2
@@ -23,20 +25,20 @@ if [ -n "${pidfile}" ]; then
 fi
 
 if [ ! -n "${pidfile}" ]; then
-    echo -e "\033[32;31;5mcannot resolve pidfile!\033[0m"
+    echo -e "\033[32;31;5mcannot resolve pidfile for ${PROGRAM_NAME}!\033[0m"
     exit 1
 fi
 
 zstart() {
     if [ -n "$(zgetpid)" ];then
-        printf "\033[32;31;5malready started!\033[0m\n"
+        printf "\033[32;31;5${PROGRAM_NAME} malready started!\033[0m\n"
         return
     fi
     local res=$(zstartup)
     if [ "$?" -eq "0" ]; then
-        printf "\033[32;49;5mstarted!\033[0m\n"
+        printf "\033[32;49;5m${PROGRAM_NAME} started!\033[0m\n"
     else
-        printf "\033[32;31;5mstart faild!\033[0m\nerror:\n%s\n" "${res}"
+        printf "\033[32;31;5mstart ${PROGRAM_NAME} faild!\033[0m\nerror:\n%s\n" "${res}"
     fi
 }
 
@@ -46,12 +48,12 @@ zstop() {
         kill "${pid}"
         if [ "$?" -eq "0" ]; then
             >"${pidfile}"
-            printf "\033[32;495mstoped!\033[0m\n"
+            printf "\033[32;495m${PROGRAM_NAME} stoped!\033[0m\n"
         else
-            printf "\033[32;31;5mfaild on stop!\033[0m\n"
+            printf "\033[32;31;5mfaild on stop ${PROGRAM_NAME}!\033[0m\n"
         fi
     else
-        printf "\033[32;31;5mnot yet started!\033[0m\n"
+        printf "\033[32;31;5m${PROGRAM_NAME} not yet started!\033[0m\n"
     fi       
 }
 
@@ -63,10 +65,10 @@ zrestart () {
 
 zstatus () {
     if [ -n "$(zgetpid)" ]; then
-        printf "\033[32;49;5mit's running!\033[0m\n"
+        printf "\033[32;49;5m${PROGRAM_NAME} is running!\033[0m\n"
         return 0
     else
-        printf "\033[32;31;5mit's stoped!\033[0m\n"
+        printf "\033[32;31;5m${PROGRAM_NAME} is stoped!\033[0m\n"
         return 1
     fi
 }
