@@ -62,7 +62,7 @@ protected:
 		return staging::getInstance<Config>();
 	}
 
-    void init(int argc, const char* const argv[]);
+    void init(int argc, char* argv[]);
 
     Config(): desc("allowed config options") {}
 

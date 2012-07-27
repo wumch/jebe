@@ -4,6 +4,8 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
 extern "C" {
 #include <unistd.h>
 #include <sys/mman.h>
@@ -13,7 +15,7 @@ extern "C" {
 namespace jebe {
 namespace cws {
 
-void Config::init(int argc, const char* const argv[])
+void Config::init(int argc, char* argv[])
 {
 	boost::program_options::options_description cmdDesc("allowed options");
 	cmdDesc.add_options()
@@ -23,7 +25,7 @@ void Config::init(int argc, const char* const argv[])
 	;
 
 	boost::filesystem::path program_path = argv[0];
-	program_name = program_path.filename().string();
+	program_name = program_path.filename();
 
 	boost::program_options::variables_map cmdOptions;
 	try
@@ -112,7 +114,15 @@ void Config::load(const std::string& config_file)
 	{
 		assert(!mlockall(MCL_CURRENT | MCL_FUTURE));
 	}
+
+	// `cpu-affinity` no longer useable since the threads-model changed.
 	std::string cpumask = options["cpuaffinity"].as<std::string>();
+
+	typedef boost::char_separator<char> Separator;
+	typedef boost::tokenizer<Separator> Tokenizer;
+	Separator sep("[],");
+	Tokenizer tokens(cpumask, sep);
+
 	if (cpumask.size())
 	{
 		uint cpunum = sysconf(_SC_NPROCESSORS_CONF);
@@ -124,7 +134,8 @@ void Config::load(const std::string& config_file)
 		cpuaffinity = boost::dynamic_bitset<>(cpumask);
 	}
 
-	CS_SAY(host << std::endl
+	CS_SAY("configs in <" << config_file << ">:" << std::endl
+		<< host << std::endl
 		<< port << std::endl
 		<< pidfile << std::endl
 		<< patten_file << std::endl

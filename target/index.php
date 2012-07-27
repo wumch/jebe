@@ -1,11 +1,12 @@
 <?php
-namespace target;
+namespace crawler;
 use Riak;
+use utils;
+use crawler;
 
 set_time_limit(10);
 error_reporting(E_ALL);
 define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
-define('RIAK_HOME', ROOT_PATH . 'Riak' . DIRECTORY_SEPARATOR);
 define('IMAGE_FILE_PATH', ROOT_PATH . 'px.gif');
 
 function autoload_riak($symbol)
@@ -13,7 +14,7 @@ function autoload_riak($symbol)
     require(ROOT_PATH . str_replace('\\', '/', $symbol) . '.php');
     return true;
 }
-spl_autoload_register('target\autoload_riak');
+spl_autoload_register('crawler\autoload_riak');
 
 class PageHolder
 {
@@ -24,11 +25,11 @@ class PageHolder
         'raw_name' => 'riak',
         'mapred_name' => 'mapred',
         // test only
-        'tokenizer' => array('http://127.0.0.1:10086/split'),
-        'host' => '211.154.172.172',
-        'port' => '18098',
-        'host' => '127.0.0.1',
-        'port' => '8098',
+//        'tokenizer' => array('http://127.0.0.1:10086/split'),
+//        'host' => '211.154.172.172',
+//        'port' => '18098',
+//        'host' => '127.0.0.1',
+//        'port' => '8098',
     );
 
     protected $buckets = array(
@@ -61,6 +62,7 @@ class PageHolder
     public $client = null;
 
     protected $url;
+    protected $urlInfo;
 
     public function __construct()
     {
@@ -105,11 +107,16 @@ class PageHolder
         {
             return false;
         }
-        $this->url = urlencode(trim(urldecode($_SERVER['HTTP_REFERER'])));
-        if (substr($this->url, 0, 4) !== 'http')
+        $this->url = trim(urldecode($_SERVER['HTTP_REFERER']));
+
+        $parser = new utils\UrlParser();
+        $this->urlInfo = $parser->parse($this->url);
+        $this->url = urlencode($this->url);
+        if ($this->urlInfo === false)
         {
             return false;
         }
+
         $curPara = $_GET;
         if (!isset($curPara['n']) or !isset($curPara['t']) or !isset($curPara['c']))
         {
@@ -157,6 +164,7 @@ class PageHolder
     {
         $words = $this->tokenize($pageContent);
         $pageData = array(
+            'loc' => $this->urlInfo,
             'location' => $this->url,
             'words' => strlen($words) ? $words : ' ',
         );

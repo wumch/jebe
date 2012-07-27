@@ -44,6 +44,7 @@ public:
 	{
 		chunkRate = Config::getInstance()->send_buffer_size;
 		chunkSize = chunkRate * _JEBE_BUFF_UNIT;
+		BOOST_STATIC_ASSERT(CS_CONST_STRLEN(_JEBE_HTTP_SEP) == sizeof(uint32_t));
 		httpsep = *reinterpret_cast<const uint32_t*>(_JEBE_HTTP_SEP _JEBE_HTTP_SEP);
 		Alloc::ordered_free(Alloc::ordered_malloc(chunkRate), chunkRate);		// to prepare memory pool before any request reaches.
 	}
@@ -82,6 +83,7 @@ public:
 	{
 		byte_t* end = cursor();
 		*(end - 1) = byte;
+		--lastSize;
 	}
 
 	void insertNumber(const uint32_t number)

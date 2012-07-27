@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include "filter.hpp"
+#include <string.h>
 #include <boost/array.hpp>
 #include <boost/checked_delete.hpp>
 #include "config.hpp"
@@ -160,7 +161,7 @@ protected:
     		const byte_t* bytes = data + actionBegins;
     		for (std::size_t i = 0; i < actionMaxLen; ++i)
     		{
-    			if (bytes[i] == ' ' || bytes[i] == '/' || bytes[i] == '?' || bytes[i] == '#')
+    			if (bytes[i] == ' ' || bytes[i] == '/' || bytes[i] == '?')
     			{
     				break;
     			}

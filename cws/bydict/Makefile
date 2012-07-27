@@ -54,6 +54,7 @@ OBJS = $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/request_handler.o $(OBJECT_PATH)/s
 all: $(OBJS)
 	@echo Linking...
 	$(CCMD) $(LDFLAGS) $(LIBS) $^ $(EXEFLAG) $(EXE)
+	-cp tokenizer.sh $(OUTPUT_PATH)/
 
 clean:
 	-rm -f $(EXE)
