@@ -4,6 +4,7 @@
 ''' flash policy file '''
 
 import os
+from natip import natip
 from SocketServer import (TCPServer as TCP, StreamRequestHandler as SRH)
 
 class MyRequestHandler(SRH):
@@ -22,13 +23,11 @@ class PolicyFileFlash():
     '''PolicyFileFlash'''
 
     def __init__(self):
-        tcpServ = TCP(("10.10.11.163", 843), MyRequestHandler)
+        tcpServ = TCP((natip, 843), MyRequestHandler)
         print 'waiting for connection...'
         # 死循环
         tcpServ.serve_forever()
 
-#!/usr/bin/python
-# Filename:main.py
 '''main interface'''
 
 def start_server():

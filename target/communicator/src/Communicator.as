@@ -6,6 +6,7 @@ import flash.display.Sprite;
 import flash.external.ExternalInterface;
 import flash.text.TextField;
 import flash.text.TextFormat;
+import com.rimusdesign.flexzmq.ZMQ;
 
 [SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
 public class Communicator extends Sprite
@@ -87,25 +88,24 @@ import flash.utils.Endian;
 class Gate
 {
     protected var config:Config;
-    protected var sock:ZmqSocket;
+    protected var sock:Socket;
 
     public function Gate(config:Config)
     {
         this.config = config;
-        sock = new ZmqSocket();
+        sock = new Socket();
     }
 
     // connect to server.
     public function connect():void
     {
-//        alert("Gate::connect " + sock.connected);
-//        if (!sock.connected)
-//        {
+        if (!sock.connected)
+        {
 //            Security.loadPolicyFile(config.policy);
             alert("connecting");
             sock.addEventListener(Event.CONNECT, onConnect);
             sock.connect(config.host, config.port);
-//        }
+        }
     }
 
     public function pageExists(url:String):void
@@ -121,34 +121,62 @@ class Gate
     // send data to server.
     public function request(data:String, charset:String):void
     {
-//        alert("send yundao");
-        alert("will send [" + data + "] (" + charset +  ")");
+        sendBytes(pack(data, charset));
+    }
+
+    protected function pack(data:String, charset:String = config.REQUIRED_CHARSET):ByteArray
+    {
+        var res:ByteArray = new ByteArray();
         var bytes:ByteArray = iconv(data, charset);
+        var compress:Boolean = (bytes.length >= 255);
+        if (compress)
+        {
+            bytes.compress();
+        }
+        var len:uint = bytes.length + 2;
+        if (len < 255)
+        {
+            res.writeByte(len);
+        }
+        else
+        {
+            res.writeByte(0xFF);
+            res.writeUnsignedInt(0);
+            res.writeUnsignedInt(len);
+        }
+        res.writeByte(0);
+        res.writeBoolean(compress);
+        bytes.position = 0;
+        res.writeBytes(bytes);
+        res.position = 0;
+        return res;
+    }
+
+    protected function sendId():void
+    {
+        var bytes:ByteArray = new ByteArray();
+        bytes.writeByte(0);
+        bytes.writeByte(0);
+        bytes.position = 0;
         sendBytes(bytes);
     }
 
     protected function sendBytes(bytes:ByteArray):void
     {
-        alert("sendBytes");
-//        if (sock.connected)
-//        {
-            alert("socket connected");
-//            if (bytes.length < (1 << 16))
-//            {
-//                sock.send(bytes.length);
-                sock.writeBytes(bytes, 0, bytes.length);
-                sock.flush();
-//            }
+        if (sock.connected)
+        {
+            sock.writeBytes(bytes);
+            sock.flush();
         }
     }
 
     protected function onConnect(event:Event):void
     {
-        // nothing to do.
+        sendId();
     }
 
     // just make "ping" call exists, so that proxy.send("ping") can success.
-    protected function ping():void
+    public function ping():void
     {
     }
 

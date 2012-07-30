@@ -63,19 +63,19 @@ public class ZmqSocket extends EventDispatcher
                 socket.addEventListener (ProgressEvent.SOCKET_DATA, socketDataHandler);
 
                 //  These are propagated upwards.
-                socket.addEventListener(Event.CLOSE, function (e: Event) { dispatchEvent (e.clone ()); });
-                socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function (e: SecurityErrorEvent) { dispatchEvent (e.clone ()); });
-                socket.addEventListener(IOErrorEvent.IO_ERROR, function (e: IOErrorEvent) { dispatchEvent (e.clone ()); });
+                socket.addEventListener(Event.CLOSE, function (e: Event):void { dispatchEvent (e.clone ()); });
+                socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function (e: SecurityErrorEvent):void { dispatchEvent (e.clone ()); });
+                socket.addEventListener(IOErrorEvent.IO_ERROR, function (e: IOErrorEvent):void { dispatchEvent (e.clone ()); });
         }
 
         //  Add event listeners before connecting.
-        public function connect (host: String, port: int)
+        public function connect (host: String, port: int):void
         {
                 socket.connect(host, port);
         }
 
         //  Call to close TCP connection.
-        public function close ()
+        public function close ():void
         {
                 socket.close ();
         }
@@ -139,7 +139,7 @@ public class ZmqSocket extends EventDispatcher
 
                 while (msg.length > 0)
                 {
-                        var frame: ByteArray = msg.shift ();
+                        var frame: ByteArray = msg.shift();
                         writeFrameBin (frame, msg.length > 0);
                 }
         }
@@ -148,8 +148,7 @@ public class ZmqSocket extends EventDispatcher
         {
                 if (!connected)
                 {
-                        dispatchEvent (new IOErrorEvent (IOErrorEvent.IO_ERROR, false, false,
-                                                                                         "Socket is not connected yet"));
+                        dispatchEvent (new IOErrorEvent (IOErrorEvent.IO_ERROR, false, false, "Socket is not connected yet"));
                         return false;
                 }
                 if (msg == null)
