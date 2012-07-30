@@ -1,7 +1,5 @@
 #!/bin/sh
 
-flexhome="/opt/flexSDK"
-
 flexhome=/opt/flexSDK
 cd ${flexhome}/bin/
 ./mxmlc --static-link-runtime-shared-libraries=true --target-player=11.1 --library-path+="${flexhome}/frameworks/libs/player/11.1" /data/fsuggest/jebe/target/communicator/src/Communicator.as
