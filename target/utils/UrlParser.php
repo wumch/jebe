@@ -13,7 +13,6 @@ class UrlParser
 
     public function __construct()
     {
-
     }
 
     public function parse($url, $mode = self::SPLIT)

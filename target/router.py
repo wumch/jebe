@@ -1,14 +1,15 @@
 #coding:utf-8
 
 import zmq
+from natip import natip
 
 context = zmq.Context(2)
 
 router = context.socket(zmq.ROUTER)
-router.bind("tcp://*:10010")
+router.bind("tcp://%s:10010" % natip)
 
 dealer = context.socket(zmq.DEALER)
-dealer.bind("tcp://127.0.0.1:10011")
+dealer.bind("tcp://%s:10011" % natip)
 
 zmq.device(zmq.QUEUE, router, dealer)
 

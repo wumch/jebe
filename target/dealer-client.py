@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import zmq, time, sys
+from natip import natip
 
 context = zmq.Context()
 
 client = context.socket(zmq.REP)
-client.connect("tcp://127.0.0.1:10011")
+client.connect("tcp://%s:10011" % natip)
 
 message = ''.join(["a" for i in xrange(1, 10)])
 time.clock()
