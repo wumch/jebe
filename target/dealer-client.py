@@ -22,6 +22,7 @@ class Handler(object):
         global client
         client.send(self.ERR_CODE_OK)
 
+    @classmethod
     def replyErr(self):
         global client
         client.send(self.ERR_CODE_ERR)
@@ -48,9 +49,6 @@ class HCrawl(Handler):
 
     def __init__(self):
         super(HCrawl, self).__init__()
-
-    def _isCompressed(self, data):
-        return self.ucpacker.unpack(data[0])[0] == ord(self.ERR_CODE_OK)
 
     def handle(self, data):
         global client
@@ -92,7 +90,8 @@ class Dealer(object):
 
     def _getHandler(self):
         index = self.ucpacker.unpack(self.header[0])[0]
-        assert 0 < index < len(self.handlerList)
+        if not 0 < index < len(self.handlerList):
+            Handler.replyErr()
         return self.handlerList[index]
 
     def handle(self):
