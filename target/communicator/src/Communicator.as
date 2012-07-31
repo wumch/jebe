@@ -49,10 +49,7 @@ import com.rimusdesign.flexzmq.ZMQEvent;
 
 import flash.display.LoaderInfo;
 import flash.external.ExternalInterface;
-import flash.utils.ByteArray;
 import flash.utils.Endian;
-
-import org.messagepack.serialization.MessagePack;
 
 class Config
 {
@@ -92,6 +89,9 @@ class Gate
 {
     protected var config:Config;
     protected var sock:ZMQ;
+
+    protected static const ERR_OK:String = 'y';
+    protected static const ERR_ERR:String = 'n';
 
     protected var actionList:Array = [
         '',     // hold the index of `0`.
@@ -137,15 +137,22 @@ class Gate
     }
 
     // request an action with extra data.
-    public function crawl(data:Object, charset:String = config.REQUIRED_CHARSET):void
+    public function crawl(_meta:Object, _content:String, charset:String = config.REQUIRED_CHARSET):void
     {
-        sock.send([genActionBytes('crawl'), convertObject(data, charset)]);
+        var meta:Object = JSON.parse(JSON.stringify(_meta));    // clone() not supported since _meta is an external object.
+        meta['compressed'] = false;
+        var content:ByteArray = iconvBytes(_content, charset);
+        if (content.length >= config.COMPRESS_THRESHOLD)
+        {
+            content.compress();
+            meta['compressed'] = true;
+        }
+        var json:String = JSON.stringify(convertObject(meta, charset));
+        sock.send([genActionBytes('crawl'), json, content]);
     }
 
     // just make "ping" call exists, so that proxy.send("ping") can success.
-    public function ping():void
-    {
-    }
+    public function ping():void {}
 
     protected function genActionBytes(action:String):ByteArray
     {
@@ -166,7 +173,7 @@ class Gate
             {
                 res[pname] = iconv(obj[pname], fromCharset);
             }
-            else if (obj is Number || obj is Boolean)
+            else if (obj[pname] is Number || obj[pname] is Boolean)
             {
                 res[pname] = obj[pname];
             }
@@ -184,7 +191,7 @@ class Gate
         var bytes:ByteArray = new ByteArray();
         bytes.endian = Endian.LITTLE_ENDIAN;
         var compress:Boolean = (data.length > config.COMPRESS_THRESHOLD);
-        bytes.writeByte("ny".charCodeAt(compress ? 1 : 0));
+        bytes.writeByte((compress ? ERR_OK : ERR_ERR).charCodeAt(0));
         if (compress)
         {
             var assist:ByteArray = new ByteArray();
@@ -203,6 +210,15 @@ class Gate
         alert("str.length:" + (bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET)));
         bytes.position = 0;
         return bytes;//.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
+    }
+
+    protected function iconvBytes(str:String, fromCharset:String):ByteArray
+    {
+        var assist:ByteArray = new ByteArray();
+        assist.endian = Endian.LITTLE_ENDIAN;
+        assist.writeMultiByte(str, fromCharset);
+        assist.position = 0;
+        return assist;
     }
 
     protected function iconv(str:String, fromCharset:String):String
@@ -280,4 +296,3 @@ function alert(...args):void
         ExternalInterface.call('alert', args[0]);
     }
 }
->>>>>>> b_dev

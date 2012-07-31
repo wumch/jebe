@@ -3,7 +3,7 @@
 import zmq
 from natip import natip
 
-context = zmq.Context(2)
+context = zmq.Context(1)
 
 router = context.socket(zmq.ROUTER)
 router.bind("tcp://%s:10010" % natip)

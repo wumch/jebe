@@ -2,7 +2,10 @@
 
 flexhome=/opt/flexSDK
 cd ${flexhome}/bin/
-./mxmlc --debug --static-link-runtime-shared-libraries=true --target-player=11.1 --source-path+=/data/fsuggest/jebe/target/libs --library-path+="${flexhome}/frameworks/libs/player/11.1" /data/fsuggest/jebe/target/communicator/src/Communicator.as
+./mxmlc --debug --static-link-runtime-shared-libraries=true --target-player=11.1 \
+    --source-path+=/data/fsuggest/jebe/target/communicator/libs \
+    --library-path+="${flexhome}/frameworks/libs/player/11.1" \
+    /data/fsuggest/jebe/target/communicator/src/Communicator.as
 
 #mxmlc --static-link-runtime-shared-libraries=true --target-player=10.1 --library-path+="D:\program files\Adobe\Flash Builder Beta\sdks\4.0.0\frameworks\libs\player\10" stage.as
 
