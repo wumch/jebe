@@ -6,7 +6,6 @@ import flash.display.Sprite;
 import flash.external.ExternalInterface;
 import flash.text.TextField;
 import flash.text.TextFormat;
-import com.rimusdesign.flexzmq.ZMQ;
 
 [SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
 public class Communicator extends Sprite
@@ -45,12 +44,15 @@ public class Communicator extends Sprite
 
 }
 
-import com.rimusdesign.flexzmq.SocketOption;
 import com.rimusdesign.flexzmq.ZMQ;
 import com.rimusdesign.flexzmq.ZMQEvent;
 
 import flash.display.LoaderInfo;
 import flash.external.ExternalInterface;
+import flash.utils.ByteArray;
+import flash.utils.Endian;
+
+import org.messagepack.serialization.MessagePack;
 
 class Config
 {
@@ -59,6 +61,7 @@ class Config
     public var policy:String;
     public var pageCharset:String;
 
+    public const COMPRESS_THRESHOLD:uint = (4 << 10);
     public const LC_CON_NAME:String = "gyads";
     public const REQUIRED_CHARSET:String = "utf-8";
 
@@ -83,20 +86,39 @@ class Config
     }
 }
 
-import flash.net.Socket;
-import flash.events.Event;
 import flash.utils.ByteArray;
-import flash.utils.Endian;
 
 class Gate
 {
     protected var config:Config;
     protected var sock:ZMQ;
 
+    protected var actionList:Array = [
+        '',     // hold the index of `0`.
+        // Ask server wheather page exists or not, and tell server where it's from.
+        // Should carry enough data for targeting ad.
+        'pageExists',
+        // Send page content to crawler.
+        'crawl',
+        // receive responsed ads.
+        'showAds',
+    ];
+
     public function Gate(config:Config)
     {
         this.config = config;
         sock = new ZMQ(ZMQ.REQ);
+        prepareReceiver();
+    }
+
+    protected function prepareReceiver():void
+    {
+        sock.addEventListener(ZMQEvent.MESSAGE_RECEIVED, handleData);
+    }
+
+    protected function handleData(event:ZMQEvent):void
+    {
+        alert(event.data);
     }
 
     // connect to server.
@@ -105,15 +127,19 @@ class Gate
         sock.connect(config.host, config.port);
     }
 
-    public function pageExists(url:String):void
+    public function pageExists(info:Object, fromCharset:String):void
     {
-        alert(url);
+        var obj:Object = convertObject(info, fromCharset);
+        alert("obj.url: " + obj.url);
+        var bytes:String = JSON.stringify(obj);
+        alert("json: " + bytes);
+        sock.send([genActionBytes('pageExists'), bytes]);
     }
 
-    // send data to server.
-    public function request(data:String, charset:String):void
+    // request an action with extra data.
+    public function crawl(data:Object, charset:String = config.REQUIRED_CHARSET):void
     {
-        sock.send([data]);
+        sock.send([genActionBytes('crawl'), convertObject(data, charset)]);
     }
 
     // just make "ping" call exists, so that proxy.send("ping") can success.
@@ -121,20 +147,71 @@ class Gate
     {
     }
 
-    protected function iconv(data:String, fromCharset:String):ByteArray
+    protected function genActionBytes(action:String):ByteArray
     {
-        var res:ByteArray = new ByteArray();
-        res.endian = Endian.LITTLE_ENDIAN;
-        var _data:String = data;
-        if (fromCharset !== config.REQUIRED_CHARSET)
+        var index:int = actionList.indexOf(action);
+        var bytes:ByteArray = new ByteArray();
+        bytes.endian = Endian.LITTLE_ENDIAN;
+        bytes.writeByte(index);
+        bytes.position = 0;
+        return bytes;
+    }
+
+    protected function convertObject(obj:Object, fromCharset:String):Object
+    {
+        var res:Object = new Object();
+        for (var pname:String in obj)
         {
-            var bytes:ByteArray = new ByteArray();
-            res.endian = Endian.LITTLE_ENDIAN;
-            bytes.writeMultiByte(data, fromCharset);
-            _data = bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
+            if (obj[pname] is String)
+            {
+                res[pname] = iconv(obj[pname], fromCharset);
+            }
+            else if (obj is Number || obj is Boolean)
+            {
+                res[pname] = obj[pname];
+            }
+            else if (obj is Object)
+            {
+                res[pname] = convertObject(obj[pname], fromCharset);
+            }
         }
-        res.writeMultiByte(_data, config.REQUIRED_CHARSET);
         return res;
+    }
+
+    // convert and compress.
+    protected function convert(data:String, fromCharset:String):ByteArray
+    {
+        var bytes:ByteArray = new ByteArray();
+        bytes.endian = Endian.LITTLE_ENDIAN;
+        var compress:Boolean = (data.length > config.COMPRESS_THRESHOLD);
+        bytes.writeByte("ny".charCodeAt(compress ? 1 : 0));
+        if (compress)
+        {
+            var assist:ByteArray = new ByteArray();
+            assist.endian = Endian.LITTLE_ENDIAN;
+            assist.writeMultiByte(data, fromCharset);
+            assist.compress();
+            assist.position = 0;
+            bytes.writeBytes(assist);
+        }
+        else
+        {
+            bytes.writeMultiByte(data, fromCharset);
+        }
+        alert("bytes.length: " + (bytes.length));
+        bytes.position = 0;
+        alert("str.length:" + (bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET)));
+        bytes.position = 0;
+        return bytes;//.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
+    }
+
+    protected function iconv(str:String, fromCharset:String):String
+    {
+        var assist:ByteArray = new ByteArray();
+        assist.endian = Endian.LITTLE_ENDIAN;
+        assist.writeMultiByte(str, fromCharset);
+        assist.position = 0;
+        return assist.readMultiByte(assist.length, config.REQUIRED_CHARSET);
     }
 }
 
