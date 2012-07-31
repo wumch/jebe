@@ -25,6 +25,7 @@ public class Communicator extends Sprite
         config = new Config(loaderInfo);
         gate = new Gate(config);
         gather = new Gather(config, gate);
+        gate.setGather(gather);
         ExternalInterface.addCallback('call', gather.call);
 
         // test only
@@ -114,6 +115,12 @@ class Gate
         prepareReceiver();
     }
 
+    // TODO: design smells.
+    public function setGather(gather:Gather):void
+    {
+        this.gather = gather;
+    }
+
     protected function prepareReceiver():void
     {
         sock.addEventListener(ZMQEvent.MESSAGE_RECEIVED, handleData);
@@ -121,20 +128,24 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        queue.push(new Array(from, callbackName));
-        this[method].apply(args);
+        alert("from: " + from, "\nmethod: " + method);
+        queue.push([from, callbackName]);
+        this[method].apply(this, args);
     }
 
     protected function handleData(event:ZMQEvent):void
     {
         var info:Array = queue.shift();
         backPropagate(info[0], info[1], event.data);
-        alert(event.data);
+        alert("alert in master page: " + event.data);
     }
 
     protected function backPropagate(from:String, callbackName:String, data:*):void
     {
-        gather.send(from, 'callback', callbackName, data);
+        if (from !== null && callbackName !== null)
+        {
+            gather.send(from, 'callback', callbackName, data);
+        }
     }
 
     // connect to server.
@@ -143,9 +154,8 @@ class Gate
         sock.connect(config.host, config.port);
     }
 
-    public function pageExists(info:Object, fromCharset:String, callbackName:String):void
+    public function pageExists(info:Object, fromCharset:String):void
     {
-        queue.push(callbackName);
         var obj:Object = convertObject(info, fromCharset);
         alert("obj.url: " + obj.url);
         var bytes:String = JSON.stringify(obj);
@@ -246,6 +256,11 @@ class Gate
         assist.position = 0;
         return assist.readMultiByte(assist.length, config.REQUIRED_CHARSET);
     }
+
+    public function callback(callbackName:String, data:*):void
+    {
+        ExternalInterface.call(callbackName, data);
+    }
 }
 
 import flash.net.LocalConnection;
@@ -255,21 +270,20 @@ import flash.events.StatusEvent;
 class Gather extends LocalConnection
 {
     protected var busName:String;
-    protected var id:String;
+    protected var id:String = null;
 
     protected var _isRecver:Boolean = false;
+    protected var inited:Boolean = false;
 
     public function Gather(config:Config, cli:Gate)
     {
         super();
         busName = config.LC_CON_NAME;
         client = cli;
-        init();
     }
     
     public function init():void
     {
-        id = ExternalInterface.call("getPageId") as String;
         addEventListener(StatusEvent.STATUS, initClient);
         call("ping");
     }
@@ -282,9 +296,12 @@ class Gather extends LocalConnection
                 makeRecver();
                 break;
             case "status":
-                _isRecver = false;
-                alert("current gather id: [" + id + "]");
-                connect(id);
+                if (id === null)
+                {
+                    id = ExternalInterface.call("getPageId") as String;
+                    connect(id);
+                    alert("current gather id: [" + id + "]");
+                }
                 break;
             default:
                 break;
@@ -293,14 +310,23 @@ class Gather extends LocalConnection
 
     protected function makeRecver():void
     {
-        alert('makeRecver');
-        _isRecver = true;
-        connect(busName);
-        (client as Gate).connect();
+        if (!_isRecver)
+        {
+            alert('makeRecver');
+            _isRecver = true;
+            id = busName;
+            connect(busName);
+            (client as Gate).connect();
+        }
     }
 
     public function call(method:String, callbackName:String = null, ...args):void
     {
+        if (!inited)
+        {
+            inited = true;
+            init();
+        }
 //        args.unshift(id);
 //        args.unshift(method);
 //        args.unshift(busName);
