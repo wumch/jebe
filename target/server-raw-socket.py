@@ -15,7 +15,7 @@ def dump(data):
     print len(data)
     print(data)
 
-(client, addr) = sock.accept()
+(sock, addr) = sock.accept()
 while True:
-    message = client.recv(100)
+    message = sock.recv(100)
     dump(message)
