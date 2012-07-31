@@ -74,7 +74,6 @@ class Config
             host = info.parameters["host"];
             port = parseInt(info.parameters["port"]);
             pageCharset = info.parameters["charset"].toLowerCase();
-            policy = info.parameters["policy"];
         }
         catch (err:Error)
         {
@@ -89,9 +88,12 @@ class Gate
 {
     protected var config:Config;
     protected var sock:ZMQ;
+    protected var gather:Gather;
 
     protected static const ERR_OK:String = 'y';
     protected static const ERR_ERR:String = 'n';
+
+    protected var queue:Array;
 
     protected var actionList:Array = [
         '',     // hold the index of `0`.
@@ -107,6 +109,7 @@ class Gate
     public function Gate(config:Config)
     {
         this.config = config;
+        queue = new Array();    // single zmq client-server pair can guarantee FIFO.
         sock = new ZMQ(ZMQ.REQ);
         prepareReceiver();
     }
@@ -116,9 +119,22 @@ class Gate
         sock.addEventListener(ZMQEvent.MESSAGE_RECEIVED, handleData);
     }
 
+    public function invoke(from:String, method:String, callbackName:String, args:Array):void
+    {
+        queue.push(new Array(from, callbackName));
+        this[method].apply(args);
+    }
+
     protected function handleData(event:ZMQEvent):void
     {
+        var info:Array = queue.shift();
+        backPropagate(info[0], info[1], event.data);
         alert(event.data);
+    }
+
+    protected function backPropagate(from:String, callbackName:String, data:*):void
+    {
+        gather.send(from, 'callback', callbackName, data);
     }
 
     // connect to server.
@@ -127,8 +143,9 @@ class Gate
         sock.connect(config.host, config.port);
     }
 
-    public function pageExists(info:Object, fromCharset:String):void
+    public function pageExists(info:Object, fromCharset:String, callbackName:String):void
     {
+        queue.push(callbackName);
         var obj:Object = convertObject(info, fromCharset);
         alert("obj.url: " + obj.url);
         var bytes:String = JSON.stringify(obj);
@@ -237,20 +254,22 @@ import flash.events.StatusEvent;
 //
 class Gather extends LocalConnection
 {
-    protected var conName:String;
+    protected var busName:String;
+    protected var id:String;
 
     protected var _isRecver:Boolean = false;
 
     public function Gather(config:Config, cli:Gate)
     {
         super();
-        conName = config.LC_CON_NAME;
+        busName = config.LC_CON_NAME;
         client = cli;
         init();
     }
     
     public function init():void
     {
+        id = ExternalInterface.call("getPageId") as String;
         addEventListener(StatusEvent.STATUS, initClient);
         call("ping");
     }
@@ -262,8 +281,12 @@ class Gather extends LocalConnection
             case "error":
                 makeRecver();
                 break;
-            default:
+            case "status":
                 _isRecver = false;
+                alert("current gather id: [" + id + "]");
+                connect(id);
+                break;
+            default:
                 break;
         }
     }
@@ -272,16 +295,23 @@ class Gather extends LocalConnection
     {
         alert('makeRecver');
         _isRecver = true;
-        connect(conName);
+        connect(busName);
         (client as Gate).connect();
     }
 
-    public function call(method:String, ...args):void
+    public function call(method:String, callbackName:String = null, ...args):void
     {
-        args.unshift(method);
-        args.unshift(conName);
-        alert(args);
-        send.apply(this, args);
+//        args.unshift(id);
+//        args.unshift(method);
+//        args.unshift(busName);
+//        alert(args);
+        send(busName, 'invoke', id, method, callbackName, args);
+//        send.call(this, id, method, args);
+    }
+
+    public function callback(callbackName:String, data:*):void
+    {
+        ExternalInterface.call(callbackName, data);
     }
 }
 
