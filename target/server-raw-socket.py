@@ -11,7 +11,7 @@ sock.listen(1)
 
 def dump(data):
     if 'a' in data:
-        print 'a in pos:', data.find('a')
+        print 'a is at:', data.find('a')
     print len(data)
     print(data)
 
