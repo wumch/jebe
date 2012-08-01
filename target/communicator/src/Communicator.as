@@ -47,7 +47,6 @@ public class Communicator extends Sprite
 
 import com.rimusdesign.flexzmq.ZMQ;
 import com.rimusdesign.flexzmq.ZMQEvent;
-
 import flash.display.LoaderInfo;
 import flash.external.ExternalInterface;
 import flash.utils.Endian;
@@ -78,7 +77,7 @@ class Config
         }
         catch (err:Error)
         {
-//            throw err;
+            throw err;
         }
     }
 }
@@ -97,7 +96,7 @@ class Gate
     protected var queue:Array;
 
     protected var actionList:Array = [
-        '',     // hold the index of `0`.
+        '',     // hold the index of `0` by a invalid.
         // Ask server wheather page exists or not, and tell server where it's from.
         // Should carry enough data for targeting ad.
         'pageExists',
@@ -128,7 +127,7 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        alert("from: " + from, "\nmethod: " + method);
+        alert("nmethod: " + method + "\nfrom: " + from);
         queue.push([from, callbackName]);
         this[method].apply(this, args);
     }
@@ -140,11 +139,18 @@ class Gate
         alert("alert in master page: " + event.data);
     }
 
-    protected function backPropagate(from:String, callbackName:String, data:*):void
+    protected function backPropagate(to:String, callbackName:String, data:*):void
     {
-        if (from !== null && callbackName !== null)
+        if (to !== null && callbackName !== null)
         {
-            gather.send(from, 'callback', callbackName, data);
+            if (gather.isSame(to))
+            {
+                callback(callbackName, data);
+            }
+            else
+            {
+                gather.send(to, 'callback', callbackName, data);
+            }
         }
     }
 
@@ -266,7 +272,6 @@ class Gate
 import flash.net.LocalConnection;
 import flash.events.StatusEvent;
 
-//
 class Gather extends LocalConnection
 {
     protected var busName:String;
@@ -280,6 +285,7 @@ class Gather extends LocalConnection
         super();
         busName = config.LC_CON_NAME;
         client = cli;
+        isPerUser = true;
     }
     
     public function init():void
@@ -312,6 +318,10 @@ class Gather extends LocalConnection
     {
         if (!_isRecver)
         {
+            if (id !== null)
+            {
+                close();
+            }
             alert('makeRecver');
             _isRecver = true;
             id = busName;
@@ -327,17 +337,17 @@ class Gather extends LocalConnection
             inited = true;
             init();
         }
-//        args.unshift(id);
-//        args.unshift(method);
-//        args.unshift(busName);
-//        alert(args);
         send(busName, 'invoke', id, method, callbackName, args);
-//        send.call(this, id, method, args);
     }
 
     public function callback(callbackName:String, data:*):void
     {
         ExternalInterface.call(callbackName, data);
+    }
+
+    public function isSame(connectionName:String):Boolean
+    {
+        return id === connectionName;
     }
 }
 

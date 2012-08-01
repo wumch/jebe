@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import zmq
-from natip import natip
+from utils.natip import natip
 import zlib, struct
 import riak
 from random import randint
@@ -29,6 +29,7 @@ class PageStorer(object):
     W_VALUE = 1
     DW_VALUE = 0
     R_VALUE = 1
+    textfilepath = r'/'
 
     _instance = None
 
@@ -115,17 +116,17 @@ class HPageExists(Handler):
     def handle(self, data):
         """
         case:
-            non-exists: tell client, ask for details of the page.
+            non-exists: ask client for details of the page.
             exists: response "all right" with some ads.
         """
         try:
-            print data
+            assert len(data) == 1
             info = self.jsonDecoder.decode(data[0])
             print info
             self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
         except Exception, e:
             self.replyErr()
-            print "pageExists failed: ", e.message()
+            print "pageExists failed: ", e.message
 
 class HCrawl(Handler):
 
@@ -145,7 +146,7 @@ class HCrawl(Handler):
             print content
         except Exception, e:
             self.replyErr()
-            print "crawl failed: ", e.message()
+            print "crawl failed: ", e.message
 
     def store(self, meta, content):
         self.pageStorer.store(meta, content)
