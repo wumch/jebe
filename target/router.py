@@ -1,7 +1,7 @@
 #coding:utf-8
 
 import zmq
-from natip import natip
+from utils.natip import natip
 
 context = zmq.Context(1)
 

@@ -4,7 +4,7 @@
 ''' flash policy file '''
 
 import os
-from natip import natip
+from utils.natip import natip
 from SocketServer import (TCPServer as TCP, StreamRequestHandler as SRH)
 
 class MyRequestHandler(SRH):

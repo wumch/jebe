@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import zmq
-from natip import natip
+from utils.natip import natip
 
 context = zmq.Context()
 server = context.socket(zmq.REP)

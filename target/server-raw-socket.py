@@ -3,7 +3,7 @@
 
 import os, sys
 import socket
-from natip import natip
+from utils.natip import natip
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind((natip, 10010))
