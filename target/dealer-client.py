@@ -70,14 +70,14 @@ class PageStorer(object):
     def store(self, meta, content):
         data = self.getData(meta, content)
         if data is None: return
-#        self.bucket.new(self.genKey(meta['url']), data).store(w=self.W_VALUE, dw=self.DW_VALUE)
+        self.bucket.new(self.genKey(meta['url']), data).store(w=self.W_VALUE, dw=self.DW_VALUE)
 
     def getData(self, meta, content):
         if 'url' not in meta:
             return None
         urlinfo = self.urlparser.parse(meta['url'])
-#        if urlinfo is None:
-#            return None
+        if urlinfo is None:
+            return None
         words = self.split(content)
         if words is None:
             return None
@@ -174,8 +174,8 @@ class HCrawl(Handler):
             print "crawl failed: ", e.message
 
     def store(self, meta, content):
-        self.pageStorer.store(meta, content)
         self.fileStorer.store(content)
+        self.pageStorer.store(meta, content)
 
 class HShowAds(Handler):
 
