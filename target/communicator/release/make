@@ -20,7 +20,7 @@ cd ${flexhome}/bin/
 
 #mv /data/fsuggest/kulebu/track/track.swf /data/fsuggest/pweb/static/media/
 
-cp /data/fsuggest/jebe/target/communicator/${branch}/Communicator.swf /data/fsuggest/jebe/target/
+cp /data/fsuggest/jebe/target/communicator/${branch}/Communicator.swf /data/fsuggest/jebe/target/crawl.swf
 
 echo
 

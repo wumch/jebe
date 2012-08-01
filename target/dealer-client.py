@@ -146,11 +146,10 @@ class HPageExists(Handler):
         try:
             assert len(data) == 1
             info = self.jsonDecoder.decode(data[0])
-            print info
             self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
         except Exception, e:
             self.replyErr()
-            print "pageExists failed: ", e.message
+            print "pageExists failed: "
 
 class HCrawl(Handler):
 
@@ -167,11 +166,9 @@ class HCrawl(Handler):
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.replyOk()
-            print meta
-            print content
         except Exception, e:
             self.replyErr()
-            print "crawl failed: ", e.message
+            print "crawl failed: "
 
     def store(self, meta, content):
         self.fileStorer.store(content)
@@ -186,12 +183,10 @@ class HShowAds(Handler):
         global sock
         try:
             info = self.jsonDecoder.decode(data)
+            self.replyOk()
         except Exception:
-            sock.send(self.ERR_CODE_ERR)
+            self.replyErr()
             print "showAds failed"
-            return
-        print info
-        sock.send(self.ERR_CODE_OK)
 
 class Dealer(object):
 

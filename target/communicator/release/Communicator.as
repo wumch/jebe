@@ -4,10 +4,8 @@ package
 
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
-import flash.text.TextField;
-import flash.text.TextFormat;
 
-[SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
+[SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
@@ -28,19 +26,7 @@ public class Communicator extends Sprite
         gate.setGather(gather);
         ExternalInterface.addCallback('call', gather.call);
         ExternalInterface.addCallback('crawl', gather.crawl);
-
-        // test only
-        var text:TextField = new TextField();
-        text.borderColor = 0xFF0000;
-        text.backgroundColor = 0x00FF00;
-        text.textColor = 0xFF0000;
-        text.border = true;
-        text.setTextFormat(new TextFormat(null, 30, 0xFF0000));
-        text.x = 50;
-        text.y = 20;
-        text.text = config.host + "\n" + config.policy + "\n";
-        text.appendText(ExternalInterface.available ? "avail" : "invail");
-        addChild(text);
+        ExternalInterface.call(config.initrc);
     }
 }
 
@@ -56,8 +42,8 @@ class Config
 {
     public var host:String;
     public var port:uint;
-    public var policy:String;
     public var pageCharset:String;
+    public var initrc:String;
 
     public const COMPRESS_THRESHOLD:uint = (4 << 10);
     public const MAX_SEND_SIZE:uint = (40 << 10);
@@ -76,6 +62,7 @@ class Config
             host = info.parameters["host"];
             port = parseInt(info.parameters["port"]);
             pageCharset = info.parameters["charset"].toLowerCase();
+            initrc = info.parameters["initrc"];
         }
         catch (err:Error)
         {
@@ -92,9 +79,6 @@ class Gate
     protected var sock:ZMQ;
     protected var gather:Gather;
 
-    protected static const ERR_OK:String = 'y';
-    protected static const ERR_ERR:String = 'n';
-
     protected var queue:Array;
 
     protected var actionList:Array = [
@@ -105,7 +89,7 @@ class Gate
         // Send page content to crawler.
         'crawl',
         // receive responsed ads.
-        'showAds',
+        'showAds'
     ];
 
     public function Gate(config:Config)
@@ -349,14 +333,6 @@ class Gather extends LocalConnection
         }
         bytes.position = 0;
         send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
-    }
-
-    public function callback(callbackName:String, data:*):void
-    {
-        if (callbackName !== null)
-        {
-            ExternalInterface.call(callbackName, data);
-        }
     }
 
     public function isSame(connectionName:String):Boolean
