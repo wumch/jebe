@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #!/bin/sh
 
 flexhome="/opt/flexSDK"
@@ -15,5 +14,3 @@ cp /data/fsuggest/jebe/target/communicator/src/Communicator.swf /data/fsuggest/j
 
 echo
 
-=======
->>>>>>> b_dev

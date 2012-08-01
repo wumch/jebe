@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+DEBUG = True
+
 import os
 import zmq
 from utils.natip import natip
@@ -42,18 +44,19 @@ class PageStorer(object):
 
     urlparser = UrlParser()
     tokenizer = ('http://192.168.88.2:10086/split',
-                 'http://192.168.88.4:10086/split',
-                 'http://127.0.0.1:10086/split',)
+                 'http://192.168.88.4:10086/split',)
     riaks = ({'host':'192.168.88.1', 'port':8098},
              {'host':'192.168.88.2', 'port':8098},
              {'host':'192.168.88.3', 'port':8098},
              {'host':'192.168.88.4', 'port':8098},)
-    riaks = ({'host':'127.0.0.1', 'port':8098},)
+    if DEBUG:
+        riaks = ({'host':natip, 'port':8098}, )
+        tokenizer = ('http://127.0.0.1:10086/split', )
+
     buck = 'loc'
     W_VALUE = 1
     DW_VALUE = 0
     R_VALUE = 1
-    textfilepath = r'/'
 
     _instance = None
 
@@ -99,7 +102,7 @@ class PageStorer(object):
         return m.hexdigest()
 
     def exists(self, url):
-        self.bucket.get(key=self.genKey(url), r=self.R_VALUE).exists()
+        return self.bucket.get(key=self.genKey(url), r=self.R_VALUE).exists()
 
 class Handler(object):
 
@@ -144,11 +147,10 @@ class HPageExists(Handler):
             exists: response "all right" with some ads.
         """
         try:
-            assert len(data) == 1
             info = self.jsonDecoder.decode(data[0])
             self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
-        except Exception, e:
-            self.replyErr()
+        except Exception:
+            self.replyOk()      # to make error-occured client no longer upload.
             print "pageExists failed: "
 
 class HCrawl(Handler):
@@ -166,7 +168,7 @@ class HCrawl(Handler):
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.replyOk()
-        except Exception, e:
+        except Exception:
             self.replyErr()
             print "crawl failed: "
 
@@ -183,7 +185,7 @@ class HShowAds(Handler):
         global sock
         try:
             info = self.jsonDecoder.decode(data)
-            self.replyOk()
+            self.replyOk() if info else self.replyErr()
         except Exception:
             self.replyErr()
             print "showAds failed"

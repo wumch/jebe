@@ -5,7 +5,7 @@ package
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
 
-[SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
+[SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
@@ -89,7 +89,7 @@ class Gate
         // Send page content to crawler.
         'crawl',
         // receive responsed ads.
-        'showAds'
+        'showAds',
     ];
 
     public function Gate(config:Config)
@@ -333,6 +333,14 @@ class Gather extends LocalConnection
         }
         bytes.position = 0;
         send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
+    }
+
+    public function callback(callbackName:String, data:*):void
+    {
+        if (callbackName !== null)
+        {
+            ExternalInterface.call(callbackName, data);
+        }
     }
 
     public function isSame(connectionName:String):Boolean

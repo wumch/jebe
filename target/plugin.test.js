@@ -506,7 +506,7 @@ if (!document.body.innerText)
             if( rand(1,100)<=100 ) sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
         var host = "192.168.1.8", port = "10010";
-        var swf = 'Communicator.swf?' + 'host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
+        var swf = 'crawl.swf?' + 'host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
