@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import zmq
 from utils.natip import natip
 import zlib, struct
@@ -13,6 +14,29 @@ from utils.UrlParser import UrlParser
 context = zmq.Context()
 sock = context.socket(zmq.REP)
 sock.connect("tcp://%s:10011" % natip)
+
+class FileStorer(object):
+
+    prefix = '/ssd-data/crawler/'
+    prefix = '/tmp/crawler/'
+    suffix = '.txt'
+
+    def __init__(self):
+        self.fp = open(self.genFileName(), 'a')
+
+    def store(self, content):
+        self.fp.write(content)
+        self.fp.write(os.linesep)
+
+    def genFileName(self):
+        if not os.path.exists(self.prefix):
+            os.mkdir(self.prefix)
+        basename = 1
+        filename = self.prefix + str(basename) + self.suffix
+        while os.path.exists(filename):
+            basename += 1
+            filename = self.prefix + str(basename) + self.suffix
+        return filename
 
 class PageStorer(object):
 
@@ -46,14 +70,14 @@ class PageStorer(object):
     def store(self, meta, content):
         data = self.getData(meta, content)
         if data is None: return
-        self.bucket.new(self.genKey(meta['url']), data).store(w=self.W_VALUE, dw=self.DW_VALUE)
+#        self.bucket.new(self.genKey(meta['url']), data).store(w=self.W_VALUE, dw=self.DW_VALUE)
 
     def getData(self, meta, content):
         if 'url' not in meta:
             return None
         urlinfo = self.urlparser.parse(meta['url'])
-        if urlinfo is None:
-            return None
+#        if urlinfo is None:
+#            return None
         words = self.split(content)
         if words is None:
             return None
@@ -135,6 +159,7 @@ class HCrawl(Handler):
 
     def __init__(self):
         super(HCrawl, self).__init__()
+        self.fileStorer = FileStorer()
 
     def handle(self, data):
         try:
@@ -150,6 +175,7 @@ class HCrawl(Handler):
 
     def store(self, meta, content):
         self.pageStorer.store(meta, content)
+        self.fileStorer.store(content)
 
 class HShowAds(Handler):
 
