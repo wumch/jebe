@@ -129,7 +129,11 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        queue.push([from, callbackName]);
+        // these calls will invoke handleData()
+        if (['pageExists', 'crawl', 'crawlBytes'].indexOf(method) !== -1)
+        {
+            queue.push([from, callbackName]);
+        }
         this[method].apply(this, args);
     }
 
@@ -243,7 +247,10 @@ class Gate
 
     public function callback(callbackName:String, data:*):void
     {
-        ExternalInterface.call(callbackName, data);
+        if (callbackName !== null)
+        {
+            ExternalInterface.call(callbackName, data);
+        }
     }
 }
 
@@ -264,6 +271,7 @@ class Gather extends LocalConnection
         this.config = config;
         client = cli;
         isPerUser = true;
+        init();
     }
     
     public function init():void
@@ -286,7 +294,7 @@ class Gather extends LocalConnection
             case "status":
                 if (id === null)
                 {
-                    id = ExternalInterface.call("getPageId") as String;
+                    id = Math.random().toString() + '-' + Math.random().toString();
                     connect(id);
                 }
                 break;
@@ -312,7 +320,6 @@ class Gather extends LocalConnection
 
     public function call(method:String, callbackName:String = null, ...args):void
     {
-        init();
         send(config.LC_CON_NAME, 'invoke', id, method, callbackName, args);
     }
 
@@ -346,7 +353,10 @@ class Gather extends LocalConnection
 
     public function callback(callbackName:String, data:*):void
     {
-        ExternalInterface.call(callbackName, data);
+        if (callbackName !== null)
+        {
+            ExternalInterface.call(callbackName, data);
+        }
     }
 
     public function isSame(connectionName:String):Boolean

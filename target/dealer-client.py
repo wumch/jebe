@@ -187,6 +187,7 @@ if __name__ == '__main__':
     dealer = Dealer()
     while True:
         data = sock.recv_multipart()
+        print "received some"
         if len(data) > 1:
             dealer.handle(data[0], data[1:])
         else:

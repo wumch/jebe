@@ -129,8 +129,13 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        alert("nmethod: " + method + "\nfrom: " + from);
-        queue.push([from, callbackName]);
+        alert("method: " + method + "\nfrom: " + from);
+        // these calls will invoke handleData()
+        if (['pageExists', 'crawl', 'crawlBytes'].indexOf(method) !== -1)
+        {
+            alert("method " + method + ' will be pushed back.');
+            queue.push([from, callbackName]);
+        }
         this[method].apply(this, args);
     }
 
@@ -138,6 +143,8 @@ class Gate
     {
         var info:Array = queue.shift();
         backPropagate(info[0], info[1], event.data);
+        alert(info[0]);
+        alert(info[1]);
         alert("alert in master page: " + event.data);
     }
 
@@ -165,9 +172,7 @@ class Gate
     public function pageExists(info:Object, fromCharset:String):void
     {
         var obj:Object = convertObject(info, fromCharset);
-        alert("obj.url: " + obj.url);
         var bytes:String = JSON.stringify(obj);
-        alert("json: " + bytes);
         sock.send([genActionBytes('pageExists'), bytes]);
     }
 
@@ -298,6 +303,7 @@ class Gather extends LocalConnection
         this.config = config;
         client = cli;
         isPerUser = true;
+        init();
     }
     
     public function init():void
@@ -320,7 +326,7 @@ class Gather extends LocalConnection
             case "status":
                 if (id === null)
                 {
-                    id = ExternalInterface.call("getPageId") as String;
+                    id = Math.random().toString() + '-' + Math.random().toString();
                     connect(id);
                     alert("current gather id: [" + id + "]");
                 }
@@ -348,7 +354,6 @@ class Gather extends LocalConnection
 
     public function call(method:String, callbackName:String = null, ...args):void
     {
-        init();
         send(config.LC_CON_NAME, 'invoke', id, method, callbackName, args);
     }
 
