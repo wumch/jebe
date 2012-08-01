@@ -33,7 +33,7 @@ _gaq.push(
 
     window.i8vars ={
         charset : document.charset || document.characterSet,
-        cmtorid : 'i8_communicator',
+        cmtorid : 'i8_communicator'
     };
 
 	I8Body= 101;
