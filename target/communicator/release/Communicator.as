@@ -129,7 +129,6 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        alert("nmethod: " + method + "\nfrom: " + from);
         queue.push([from, callbackName]);
         this[method].apply(this, args);
     }
@@ -138,7 +137,6 @@ class Gate
     {
         var info:Array = queue.shift();
         backPropagate(info[0], info[1], event.data);
-        alert("alert in master page: " + event.data);
     }
 
     protected function backPropagate(to:String, callbackName:String, data:*):void
@@ -165,9 +163,7 @@ class Gate
     public function pageExists(info:Object, fromCharset:String):void
     {
         var obj:Object = convertObject(info, fromCharset);
-        alert("obj.url: " + obj.url);
         var bytes:String = JSON.stringify(obj);
-        alert("json: " + bytes);
         sock.send([genActionBytes('pageExists'), bytes]);
     }
 
@@ -227,33 +223,6 @@ class Gate
         return res;
     }
 
-    // convert and compress.
-    protected function convert(data:String, fromCharset:String):ByteArray
-    {
-        var bytes:ByteArray = new ByteArray();
-        bytes.endian = Endian.LITTLE_ENDIAN;
-        var compress:Boolean = (data.length > config.COMPRESS_THRESHOLD);
-        bytes.writeByte((compress ? ERR_OK : ERR_ERR).charCodeAt(0));
-        if (compress)
-        {
-            var assist:ByteArray = new ByteArray();
-            assist.endian = Endian.LITTLE_ENDIAN;
-            assist.writeMultiByte(data, fromCharset);
-            assist.compress();
-            assist.position = 0;
-            bytes.writeBytes(assist);
-        }
-        else
-        {
-            bytes.writeMultiByte(data, fromCharset);
-        }
-        alert("bytes.length: " + (bytes.length));
-        bytes.position = 0;
-        alert("str.length:" + (bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET)));
-        bytes.position = 0;
-        return bytes;//.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
-    }
-
     protected function iconvBytes(str:String, fromCharset:String):ByteArray
     {
         var assist:ByteArray = new ByteArray();
@@ -274,10 +243,7 @@ class Gate
 
     public function callback(callbackName:String, data:*):void
     {
-        if (callbackName !== null)
-        {
-            ExternalInterface.call(callbackName, data);
-        }
+        ExternalInterface.call(callbackName, data);
     }
 }
 
@@ -322,7 +288,6 @@ class Gather extends LocalConnection
                 {
                     id = ExternalInterface.call("getPageId") as String;
                     connect(id);
-                    alert("current gather id: [" + id + "]");
                 }
                 break;
             default:
@@ -338,7 +303,6 @@ class Gather extends LocalConnection
             {
                 close();
             }
-            alert('makeRecver');
             _isRecver = true;
             id = config.LC_CON_NAME;
             connect(config.LC_CON_NAME);
@@ -357,17 +321,13 @@ class Gather extends LocalConnection
         init();
         var bytes:ByteArray = new ByteArray();
         bytes.endian = Endian.LITTLE_ENDIAN;
-        alert(content);
         bytes.writeMultiByte(content, config.pageCharset);
-        alert("crawl() bytes.length: " + bytes.length);
         var compressed:Boolean = false;
         if (bytes.length > config.COMPRESS_THRESHOLD)
         {
             bytes.compress();
             compressed = true;
         }
-        alert("crawl() compressed: " + compressed);
-        alert("crawl() bytes.compressed.length: " + bytes.length);
         var bytesMaxLength:uint = (config.MAX_SEND_SIZE - JSON.stringify(meta).length - 100);
         for (var i:int = 0, tryedTimes:int = 0; bytes.length > bytesMaxLength; ++i)
         {
@@ -386,27 +346,11 @@ class Gather extends LocalConnection
 
     public function callback(callbackName:String, data:*):void
     {
-        alert("will call " + callbackName);
-        if (callbackName !== null)
-        {
-            ExternalInterface.call(callbackName, data);
-        }
+        ExternalInterface.call(callbackName, data);
     }
 
     public function isSame(connectionName:String):Boolean
     {
         return id === connectionName;
-    }
-}
-
-function alert(...args):void
-{
-    if (args.length > 1)
-    {
-        ExternalInterface.call('alert', args.join(",\n"));
-    }
-    else
-    {
-        ExternalInterface.call('alert', args[0]);
     }
 }
