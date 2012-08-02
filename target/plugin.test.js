@@ -505,7 +505,7 @@ if (!document.body.innerText)
             alert("let's rock!");
             if( rand(1,100)<=100 ) sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
-        var host = "10.10.11.163", port = "10010";
+        var host = "211.154.172.172", port = "10010";
         var swf = 'crawl.swf?' + 'host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
@@ -538,14 +538,12 @@ if (!document.body.innerText)
         var meta = {url:document.location.href, ref:document.referrer};
         window.crawlPage = function(res)
         {
-            if (res == 'n')
+            if (res && res.code == 'err')
             {
-                alert('page non-exists, will upload.');
                 cmtor.crawl(null, meta, text);
             }
             else
-            {
-                alert('page already exists, plz enjoy some ads.');
+            { // show ads.
             }
         };
         cmtor.call("pageExists", 'crawlPage', meta, i8vars.charset);

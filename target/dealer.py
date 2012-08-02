@@ -106,24 +106,24 @@ class PageStorer(object):
 
 class Handler(object):
 
-    ERR_CODE_OK     = 'y'
-    ERR_CODE_ERR    = 'n'
+    ERR_CODE_OK     = 'ok'
+    ERR_CODE_ERR    = 'err'
     jsonDecoder = JSONDecoder(encoding='utf-8')
     jsonEncoder = JSONEncoder()
 
     def __init__(self):
-        self.out = self.ERR_CODE_ERR
+        self.out = {'code':self.ERR_CODE_ERR}
 
     def handle(self, data): pass
 
     def replyOk(self):
-        global sock
-        sock.send(self.ERR_CODE_OK)
+        self.out['code'] = self.ERR_CODE_OK
+        self.response()
 
     @classmethod    # to make global callable.
     def replyErr(cls):
         global sock
-        sock.send(cls.ERR_CODE_ERR)
+        sock.send(cls.jsonEncoder.encode({'code':self.ERR_CODE_ERR}))
 
     def response(self, data = None):
         global sock
