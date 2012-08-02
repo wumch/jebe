@@ -4,8 +4,6 @@ package
 
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
-import flash.text.TextField;
-import flash.text.TextFormat;
 
 [SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
 public class Communicator extends Sprite
@@ -28,19 +26,7 @@ public class Communicator extends Sprite
         gate.setGather(gather);
         ExternalInterface.addCallback('call', gather.call);
         ExternalInterface.addCallback('crawl', gather.crawl);
-
-        // test only
-        var text:TextField = new TextField();
-        text.borderColor = 0xFF0000;
-        text.backgroundColor = 0x00FF00;
-        text.textColor = 0xFF0000;
-        text.border = true;
-        text.setTextFormat(new TextFormat(null, 30, 0xFF0000));
-        text.x = 50;
-        text.y = 20;
-        text.text = config.host + "\n" + config.policy + "\n";
-        text.appendText(ExternalInterface.available ? "avail" : "invail");
-        addChild(text);
+        ExternalInterface.call(config.initrc);
     }
 }
 
@@ -56,8 +42,8 @@ class Config
 {
     public var host:String;
     public var port:uint;
-    public var policy:String;
     public var pageCharset:String;
+    public var initrc:String;
 
     public const COMPRESS_THRESHOLD:uint = (4 << 10);
     public const MAX_SEND_SIZE:uint = (40 << 10);
@@ -76,6 +62,7 @@ class Config
             host = info.parameters["host"];
             port = parseInt(info.parameters["port"]);
             pageCharset = info.parameters["charset"].toLowerCase();
+            initrc = info.parameters["initrc"];
         }
         catch (err:Error)
         {
@@ -91,9 +78,6 @@ class Gate
     protected var config:Config;
     protected var sock:ZMQ;
     protected var gather:Gather;
-
-    protected static const ERR_OK:String = 'y';
-    protected static const ERR_ERR:String = 'n';
 
     protected var queue:Array;
 
@@ -230,33 +214,6 @@ class Gate
             }
         }
         return res;
-    }
-
-    // convert and compress.
-    protected function convert(data:String, fromCharset:String):ByteArray
-    {
-        var bytes:ByteArray = new ByteArray();
-        bytes.endian = Endian.LITTLE_ENDIAN;
-        var compress:Boolean = (data.length > config.COMPRESS_THRESHOLD);
-        bytes.writeByte((compress ? ERR_OK : ERR_ERR).charCodeAt(0));
-        if (compress)
-        {
-            var assist:ByteArray = new ByteArray();
-            assist.endian = Endian.LITTLE_ENDIAN;
-            assist.writeMultiByte(data, fromCharset);
-            assist.compress();
-            assist.position = 0;
-            bytes.writeBytes(assist);
-        }
-        else
-        {
-            bytes.writeMultiByte(data, fromCharset);
-        }
-        alert("bytes.length: " + (bytes.length));
-        bytes.position = 0;
-        alert("str.length:" + (bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET)));
-        bytes.position = 0;
-        return bytes;//.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
     }
 
     protected function iconvBytes(str:String, fromCharset:String):ByteArray

@@ -5,7 +5,7 @@ package
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
 
-[SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
+[SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
