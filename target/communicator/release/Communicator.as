@@ -26,7 +26,6 @@ public class Communicator extends Sprite
         gate.setGather(gather);
         ExternalInterface.addCallback('call', gather.call);
         ExternalInterface.addCallback('crawl', gather.crawl);
-        ExternalInterface.call(config.initrc);
     }
 }
 
@@ -35,6 +34,7 @@ public class Communicator extends Sprite
 import com.rimusdesign.flexzmq.ZMQ;
 import com.rimusdesign.flexzmq.ZMQEvent;
 import flash.display.LoaderInfo;
+import flash.events.Event;
 import flash.external.ExternalInterface;
 import flash.utils.Endian;
 
@@ -109,6 +109,7 @@ class Gate
     protected function prepareReceiver():void
     {
         sock.addEventListener(ZMQEvent.MESSAGE_RECEIVED, handleData);
+        sock.addEventListener(Event.CONNECT, handleConnect);
     }
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
@@ -119,6 +120,11 @@ class Gate
             queue.push([from, callbackName]);
         }
         this[method].apply(this, args);
+    }
+
+    protected function handleConnect(event:Event):void
+    {
+        ExternalInterface.call(config.initrc);
     }
 
     protected function handleData(event:ZMQEvent):void
