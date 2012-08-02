@@ -510,12 +510,12 @@ if (!document.body.innerText)
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
-                '<param name=host value="' + host + '">'             +
-                '<param name=port value="' + port + '">'             +
+                '<param name=host value="' + host + '">'                    +
+                '<param name=port value="' + port + '">'                    +
                 '<param name=charset value="' + i8vars.charset +  '">'      +
-                '<param name=movie value="' + swf + '">'             +
-                '<param name=allowScriptAccess value="always">'             +
-                '<param name=quality value="low">'                     +
+                '<param name=movie value="' + swf + '">'                    +
+                '<param name=allowScriptAccess value="always">'           +
+                '<param name=quality value="low">'                          +
                 '<embed src="' + swf + '" allowscriptaccess="always" quality="low" width="1" height="1" name="' +
                     i8vars.cmtorid + '" id="' + i8vars.cmtorid + '" type="application/x-shockwave-flash"></embed>' +
             '</object>';
