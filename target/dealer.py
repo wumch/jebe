@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-DEBUG = True
+DEBUG = False
 
 import os
 import zmq
@@ -103,7 +103,6 @@ class PageStorer(object):
         return m.hexdigest()
 
     def exists(self, url):
-        return False
         return self.bucket.get(key=self.genKey(url), r=self.R_VALUE).exists()
 
 class Handler(object):
