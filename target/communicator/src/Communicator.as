@@ -4,8 +4,10 @@ package
 
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
+import flash.text.TextField;
+import flash.text.TextFormat;
 
-[SWF(width=1000, height= 600, backgroundColor="0x00FF00", frameRate="20")]
+[SWF(width=1000, height=600, backgroundColor="0x00FF00", frameRate="20")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
@@ -20,13 +22,17 @@ public class Communicator extends Sprite
 
     public function initialize():void
     {
-        config = new Config(loaderInfo);
-        gate = new Gate(config);
-        gather = new Gather(config, gate);
-        gate.setGather(gather);
-        ExternalInterface.addCallback('call', gather.call);
-        ExternalInterface.addCallback('crawl', gather.crawl);
-        ExternalInterface.call(config.initrc);
+//        config = new Config(loaderInfo);
+//        gate = new Gate(config);
+//        gather = new Gather(config, gate);
+//        gate.setGather(gather);
+        var text:TextField = new TextField();
+        text.text = ExternalInterface.available ? 'avail' : 'invail';
+        text.textColor = 0xff0000;
+        text.setTextFormat(new TextFormat(null, 30, 0xff0000));
+        addChild(text);
+//        ExternalInterface.addCallback('call', gather.call);
+//        ExternalInterface.addCallback('crawl', gather.crawl);
     }
 }
 
@@ -35,6 +41,7 @@ public class Communicator extends Sprite
 import com.rimusdesign.flexzmq.ZMQ;
 import com.rimusdesign.flexzmq.ZMQEvent;
 import flash.display.LoaderInfo;
+import flash.events.Event;
 import flash.external.ExternalInterface;
 import flash.utils.Endian;
 
@@ -291,6 +298,7 @@ class Gather extends LocalConnection
             default:
                 break;
         }
+        ExternalInterface.call(config.initrc);
     }
 
     protected function makeRecver():void

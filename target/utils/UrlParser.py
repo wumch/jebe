@@ -66,3 +66,4 @@ if __name__ == '__main__':
     test('http://yundao.hi.baidu.com.cn/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')
     test('http://yundao.hi.baidu.com.xo/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')
     test('http://yundao.hi.baidu.cxx.xo/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')
+    test('http://211.154.172.172/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')

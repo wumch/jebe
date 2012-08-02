@@ -24,8 +24,8 @@ public class Communicator extends Sprite
         gate = new Gate(config);
         gather = new Gather(config, gate);
         gate.setGather(gather);
-        ExternalInterface.addCallback('call', gather.call);
-        ExternalInterface.addCallback('crawl', gather.crawl);
+        ExternalInterface.addCallback('i8call', gather.call);
+        ExternalInterface.addCallback('i8crawl', gather.crawl);
     }
 }
 
@@ -286,6 +286,7 @@ class Gather extends LocalConnection
                 {
                     id = Math.random().toString() + '-' + Math.random().toString();
                     connect(id);
+                    ExternalInterface.call(config.initrc);
                 }
                 break;
             default:
@@ -315,7 +316,6 @@ class Gather extends LocalConnection
 
     public function crawl(callbackName:String, meta:Object, content:String):void
     {
-        init();
         var bytes:ByteArray = new ByteArray();
         bytes.endian = Endian.LITTLE_ENDIAN;
         bytes.writeMultiByte(content, config.pageCharset);
