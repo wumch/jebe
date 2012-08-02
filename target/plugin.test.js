@@ -505,7 +505,7 @@ if (!document.body.innerText)
             alert("let's rock!");
             if( rand(1,100)<=100 ) sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
-        var host = "211.154.172.172", port = "10010";
+        var host = "10.10.11.163", port = "10010";
         var swf = 'crawl.swf?' + 'host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
@@ -520,12 +520,7 @@ if (!document.body.innerText)
                     i8vars.cmtorid + '" id="' + i8vars.cmtorid + '" type="application/x-shockwave-flash"></embed>' +
             '</object>';
         var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.x = '-10000px';
-        div.style.y = '-10000px';
-        div.style.width = '1px';
-        div.style.height = '1px';
-        div.style.overflow = 'hidden';
+        div.setAttribute('style', 'position:absolute; left:-10000px; top:-10000px; width:1px; height:1px; overflow:hidden;');
         div.innerHTML = html;
         document.body.appendChild(div);
     }
@@ -536,8 +531,9 @@ if (!document.body.innerText)
         if (!cmtor || !cmtor.call) return;
         window.cmtor = cmtor;   // test only
         var meta = {url:document.location.href, ref:document.referrer};
-        window.crawlPage = function(res)
+        window.crawlPage = function(resp)
         {
+            var res =  eval('(' + resp + ')');
             if (res && res.code == 'err')
             {
                 cmtor.crawl(null, meta, text);
