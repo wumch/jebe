@@ -3,7 +3,6 @@ package
 {
 
 import flash.display.Sprite;
-import flash.events.Event;
 import flash.external.ExternalInterface;
 
 [SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
@@ -25,7 +24,6 @@ public class Communicator extends Sprite
         gate = new Gate(config);
         gather = new Gather(config, gate);
         gate.setGather(gather);
-        stage.addEventListener(Event.REMOVED, gather.disconnect);
         ExternalInterface.addCallback('i8call', gather.i8call);
         ExternalInterface.addCallback('i8crawl', gather.i8crawl);
         ExternalInterface.addCallback('i8disconnect', gather.i8disconnect);
@@ -322,11 +320,6 @@ class Gather extends LocalConnection
     public function i8call(method:String, callbackName:String = null, ...args):void
     {
         send(config.LC_CON_NAME, 'invoke', id, method, callbackName, args);
-    }
-
-    public function disconnect(event:Event):void
-    {
-        i8disconnect();
     }
 
     public function i8disconnect():void
