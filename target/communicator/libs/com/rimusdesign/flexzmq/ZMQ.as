@@ -213,9 +213,12 @@ package com.rimusdesign.flexzmq{
 		
 		
 		public function close ( ) : void {
-			
+
 			handshakeComplete = false;
-			socket.close ( );
+            if (socket.connected)
+            {
+			    socket.close ( );
+            }
 			removeEventListeners ( );
 		}
 		

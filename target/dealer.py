@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-DEBUG = False
-
 import os
 import zmq
 from utils.natip import natip
@@ -12,10 +10,11 @@ from hashlib import md5
 from urllib2 import *
 from json import JSONDecoder, JSONEncoder
 from utils.UrlParser import UrlParser
+from config import config, DEBUG
 
-context = zmq.Context()
+context = zmq.Context(1)
 sock = context.socket(zmq.REP)
-sock.connect("tcp://%s:10011" % natip)
+sock.connect("tcp://%(host)s:%(port)d" % config.getRouter())
 
 class FileStorer(object):
 
@@ -44,15 +43,6 @@ class FileStorer(object):
 class PageStorer(object):
 
     urlparser = UrlParser()
-    tokenizer = ('http://192.168.88.2:10086/split',
-                 'http://192.168.88.4:10086/split',)
-    riaks = ({'host':'192.168.88.1', 'port':8098},
-             {'host':'192.168.88.2', 'port':8098},
-             {'host':'192.168.88.3', 'port':8098},
-             {'host':'192.168.88.4', 'port':8098},)
-    if DEBUG:
-        riaks = ({'host':natip, 'port':8098}, )
-        tokenizer = ('http://127.0.0.1:10086/split', )
 
     buck = 'loc'
     W_VALUE = 1
@@ -68,7 +58,7 @@ class PageStorer(object):
         return cls._instance
 
     def __init__(self):
-        self.riakClient = riak.RiakClient(**self.riaks[randint(0, len(self.riaks) - 1)])
+        self.riakClient = riak.RiakClient(**config.getRiak())
         self.bucket = self.riakClient.bucket(self.buck)
 
     def store(self, meta, content):
@@ -93,10 +83,9 @@ class PageStorer(object):
         }
 
     def split(self, content):
-        for server in self.tokenizer:
-            try:
-                return urlopen(server, content, timeout=3).read()
-            except Exception: pass
+        try:
+            return urlopen(config.getTokenizer(), content, timeout=3).read()
+        except Exception: pass
 
     def genKey(self, url):
         m = md5()

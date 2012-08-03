@@ -268,7 +268,7 @@ class Gather extends LocalConnection
         super();
         this.config = config;
         client = cli;
-//        isPerUser = true;
+        isPerUser = true;
         init();
     }
     
