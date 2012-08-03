@@ -72,6 +72,7 @@ class PageStorer(object):
         self.bucket = self.riakClient.bucket(self.buck)
 
     def store(self, meta, content):
+        if DEBUG: return
         data = self.getData(meta, content)
         if data is None: return
         self.bucket.new(self.genKey(meta['url']), data).store(w=self.W_VALUE, dw=self.DW_VALUE)
@@ -103,6 +104,7 @@ class PageStorer(object):
         return m.hexdigest()
 
     def exists(self, url):
+        if DEBUG: return False
         return self.bucket.get(key=self.genKey(url), r=self.R_VALUE).exists()
 
 class Handler(object):
