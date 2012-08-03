@@ -5,14 +5,14 @@
 
 import os
 from utils.natip import natip
-from SocketServer import (TCPServer as TCP, StreamRequestHandler as SRH)
+from SocketServer import (ThreadingTCPServer as TCP, StreamRequestHandler as SRH)
 
 class MyRequestHandler(SRH):
     '''MyRequestHandler'''
 
     def handle(self):
         print '...connected from:', self.client_address
-        print self.rfile.read(23)
+#        print self.rfile.read(23)
         self.wfile.write('<cross-domain-policy>\
                             <allow-access-from domain="*" to-ports="*"/>\
                           </cross-domain-policy>\

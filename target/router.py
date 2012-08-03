@@ -1,7 +1,6 @@
 #coding:utf-8
 
 import zmq
-from utils.natip import natip
 from config import config
 
 context = zmq.Context(config.iothreads)

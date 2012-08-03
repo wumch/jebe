@@ -4,6 +4,7 @@ package
 
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
+import flash.system.Security;
 
 [SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
 public class Communicator extends Sprite
@@ -16,6 +17,7 @@ public class Communicator extends Sprite
     {
         super();
         initialize();
+        Security.allowDomain('*');
     }
 
     public function initialize():void

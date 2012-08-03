@@ -1,6 +1,6 @@
 #encoding:utf-8
 
-DEBUG = False
+DEBUG = True
 from utils.natip import natip
 
 class Config(object):
