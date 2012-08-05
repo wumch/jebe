@@ -22,7 +22,7 @@ def genRequestUrl(pageUrl):
 def look(url):
     try:
         return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())['words']
-    except ...:
+    except Exception:
         return None
 
 
