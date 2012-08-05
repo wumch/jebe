@@ -20,7 +20,10 @@ def genRequestUrl(pageUrl):
     return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) +genKey(pageUrl)
 
 def look(url):
-    return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())['words']
+    try:
+        return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())['words']
+    except ...:
+        return None
 
 
 if __name__ == '__main__':
