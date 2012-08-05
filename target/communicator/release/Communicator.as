@@ -39,7 +39,6 @@ import com.rimusdesign.flexzmq.ZMQEvent;
 import flash.display.LoaderInfo;
 import flash.events.Event;
 import flash.external.ExternalInterface;
-import flash.utils.Endian;
 
 class Config
 {
