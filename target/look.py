@@ -7,8 +7,9 @@ from urllib2 import urlopen
 from json import JSONDecoder
 from config import config
 
-def urlComplete(url):
-    return url if url.startswith('http') else ('http://' + url)
+def urlComplete(pageUrl):
+    url = pageUrl if pageUrl.startswith('http') else ('http://' + pageUrl)
+    return url if url.find('/', 10) != -1 else (url + '/')
 
 def genKey(url):
     m = md5()
