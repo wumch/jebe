@@ -5,7 +5,7 @@ import os, sys
 from hashlib import md5
 from urllib2 import urlopen
 from json import JSONDecoder
-from utils.natip import natip
+from config import config
 
 def urlComplete(url):
     return url if url.startswith('http') else ('http://' + url)
@@ -16,7 +16,7 @@ def genKey(url):
     return m.hexdigest()
 
 def genRequestUrl(pageUrl):
-    return 'http://%s:8098/riak/loc/%s' % (natip, genKey(pageUrl))
+    return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) +genKey(pageUrl)
 
 def look(url):
     return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())['words']
