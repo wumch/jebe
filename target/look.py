@@ -17,7 +17,7 @@ def genKey(url):
     return m.hexdigest()
 
 def genRequestUrl(pageUrl):
-    return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) +genKey(pageUrl)
+    return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) + genKey(pageUrl)
 
 def look(url):
     try:
