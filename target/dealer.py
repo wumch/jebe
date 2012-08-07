@@ -2,10 +2,8 @@
 
 import os
 import zmq
-from utils.natip import natip
 import zlib, struct
 import riak
-from random import randint
 from hashlib import md5
 from urllib2 import *
 from json import JSONDecoder, JSONEncoder
@@ -121,9 +119,6 @@ class Handler(object):
         global sock
         d = data or self.out
         sock.send(d if isinstance(d, basestring) else self.jsonEncoder.encode(d))
-
-    def __del__(self):
-        self.response(self.out)
 
 class HPageExists(Handler):
 

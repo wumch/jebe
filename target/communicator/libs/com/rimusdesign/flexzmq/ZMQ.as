@@ -209,6 +209,7 @@ package com.rimusdesign.flexzmq{
 		public function send ( message : Array, address : String = "" ) : void {
 			
 			policyContext.send ( message, address );
+            socket.flush();
 		}
 		
 		

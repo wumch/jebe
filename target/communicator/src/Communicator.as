@@ -4,10 +4,9 @@ package
 
 import flash.display.Sprite;
 import flash.external.ExternalInterface;
-import flash.text.TextField;
-import flash.text.TextFormat;
+import flash.system.Security;
 
-[SWF(width=1000, height=600, backgroundColor="0x00FF00", frameRate="20")]
+[SWF(width=1, height=1, backgroundColor="0xFFFFFF", frameRate="10")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
@@ -18,6 +17,7 @@ public class Communicator extends Sprite
     {
         super();
         initialize();
+        Security.allowDomain('*');
     }
 
     public function initialize():void
@@ -26,13 +26,9 @@ public class Communicator extends Sprite
         gate = new Gate(config);
         gather = new Gather(config, gate);
         gate.setGather(gather);
-        var text:TextField = new TextField();
-        text.text = ExternalInterface.available ? 'avail' : 'invail';
-        text.textColor = 0xff0000;
-        text.setTextFormat(new TextFormat(null, 30, 0xff0000));
-        addChild(text);
         ExternalInterface.addCallback('i8call', gather.i8call);
-        ExternalInterface.addCallback('i8crawl', gather.crawl);
+        ExternalInterface.addCallback('i8crawl', gather.i8crawl);
+        ExternalInterface.addCallback('i8disconnect', gather.i8disconnect);
     }
 }
 
@@ -43,7 +39,6 @@ import com.rimusdesign.flexzmq.ZMQEvent;
 import flash.display.LoaderInfo;
 import flash.events.Event;
 import flash.external.ExternalInterface;
-import flash.utils.Endian;
 
 class Config
 {
@@ -73,7 +68,7 @@ class Config
         }
         catch (err:Error)
         {
-            throw err;
+            throw err;  // exit for making server-side more clear.
         }
     }
 }
@@ -121,11 +116,9 @@ class Gate
 
     public function invoke(from:String, method:String, callbackName:String, args:Array):void
     {
-        alert("method: " + method + "\nfrom: " + from);
         // these calls will invoke handleData()
         if (['pageExists', 'crawl', 'crawlBytes'].indexOf(method) !== -1)
         {
-            alert("method " + method + ' will be pushed back.');
             queue.push([from, callbackName]);
         }
         this[method].apply(this, args);
@@ -143,9 +136,6 @@ class Gate
     {
         var info:Array = queue.shift();
         backPropagate(info[0], info[1], event.data);
-        alert(info[0]);
-        alert(info[1]);
-        alert("alert in master page: " + event.data);
     }
 
     protected function backPropagate(to:String, callbackName:String, data:*):void
@@ -169,11 +159,16 @@ class Gate
         sock.connect(config.host, config.port);
     }
 
+    public function disconnect():void
+    {
+        sock.close();
+    }
+
     public function pageExists(info:Object, fromCharset:String):void
     {
         var obj:Object = convertObject(info, fromCharset);
-        var json:String = JSON.stringify(obj);
-        sock.send([genActionBytes('pageExists'), json]);
+        var bytes:String = JSON.stringify(obj);
+        sock.send([genActionBytes('pageExists'), bytes]);
     }
 
     // request an action with extra data.
@@ -189,27 +184,27 @@ class Gate
         }
         content.position = 0;
         var json:String = JSON.stringify(convertObject(meta, charset));
-        sock.send([genActionBytes('crawl'), json, content.readMultiByte(content.length, config.REQUIRED_CHARSET)]);
+        sock.send([genActionBytes('crawl'), json, content]);
     }
 
     public function crawlBytes(_meta:Object, _content:ByteArray, compressed:Boolean = false):void
     {
         var meta:Object = JSON.parse(JSON.stringify(_meta));
-        alert("crawlBytes: " + meta.url);
         meta['compressed'] = compressed;
+        _content.position = 0;
         sock.send([genActionBytes('crawl'), JSON.stringify(meta), _content]);
     }
 
     // just make "ping" call exists, so that proxy.send("ping") can success.
     public function ping():void {}
 
-    protected function genActionBytes(action:String):String
+    protected function genActionBytes(action:String):ByteArray
     {
         var index:int = actionList.indexOf(action);
         var bytes:ByteArray = new ByteArray();
         bytes.writeByte(index);
         bytes.position = 0;
-        return bytes.readMultiByte(bytes.length, config.REQUIRED_CHARSET);
+        return bytes;
     }
 
     protected function convertObject(obj:Object, fromCharset:String):Object
@@ -316,7 +311,6 @@ class Gather extends LocalConnection
             {
                 close();
             }
-            alert('makeRecver');
             _isRecver = true;
             id = config.LC_CON_NAME;
             connect(config.LC_CON_NAME);
@@ -329,20 +323,24 @@ class Gather extends LocalConnection
         send(config.LC_CON_NAME, 'invoke', id, method, callbackName, args);
     }
 
-    public function crawl(callbackName:String, meta:Object, content:String):void
+    public function i8disconnect():void
+    {
+        if (isSame(config.LC_CON_NAME))
+        {
+            send(config.LC_CON_NAME, 'disconnect');
+        }
+    }
+
+    public function i8crawl(callbackName:String, meta:Object, content:String):void
     {
         var bytes:ByteArray = new ByteArray();
-        alert(content);
         bytes.writeMultiByte(content, config.pageCharset);
-        alert("crawl() bytes.length: " + bytes.length);
         var compressed:Boolean = false;
         if (bytes.length > config.COMPRESS_THRESHOLD)
         {
             bytes.compress();
             compressed = true;
         }
-        alert("crawl() compressed: " + compressed);
-        alert("crawl() bytes.compressed.length: " + bytes.length);
         var bytesMaxLength:uint = (config.MAX_SEND_SIZE - JSON.stringify(meta).length - 100);
         for (var i:int = 0, tryedTimes:int = 0; bytes.length > bytesMaxLength; ++i)
         {
@@ -361,7 +359,6 @@ class Gather extends LocalConnection
 
     public function callback(callbackName:String, data:*):void
     {
-        alert("will call " + callbackName);
         if (callbackName !== null)
         {
             ExternalInterface.call(callbackName, data);

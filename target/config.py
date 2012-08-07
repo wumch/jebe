@@ -1,6 +1,7 @@
 #encoding:utf-8
 
-DEBUG = True
+import os
+DEBUG = not not os.getenv('JEBE_DEBUG', False)
 from utils.natip import natip
 
 class Config(object):
@@ -16,7 +17,7 @@ class Config(object):
         {'host':'192.168.88.4', 'port':riak_port},)
 
     tokenizers = ('http://192.168.88.2:10086/split',
-         'http://192.168.88.4:10086/split',)
+        'http://192.168.88.4:10086/split',)
 
     iothreads = 4
 

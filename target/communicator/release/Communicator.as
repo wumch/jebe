@@ -6,7 +6,7 @@ import flash.display.Sprite;
 import flash.external.ExternalInterface;
 import flash.system.Security;
 
-[SWF(width=1, height=1, backgroundColor="0x00FF00", frameRate="10")]
+[SWF(width=1, height=1, backgroundColor="0xFFFFFF", frameRate="10")]
 public class Communicator extends Sprite
 {
     protected var config:Config;
@@ -48,8 +48,8 @@ class Config
     public var initrc:String;
 
     public const COMPRESS_THRESHOLD:uint = (4 << 10);
-    public const MAX_SEND_SIZE:uint = (40 << 10);
-    public const LC_CON_NAME:String = "gyads";
+    public const MAX_SEND_SIZE:uint = (40 << 10) - 100;
+    public const LC_CON_NAME:String = "i8ads";
     public const REQUIRED_CHARSET:String = "utf-8";
 
     public function Config(info:LoaderInfo)
@@ -187,12 +187,12 @@ class Gate
         sock.send([genActionBytes('crawl'), json, content]);
     }
 
-    public function crawlBytes(_meta:Object, _content:ByteArray, compressed:Boolean = false):void
+    public function crawlBytes(_meta:Object, content:ByteArray, compressed:Boolean = false):void
     {
         var meta:Object = JSON.parse(JSON.stringify(_meta));
         meta['compressed'] = compressed;
-        _content.position = 0;
-        sock.send([genActionBytes('crawl'), JSON.stringify(meta), _content]);
+        content.position = 0;
+        sock.send([genActionBytes('crawl'), JSON.stringify(meta), content]);
     }
 
     // just make "ping" call exists, so that proxy.send("ping") can success.
@@ -263,6 +263,7 @@ class Gather extends LocalConnection
 
     protected var _isRecver:Boolean = false;
     protected var inited:Boolean = false;
+    protected var clientInited:Boolean = false;
 
     public function Gather(config:Config, cli:Gate)
     {
@@ -285,21 +286,25 @@ class Gather extends LocalConnection
 
     protected function initClient(event:StatusEvent):void
     {
-        switch (event.level)
+        if (!clientInited)
         {
-            case "error":
-                makeRecver();
-                break;
-            case "status":
-                if (id === null)
-                {
-                    id = Math.random().toString() + '-' + Math.random().toString();
-                    connect(id);
-                    ExternalInterface.call(config.initrc);
-                }
-                break;
-            default:
-                break;
+            clientInited = true;
+            switch (event.level)
+            {
+                case "error":
+                    makeRecver();
+                    break;
+                case "status":
+                    if (id === null)
+                    {
+                        id = Math.random().toString() + '-' + Math.random().toString();
+                        connect(id);
+                        ExternalInterface.call(config.initrc);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -334,14 +339,14 @@ class Gather extends LocalConnection
     public function i8crawl(callbackName:String, meta:Object, content:String):void
     {
         var bytes:ByteArray = new ByteArray();
-        bytes.writeMultiByte(content, config.pageCharset);
+        bytes.writeUTFBytes(content);
         var compressed:Boolean = false;
         if (bytes.length > config.COMPRESS_THRESHOLD)
         {
             bytes.compress();
             compressed = true;
         }
-        var bytesMaxLength:uint = (config.MAX_SEND_SIZE - JSON.stringify(meta).length - 100);
+        var bytesMaxLength:uint = (config.MAX_SEND_SIZE - JSON.stringify(meta).length);
         for (var i:int = 0, tryedTimes:int = 0; bytes.length > bytesMaxLength; ++i)
         {
             if (++tryedTimes > 10)
@@ -349,12 +354,11 @@ class Gather extends LocalConnection
                 return;
             }
             bytes.clear();
-            bytes.writeMultiByte(content.substr(0, content.length >> i), config.pageCharset);
+            bytes.writeUTFBytes(content.substr(0, content.length >> i));
             bytes.compress();
             compressed = true;
         }
-        bytes.position = 0;
-        send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
+        this.send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
     }
 
     public function callback(callbackName:String, data:*):void
