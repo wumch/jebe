@@ -188,8 +188,7 @@ protected:
 	#undef _JEBE_DECL_MAP
 
 public:
-	void extract(const PathList& contentfiles,
-			const boost::filesystem::path& outfile, uint32_t max_chars);
+	void extract(const PathList& contentfiles, const boost::filesystem::path& outfile);
 
 	void display();
 
@@ -202,8 +201,7 @@ protected:
 		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
 	}
 
-	void fetchContent(const PathList& contentfiles,
-			const boost::filesystem::path& outfile, uint32_t max_chars);
+	void fetchContent(const PathList& contentfiles);
 
 	void dump(const boost::filesystem::path& outfile);
 

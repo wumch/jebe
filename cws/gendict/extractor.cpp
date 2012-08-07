@@ -261,9 +261,9 @@ void Extractor::dump(const boost::filesystem::path& outfile)
 }
 
 void Extractor::extract(const PathList& contentfiles,
-		const boost::filesystem::path& outfile, uint32_t maxchars)
+		const boost::filesystem::path& outfile)
 {
-	fetchContent(contentfiles, outfile, maxchars);
+	fetchContent(contentfiles);
 	dump(outfile);
 }
 
@@ -383,8 +383,7 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	delete[] gb;
 }
 
-void Extractor::fetchContent(const PathList& contentfiles,
-		const boost::filesystem::path& outfile, uint32_t maxchars)
+void Extractor::fetchContent(const PathList& contentfiles)
 {
 	CharType* const content = new CharType[_JEBE_PROCESS_STEP + 1];
 
@@ -395,7 +394,7 @@ void Extractor::fetchContent(const PathList& contentfiles,
 		file.imbue(std::locale(""));
 		CS_SAY("read");
 
-		uint32_t processed = 0;
+//		uint32_t processed = 0;
 		ssize_t readed = 0;
 		while (true)
 		{
@@ -405,14 +404,14 @@ void Extractor::fetchContent(const PathList& contentfiles,
 			{
 				break;
 			}
-			if (CS_BUNLIKELY(maxchars != 0))
-			{
-				processed += readed;
-				if (CS_BUNLIKELY(processed > maxchars))
-				{
-					break;
-				}
-			}
+//			if (CS_BUNLIKELY(maxchars != 0))
+//			{
+//				processed += readed;
+//				if (CS_BUNLIKELY(processed > maxchars))
+//				{
+//					break;
+//				}
+//			}
 			scan(content, readed);
 		}
 		file.close();
