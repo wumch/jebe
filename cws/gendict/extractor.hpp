@@ -178,6 +178,8 @@ class Extractor
 public:
 	static const int32_t gb_char_max = 65536;
 
+	typedef std::vector<boost::filesystem::path> PathList;
+
 protected:
 	std::bitset<gb_char_max> gb2312;
 
@@ -186,7 +188,7 @@ protected:
 	#undef _JEBE_DECL_MAP
 
 public:
-	void extract(const boost::filesystem::path& contentfile,
+	void extract(const PathList& contentfiles,
 			const boost::filesystem::path& outfile, uint32_t max_chars);
 
 	void display();
@@ -200,10 +202,10 @@ protected:
 		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
 	}
 
-	void fetchContent(const boost::filesystem::path& contentfile,
+	void fetchContent(const PathList& contentfiles,
 			const boost::filesystem::path& outfile, uint32_t max_chars);
 
-	void extract(const boost::filesystem::path& outfile);
+	void dump(const boost::filesystem::path& outfile);
 
 	void scan(CharType* const str, String::size_type len);
 
@@ -266,7 +268,7 @@ protected:
 
 	Words words;
 
-	static const double entropyThresholdLower	= 0.2;
+	static const double entropyThresholdLower	= 0.3;
 	static const double entropyThresholdUpper	= 1.5;
 	static const double joinThresholdLower		= 50.;
 	static const double joinThresholdUpper		= 1000.;
@@ -422,12 +424,12 @@ protected:
 			if (padit == plist->end())
 			{
 				plist.append(typename PrefixType::Pad(suffix, it->second));
-				CS_SAY("first " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: [" << suffix.c_str() << "], atimes: " << it->second);
+				CS_SAY("first " << prefix_len << ", prefix: [" << prefix << "], suffix: [" << suffix << "], atimes: " << it->second);
 			}
 			else
 			{
 				padit->second = it->second;
-				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix.c_str() << "], suffix: " << suffix.c_str() << "], atimes: " << it->second);
+				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix << "], suffix: " << suffix << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
 		}
@@ -465,12 +467,12 @@ protected:
 			if (padit == plist->end())
 			{
 				plist.append(typename SuffixType::Pad(prefix, it->second));
-				CS_SAY("first " << prefix_len << ", prefix: [" << suffix.c_str() << "], suffix: [" << prefix.c_str() << "], atimes: " << it->second);
+				CS_SAY("first " << prefix_len << ", prefix: [" << suffix << "], suffix: [" << prefix << "], atimes: " << it->second);
 			}
 			else
 			{
 				padit->second = it->second;
-				CS_SAY("repeat " << prefix_len << ", prefix: [" << suffix.c_str() << "], suffix: " << prefix.c_str() << "], atimes: " << it->second);
+				CS_SAY("repeat " << prefix_len << ", prefix: [" << suffix << "], suffix: " << prefix << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
 		}

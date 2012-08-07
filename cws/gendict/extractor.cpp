@@ -214,7 +214,7 @@ void Analyzer::clean_(typename Phrase<plen>::MapType& map, std::size_t min_atime
 	}
 }
 
-void Extractor::extract(const boost::filesystem::path& outfile)
+void Extractor::dump(const boost::filesystem::path& outfile)
 {
 	#define _JEBE_AZER_ARG(Z, n, N)			BOOST_PP_CAT(map, n)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 	std::auto_ptr<Analyzer> azer(new Analyzer(BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_AZER_ARG, BOOST_PP_EMPTY())));
@@ -260,11 +260,11 @@ void Extractor::extract(const boost::filesystem::path& outfile)
 	ofile.close();
 }
 
-void Extractor::extract(const boost::filesystem::path& contentfile,
+void Extractor::extract(const PathList& contentfiles,
 		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
-	fetchContent(contentfile, outfile, maxchars);
-	extract(outfile);
+	fetchContent(contentfiles, outfile, maxchars);
+	dump(outfile);
 }
 
 void Extractor::scan(CharType* const str, String::size_type len)
@@ -383,38 +383,42 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	delete[] gb;
 }
 
-void Extractor::fetchContent(const boost::filesystem::path& contentfile,
+void Extractor::fetchContent(const PathList& contentfiles,
 		const boost::filesystem::path& outfile, uint32_t maxchars)
 {
 	CharType* const content = new CharType[_JEBE_PROCESS_STEP + 1];
 
-	std::wfstream file(contentfile.string().c_str(), std::ios_base::in);
-	CS_SAY("imbue");
-	file.imbue(std::locale(""));
-	CS_SAY("read");
-
-	uint32_t processed = 0;
-	ssize_t readed = 0;
-	while (true)
+	for (PathList::const_iterator it = contentfiles.begin(); it != contentfiles.end(); ++it)
 	{
-		memset(content, 0, _JEBE_PROCESS_STEP + 1);
-		CS_SAY("content readed: " << readed);
-		if (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
+		std::wfstream file(it->string().c_str(), std::ios_base::in);
+		CS_SAY("imbue");
+		file.imbue(std::locale(""));
+		CS_SAY("read");
+
+		uint32_t processed = 0;
+		ssize_t readed = 0;
+		while (true)
 		{
-			break;
-		}
-		if (CS_BUNLIKELY(maxchars != 0))
-		{
-			processed += readed;
-			if (CS_BUNLIKELY(processed > maxchars))
+			memset(content, 0, _JEBE_PROCESS_STEP + 1);
+			CS_SAY("content readed: " << readed);
+			if (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
 			{
 				break;
 			}
+			if (CS_BUNLIKELY(maxchars != 0))
+			{
+				processed += readed;
+				if (CS_BUNLIKELY(processed > maxchars))
+				{
+					break;
+				}
+			}
+			scan(content, readed);
 		}
-		scan(content, readed);
+		file.close();
+		std::cout << it->string() << " done" << std::endl;
 	}
 	delete[] content;
-	file.close();
 }
 
 } /* namespace cws */
