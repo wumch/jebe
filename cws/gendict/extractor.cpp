@@ -401,13 +401,9 @@ void Extractor::fetchContent(const PathList& contentfiles)
 		{
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
 			CS_SAY("content readed: " << readed);
-			while (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
+			if (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
 			{
-				file.seekg(1024, std::ios_base::cur);
-				if (!file.good())
-				{
-					goto fileover;
-				}
+				break;
 			}
 //			if (CS_BUNLIKELY(maxchars != 0))
 //			{
@@ -419,7 +415,6 @@ void Extractor::fetchContent(const PathList& contentfiles)
 //			}
 			scan(content, readed);
 		}
-		fileover:
 		file.close();
 		std::cout << it->string() << " done" << std::endl;
 	}
