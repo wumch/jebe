@@ -13,7 +13,6 @@ int main(int argc, char* argv[])
 
 	Extractor::PathList contentfiles;
 	boost::filesystem::path gbfile, outfile;
-	uint64_t maxchars = 0;
 
 	if (argc < 4)
 	{
@@ -39,5 +38,5 @@ int main(int argc, char* argv[])
 
 	staging::mbswcs::setlocale();
 	std::auto_ptr<Extractor> extractor(new Extractor(gbfile));
-	extractor->extract(contentfiles, outfile, maxchars);
+	extractor->extract(contentfiles, outfile);
 }
