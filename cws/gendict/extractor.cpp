@@ -1,8 +1,7 @@
 
-#include "staging.hpp"
+#include "extractor.hpp"
 #include "memory.hpp"
 #include "extractor.impl.hpp"
-#include "extractor.hpp"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -29,10 +28,10 @@ std::wstringstream log;
 
 template<uint8_t plen>
 Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
-		const typename Phrase<plen>::MapType& map,
-		const typename Phrase<plen - 1>::MapType& prefixmap,
-		const typename Phrase<plen - 1>::PadMap& padmap
-	) const
+	const typename Phrase<plen>::MapType& map,
+	const typename Phrase<plen - 1>::MapType& prefixmap,
+	const typename Phrase<plen - 1>::PadMap& padmap
+) const
 {
 	typedef Phrase<plen - 1> PhraseType;
 	typedef typename PhraseType::MapType MapType;
@@ -44,7 +43,7 @@ Analyzer::WordExamineRes Analyzer::judgePad(const Phrase<plen>& phrase,
 	const SuffixType suffix(phrase.str + (plen - 1));
 
 	CS_LOG(phrase.c_str() << "\t");
-	// both count(prefix) and count(suffix) can not be 0, it is impossible.
+	// neither count(prefix) nor count(suffix) won't be 0 --- it is impossible.
 	/*
 	double joinprobActual = count(phrase) / count(prefix),
 			joinprobPred = count(suffix) / totalAtimes;
@@ -225,19 +224,38 @@ void Extractor::extract(const boost::filesystem::path& outfile)
 	std::wofstream ofile(outfile.string().c_str(), std::ios_base::trunc);
 	ofile.imbue(std::locale(""));
 	const Analyzer::Words& words = azer->getWords();
+
+	std::size_t words_count = 0, words_atimes = 0;
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
-		if (it->size() == 2)
+		if (it->first.size() == 2)
 		{
-			if (CS_BUNLIKELY(isAscii((*it)[0])))
+			if (CS_BUNLIKELY(isAscii(it->first[0])))
 			{
-				if (CS_BUNLIKELY(isAscii((*it)[1])))
+				if (CS_BUNLIKELY(isAscii(it->first[1])))
 				{
 					continue;
 				}
 			}
 		}
-		ofile << it->c_str() << '\n';
+		++words_count;
+		words_atimes += it->second;
+	}
+	ofile << words_count << "\t" << words_atimes << '\n';
+
+	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
+	{
+		if (it->first.size() == 2)
+		{
+			if (CS_BUNLIKELY(isAscii(it->first[0])))
+			{
+				if (CS_BUNLIKELY(isAscii(it->first[1])))
+				{
+					continue;
+				}
+			}
+		}
+		ofile << it->first.c_str() << "\t" << it->second << '\n';
 	}
 	ofile.close();
 }
@@ -332,7 +350,7 @@ void Extractor::display()
 	for (BOOST_PP_CAT(Ph, n)::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
 		it != BOOST_PP_CAT(map, n).end(); ++it)												\
 	{																						\
-		CS_SAY("phrase" << n << ": [" << it->first.c_str() << "]: " << it->second);					\
+		CS_SAY("phrase" << n << ": [" << it->first << "]: " << it->second);			\
 	}
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DO_DISPLAY, BOOST_PP_EMPTY())
 	#undef _JEBE_CALL_SCAN

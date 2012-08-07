@@ -1,6 +1,10 @@
 
 #pragma once
 
+#define CS_DEBUG	0
+#define CS_LOG_ON	0
+#define CS_USE_WCS	0
+
 #include "staging.hpp"
 #include <bitset>
 #include <list>
@@ -20,16 +24,13 @@
 #	include <limits.h>
 #endif
 
-#define _JEBE_WORD_MAX_LEN		7
+#define _JEBE_WORD_MAX_LEN				7
 #define _JEBE_ASCII_WORD_MAX_LEN		20
-#define _JEBE_WORD_MIN_ATIMES	10
-#define _JEBE_PROCESS_STEP		(2 << 20)
+#define _JEBE_WORD_MIN_ATIMES			10
+#define _JEBE_PROCESS_STEP				(2 << 20)
 
 namespace staging {
-
-template<size_t dwords> CS_FORCE_INLINE
-void memcpy4(void* const s1, const void* const s2);
-
+template<size_t dwords> CS_FORCE_INLINE void memcpy4(void* const s1, const void* const s2);
 }
 
 namespace jebe {
@@ -243,7 +244,7 @@ public:
 class Analyzer
 {
 public:
-	typedef boost::unordered_set<String> Words;
+	typedef boost::unordered_map<String, atimes_t> Words;
 
 protected:
 	typedef boost::array<atimes_t, Extractor::gb_char_max> SuffixMap;
@@ -330,7 +331,7 @@ protected:
 			res = judgePad<plen>(it->first, map, prefixmap, padmap);
 			if (CS_BUNLIKELY(res & yes))
 			{
-				words.insert(it->first);
+				words[it->first] = it->second;
 			}
 			if (plen > 2)
 			{
