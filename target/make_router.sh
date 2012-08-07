@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cd "$(realpath $(dirname ${0}))"
+
+if [ -n "${1}" ] && [ "${1}" == "dynamic" ]; then
+    g++ -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic router.c -lzmq -pthread -o router
+else
+    g++ -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic router.c -Wl,-Bstatic -lzmq -lrt -luuid -Wl,-Bdynamic -pthread -o router
+fi
+
