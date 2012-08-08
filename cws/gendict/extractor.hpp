@@ -166,6 +166,14 @@ public:
 	uint32_t operator()(const Ph& ph) const
 	{
 		return hasher(hfhash<plen>(ph));
+//		uint32_t res = 0;
+//		char* const bytes = reinterpret_cast<char*>(&res);
+//		const char* const data = reinterpret_cast<const char*>(ph.str);
+//		for (uint i = 0; i < (plen * sizeof(CharType)); ++i)
+//		{
+//			bytes[i % plen] ^= data[i];
+//		}
+//		return res;
 	}
 };
 

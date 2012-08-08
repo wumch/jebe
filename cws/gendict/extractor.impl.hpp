@@ -53,43 +53,43 @@ uint32_t hfhash<2>(const Phrase<2>& p)
 template<> CS_FORCE_INLINE
 uint32_t hfhash<3>(const Phrase<3>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<4>(const Phrase<4>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<5>(const Phrase<5>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 16);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<6>(const Phrase<6>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<7>(const Phrase<7>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 16);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<8>(const Phrase<8>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 8)  ^ (static_cast<uint16_t>(p.str[7]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 8)  ^ (static_cast<uint16_t>(p.str[7]) << 16);
 }
 
 template<> CS_FORCE_INLINE
 uint32_t hfhash<9>(const Phrase<9>& p)
 {
-	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) << (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ static_cast<uint16_t>(p.str[6]) ^ (static_cast<uint16_t>(p.str[7]) << 8)  ^ (static_cast<uint16_t>(p.str[8]) << 16);
+	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ static_cast<uint16_t>(p.str[6]) ^ (static_cast<uint16_t>(p.str[7]) << 8)  ^ (static_cast<uint16_t>(p.str[8]) << 16);
 }
 
 //template<uint8_t n> CS_FORCE_INLINE uint32_t hfhash(const Phrase<n>& p)
