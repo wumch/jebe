@@ -179,21 +179,21 @@ public:
 	tsize_t words_atimes_total;
 	static const int16_t mid_joiner =
 #if CS_IS_LITTLE_ENDIAN
-			(':' << CHAR_BIT) + '"';
+			(',' << CHAR_BIT) + '"';
 #else
-			('"' << CHAR_BIT) + ':';
+			('"' << CHAR_BIT) + ',';
 #endif
-			static const int16_t end_joiner =
+			static const int32_t end_joiner =		// ],["
 #if CS_IS_LITTLE_ENDIAN
-					(',' << CHAR_BIT) + '"';
+					('"' << (CHAR_BIT * 3)) + ('[' << (CHAR_BIT * 2)) + (',' << CHAR_BIT) + ']';
 #else
 					('"' << CHAR_BIT) + ',';
 #endif
-	static const int8_t tail =
+	static const int16_t tail =
 #if CS_IS_LITTLE_ENDIAN
-			'}';
+			(']' << CHAR_BIT) + ']';
 #else
-			'}' << CHAR_BIT;
+			']' << CHAR_BIT;
 #endif
 
 	std::pair<const Node*, atimes_t> word_atime;		// assit to avoid stack alloc.
@@ -203,7 +203,8 @@ public:
 	explicit MarveHolder(SendBuff& buff):
 		words(128), res(buff), cur(1), words_atimes_total(0), word_atime(NULL, 1)
 	{
-		res.write('{');
+		res.write('[');
+		res.write('[');
 	}
 
 	void operator()(const Node& node)
@@ -236,7 +237,7 @@ public:
 		ow->reserve(words.size());
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
-			CS_SAY("afrea of [" << it->first << "] :" << it->first->afreq());
+			CS_SAY("afreq of [" << it->first << "] :" << it->first->afreq());
 			ow->push_back(std::make_pair(it->first, (static_cast<double>(it->second) / words_atimes_total) / it->first->afreq()));
 		}
 		std::sort(ow->begin(), ow->end(), MarveCompare());
@@ -248,16 +249,26 @@ public:
 		{
 			if (CS_BLIKELY(it != ow->begin()))
 			{
-				res.write(',');
+				if (CS_BLIKELY(it != ow->end()))
+				{
+					res.write(end_joiner);
+				}
+				else
+				{
+					res.write(*reinterpret_cast<const uint16_t*>("]]"));
+				}
 			}
-			res.write('"');
+			else
+			{
+				res.write('"');
+			}
 
 			res.write(it->first->str().data(), it->first->str().size());
 
 			res.write(mid_joiner);
 
 			score = boost::lexical_cast<std::string>(it->second);
-			CS_SAY("it->secondL: " << it->second << ", score: " << score);
+			CS_SAY("it->second: " << it->second << ", score: " << score);
 			res.write(score.data(), score.size());
 
 //			res.insertNumber(it->second);
