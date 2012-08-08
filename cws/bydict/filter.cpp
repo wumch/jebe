@@ -2,91 +2,31 @@
 #include "filter.hpp"
 #include <fstream>
 #include <iomanip>
+#include "numcast.hpp"
 
 namespace jebe {
 namespace cws {
 
-// Filter
-//template<typename CallbackType>
-//tsize_t Filter::find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const
-//{
-//#if _JEBE_ENABLE_MAXMATCH
-//	tsize_t matched = 0;
-//#endif
-//    const Node* node = tree.root;
-//    tsize_t offset = 0;
-//#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-//    bool begin_from_root = true;
-//#endif
-//#if _JEBE_SCAN_FROM_RIGHT
-//    for (int32_t i = len - 1, offset = i - 1; i > -1; --i)
-//    {
-//    	CS_PREFETCH(node->children, 0, 2);
-//#else
-//    for (tsize_t i = 0; i < len ; ++i)
-//    {
-//#endif
-//        if (CS_LIKELY(node = node->cichildat(atoms[i])))
-//        {
-//#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-//            if (CS_BUNLIKELY(begin_from_root))
-//            {
-//                begin_from_root = false;
-//#	if _JEBE_SCAN_FROM_RIGHT
-//                --offset;
-//#	else
-//                ++offset;
-//#	endif
-//            }
-//#endif
-//            if (CS_BUNLIKELY(node->patten_end))
-//            {
-//                offset = i;
-//                if (CS_BLIKELY(node->is_leaf))
-//                {
-//#if _JEBE_ENABLE_MAXMATCH
-//                	if (CS_BUNLIKELY(Config::getInstance()->max_match))
-//                	{
-//						if (CS_BUNLIKELY(++matched > Config::getInstance()->max_match))
-//						{
-//							break;
-//						}
-//                	}
-//#endif
-//					callback(*node);
-//					node = tree.root;
-//#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-//                    begin_from_root = true;
-//#endif
-//                }
-//            }
-//        }
-//        else
-//        {
-//            node = tree.root;
-//#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-//            begin_from_root = true;
-//#endif
-//#if _JEBE_SCAN_FROM_RIGHT
-//            i = offset--;
-//#else
-//            i = offset++;
-//#endif
-//        }
-//    }
-//    return offset;
-//}
-
 void Ftree::build(const std::string& fname)
 {
-    char word[word_max_len + 1];
-    memset(word, 0, word_max_len + 1);
+    char word[word_max_bytes];
+    memset(word, 0, word_max_bytes);
     try
     {
         std::ifstream fp(fname.c_str());
+        if (fp.getline(word, word_max_bytes))
+        {
+        	size_t consumed_bytes = 0;
+        	total_words = staging::NumCast::strtoul_comma(word, &consumed_bytes);
+        	CS_SAY("consumed_bytes: " << consumed_bytes);
+        	total_atimes = staging::NumCast::strtoul_comma(word + consumed_bytes + 1);
+        	CS_SAY("total_words: " << total_words);
+        	CS_SAY("total_atimes: " << total_atimes);
+        }
+
         if (fp)
         {
-            while (fp.getline(word, word_max_len))
+            while (fp.getline(word, word_max_bytes))
             {
                 attach_word(word);
             }
@@ -103,15 +43,26 @@ void Ftree::attach_word(const char* const word)
 {
     const byte_t* const patten = reinterpret_cast<const byte_t*>(word);
     Node* node = root;
+    atimes_t atimes = 0;
+    wsize_t i = 0;
 #if _JEBE_SCAN_FROM_RIGHT
     for(int32_t i = strlen(word) - 1; -1 < i; --i)
 #else
-    for (wsize_t i = 0, end = strlen(word); i < end; ++i)
+    for (wsize_t end = strlen(word); i < end; ++i)
 #endif
     {
-        node = node->attach_child(patten[i]);
+    	if (CS_BUNLIKELY(patten[i] == '\t'))
+    	{
+    		atimes = staging::NumCast::strtoul_comma(patten + i + 1);
+    		break;
+    	}
+    	else
+    	{
+    		node = node->attach_child(patten[i]);
+    	}
     }
-    node->endswith(word);
+    CS_SAY("[" << word << "] atimes: " << atimes << ", total_atimes: " << total_atimes << ", freq: " << (static_cast<double>(atimes) / total_atimes));
+    node->endswith(std::string(word, i), atimes, static_cast<double>(atimes) / total_atimes);
 }
 
 }

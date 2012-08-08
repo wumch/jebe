@@ -34,10 +34,12 @@ public:
 		return children[_atom];
     }
 
-    inline void endswith(const std::string& _patten)
+    inline void endswith(const std::string& _patten, atimes_t _atimes, double freq_)
     {
         patten_end = true;
         patten = _patten;
+        atimes_ = _atimes;
+        afreq_ = freq_;
     }
 
     CS_FORCE_INLINE static Node* make_node()
@@ -56,8 +58,17 @@ public:
     	return CS_BUNLIKELY('A' <= atom && atom <= 'Z') ? children[atom | 32] : children[atom];
     }
 
+    CS_FORCE_INLINE atimes_t atimes() const
+    {
+    	return atimes_;
+    }
+
+    CS_FORCE_INLINE double afreq() const
+    {
+    	return afreq_;
+    }
+
 private:
-    // maybe, should introduce a pack(sizeof(all))?
     Node* children[word_max_len];
 
     std::string patten;
@@ -65,6 +76,9 @@ private:
     bool is_leaf;
 
     bool patten_end;
+
+    atimes_t atimes_;
+    double afreq_;		// frequency of appear.
 };
 
 }

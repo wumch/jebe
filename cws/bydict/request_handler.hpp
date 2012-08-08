@@ -16,6 +16,7 @@ enum Action {
 	split = 0,
 	count,
 	compare,
+	marve,
 
 	unknown,
 };
@@ -26,7 +27,7 @@ protected:
 	static const Filter* filter;
 	static std::size_t chunkSize;
 
-	typedef boost::array<uint64_t, 3> ActionList;
+	typedef boost::array<uint64_t, unknown> ActionList;
 	static const std::size_t actionBegins = CS_CONST_STRLEN("POST /");
 	static const std::size_t actionMaxLen = sizeof(uint64_t);
 	static const ActionList actionList;
@@ -39,11 +40,12 @@ protected:
 	SplitHolder* spliter;
 	CountHolder* counter;
 	CompareHolder* comparer;
+	MarveHolder* marver;
 
 public:
     RequestHandler(byte_t* const chunk_, SendBuff& buff_)
     	: chunk(chunk_), buff(buff_), action(unknown),
-    	  spliter(NULL), counter(NULL), comparer(NULL)
+    	  spliter(NULL), counter(NULL), comparer(NULL), marver(NULL)
     {
     	CS_SAY("address of buff in RequestHandler: [" << &buff << "]");
     }
@@ -85,6 +87,14 @@ public:
     				comparer = new CompareHolder(buff);
 				}
     			offset = filter->find<CompareHolder>(data, dataSize, *comparer);
+    			solved_flag = true;
+    			break;
+    		case marve:
+    			if (CS_BLIKELY(!marver))
+				{
+    				marver = new MarveHolder(buff);
+				}
+    			offset = filter->find<MarveHolder>(data, dataSize, *marver);
     			solved_flag = true;
     			break;
     		default:
@@ -136,6 +146,13 @@ public:
     				comparer = new CompareHolder(buff);
 				}
 				return comparer->genRes();
+				break;
+			case marve:
+    			if (CS_BUNLIKELY(!marver))
+				{
+    				marver = new MarveHolder(buff);
+				}
+				return marver->genRes();
 				break;
 			default:
 				break;

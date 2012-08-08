@@ -3,7 +3,6 @@
 
 #include "predef.hpp"
 #include <string>
-#include <boost/cstdint.hpp>
 #include "holders.hpp"
 #include "node.hpp"
 #include "config.hpp"
@@ -38,6 +37,10 @@ private:
     Node* root;
 
     enum { word_max_len = UCHAR_MAX + 1 };
+    enum { word_max_bytes = 128 };
+
+    uint64_t total_atimes;
+    uint64_t total_words;
 };
 
 class Filter

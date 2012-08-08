@@ -25,7 +25,7 @@ void Config::init(int argc, char* argv[])
 	;
 
 	boost::filesystem::path program_path = argv[0];
-	program_name = program_path.filename();
+	program_name = program_path.filename().string();
 
 	boost::program_options::variables_map cmdOptions;
 	try
