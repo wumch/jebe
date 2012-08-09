@@ -5,7 +5,7 @@ import os, sys
 from hashlib import md5
 from urllib2 import urlopen
 from json import JSONDecoder
-from config import config
+from target import config
 
 def urlComplete(pageUrl):
     url = pageUrl if pageUrl.startswith('http') else ('http://' + pageUrl)

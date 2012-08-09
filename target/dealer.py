@@ -6,9 +6,9 @@ import zlib, struct
 import riak
 from hashlib import md5
 from urllib2 import *
-from json import JSONDecoder, JSONEncoder
 from utils.UrlParser import UrlParser
 from config import config, DEBUG
+from utils.MarveWords import MarveWords
 
 context = zmq.Context(1)
 sock = context.socket(zmq.REP)
@@ -82,7 +82,7 @@ class PageStorer(object):
 
     def split(self, content):
         try:
-            return urlopen(config.getTokenizer(), content, timeout=3).read()
+            return urlopen(config.getTokenizer('split'), content, timeout=3).read()
         except Exception: pass
 
     def genKey(self, url):
@@ -98,8 +98,6 @@ class Handler(object):
 
     ERR_CODE_OK     = 'ok'
     ERR_CODE_ERR    = 'err'
-    jsonDecoder = JSONDecoder(encoding='utf-8')
-    jsonEncoder = JSONEncoder()
 
     def __init__(self):
         self.out = {'code':self.ERR_CODE_ERR}
@@ -113,12 +111,36 @@ class Handler(object):
     @classmethod    # to make global callable.
     def replyErr(cls):
         global sock
-        sock.send(cls.jsonEncoder.encode({'code':cls.ERR_CODE_ERR}))
+        sock.send(config.jsonEncoder.encode({'code':cls.ERR_CODE_ERR}))
 
     def response(self, data = None):
         global sock
         d = data or self.out
-        sock.send(d if isinstance(d, basestring) else self.jsonEncoder.encode(d))
+        sock.send(d if isinstance(d, basestring) else config.jsonEncoder.encode(d))
+
+class HMarve(Handler):
+
+    def __init__(self):
+        super(Handler, self).__init__()
+
+    def handle(self, data):
+        try:
+            meta = config.jsonDecoder.decode(data[0])
+            content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
+            self.response(self.marve(content))
+        except Exception:
+            self.replyErr()
+            print "marve failed: "
+
+    def marve(self, content):
+        try:
+            json = urlopen(config.getTokenizer('marve'), data=content, timeout=3).read()
+            res = MarveWords(config.jsonDecoder.decode(json)).top()
+            if DEBUG: print res
+            return res
+        except Exception:
+            return None
+
 
 class HPageExists(Handler):
 
@@ -134,7 +156,7 @@ class HPageExists(Handler):
             exists: response "all right" with some ads.
         """
         try:
-            info = self.jsonDecoder.decode(data[0])
+            info = config.jsonDecoder.decode(data[0])
             self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
         except Exception:
             self.replyOk()      # to make error-occured client no longer upload.
@@ -151,7 +173,7 @@ class HCrawl(Handler):
 
     def handle(self, data):
         try:
-            meta = self.jsonDecoder.decode(data[0])
+            meta = config.jsonDecoder.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.replyOk()
@@ -171,7 +193,7 @@ class HShowAds(Handler):
     def handle(self, data):
         global sock
         try:
-            info = self.jsonDecoder.decode(data)
+            info = config.jsonDecoder.decode(data)
             self.replyOk() if info else self.replyErr()
         except Exception:
             self.replyErr()
@@ -181,6 +203,8 @@ class Dealer(object):
 
     ucpacker = struct.Struct('B')     # ny
     handlerList = [None, HPageExists(), HCrawl(), HShowAds()]
+    if DEBUG:   # for test marve
+        handlerList[2] = HMarve()
 
     def __init__(self): pass
 
