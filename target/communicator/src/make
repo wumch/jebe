@@ -2,18 +2,31 @@
 
 flexhome="/opt/flexSDK"
 
-flexhome=/opt/flexSDK
+if [ "${1}" == "debug" ]; then
+    debug="1"
+else
+    debug=""
+fi
+
+if [ -n "${debug}" ]; then
+    branch=src
+else
+    branch=release
+fi
+
 cd ${flexhome}/bin/
-./mxmlc --debug --static-link-runtime-shared-libraries=true --target-player=10.3 \
+
+./mxmlc ${debug:+--debug} --static-link-runtime-shared-libraries=true \
+    --target-player=10.3 \
     --source-path+=/data/fsuggest/jebe/target/communicator/libs \
     --library-path+="${flexhome}/frameworks/libs/player/11.1" \
-    /data/fsuggest/jebe/target/communicator/src/Communicator.as
+    /data/fsuggest/jebe/target/communicator/${branch}/Communicator.as
 
 #mxmlc --static-link-runtime-shared-libraries=true --target-player=10.1 --library-path+="D:\program files\Adobe\Flash Builder Beta\sdks\4.0.0\frameworks\libs\player\10" stage.as
 
 #mv /data/fsuggest/kulebu/track/track.swf /data/fsuggest/pweb/static/media/
 
-cp /data/fsuggest/jebe/target/communicator/src/Communicator.swf /data/fsuggest/jebe/target/
+cp /data/fsuggest/jebe/target/communicator/${branch}/Communicator.swf /data/fsuggest/jebe/target/crawl.swf
 
 echo
 
