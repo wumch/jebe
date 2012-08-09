@@ -42,7 +42,7 @@ class FileConverter(object):
         try:
             return line.decode(encoding).encode(self.encoding)
         except Exception:
-            return 'still wrong'
+            return ''
 
 class DirConverter(object):
 
@@ -66,14 +66,13 @@ class DirConverter(object):
         p = ''
         for i in range(0, len(info)):
             p = os.path.join(p, info[i])
-            if not os.path.exists(path):
+            if not os.path.exists(p):
                 os.mkdir(p)
 
     def convert(self):
         for i in range(0, len(self.ifiles)):
             FileConverter(self.ifiles[i], self.ofiles[i]).convert()
             print self.ifiles[i], 'done'
-
 
 if __name__ == '__main__':
     converter = DirConverter(sys.argv[1], sys.argv[2])
