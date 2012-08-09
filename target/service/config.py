@@ -10,8 +10,7 @@ from utils.log import mklogger
 class Config(object):
 
     LOG_FILE = r'/var/log/crawler-server.log'
-
-    TIME_ZONE = 'Asia/Shanghai'
+    TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
     router_port = 10010
     dealer_port = 10011

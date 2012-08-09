@@ -47,10 +47,8 @@ class RiakStorer(object):
 
 class PageStorer(RiakStorer):
 
-    urlparser = UrlParser()
-
     buck = 'loc'
-
+    urlparser = UrlParser()
     _instance = None
 
     @classmethod
@@ -61,6 +59,7 @@ class PageStorer(RiakStorer):
 
     def __init__(self):
         super(PageStorer, self).__init__()
+        self.bucket.set_property('backend', 'hdd1')
 
     def store(self, meta, content):
         if DEBUG: return
@@ -88,7 +87,7 @@ class PageStorer(RiakStorer):
             return urlopen(config.getTokenizer('split'), content, timeout=3).read()
         except Exception: pass
 
-class MovesStorer(RiakStorer):
+class MoveStorer(RiakStorer):
 
     buck = 'mov'      # web-moves
 
@@ -101,16 +100,24 @@ class MovesStorer(RiakStorer):
         return cls._instance
 
     def __init__(self):
-        super(MovesStorer, self).__init__()
+        super(MoveStorer, self).__init__()
+        self.bucket.set_property('backend', 'hdd1')
 
-    def exists(self, url):
+    def exists(self, info):
         if DEBUG: return False
-        return self.bucket.get(key=self._genKey(url), r=self.R_VALUE).exists()
+        return self._store(info)
 
-    def store(self, url, ref):
-        key = self._genKey(url)
+    def _store(self, info):
+        if 'url' not in info:
+            return False
+        key = self._genKey(info['url'])
         obj = self.bucket.get(key=key, r=self.R_VALUE)
-        if obj.exists():
+        if not obj.exists():
+            obj = self.bucket.get(key=key, r=self.R_VALUE_UP)
+        exists = obj.exists()
+        if 'ref' not in info:   # donot store in this case.
+            return exists
+        if exists:
             try:
                 obj.set_data(int(obj.get_data()) + 1).store()
             except Exception:

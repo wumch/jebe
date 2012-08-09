@@ -6,7 +6,6 @@ from urllib2 import urlopen
 from config import config, logger, DEBUG
 from utils.MarveWords import MarveWords
 from model.model import *
-from utils.datetimes import now
 
 class Handler(object):
 
@@ -58,20 +57,15 @@ class HMarve(Handler):
 
 class HPageExists(Handler):
 
-    pageStorer = PageStorer.instance()
+    moveStorer = MoveStorer.instance()
 
     def __init__(self):
         super(HPageExists, self).__init__()
 
     def handle(self, data):
-        """
-        case:
-            non-exists: ask client for details of the page.
-            exists: response "all right" with some ads.
-        """
         try:
             info = config.jsonDecoder.decode(data[0])
-            self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
+            self.replyOk() if self.moveStorer.exists(info) else self.replyErr()
         except Exception:
             self.replyOk()      # to make error-occured client no longer upload.
             logger.error("pageExists failed")
