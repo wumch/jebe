@@ -61,7 +61,7 @@ class DirConverter(object):
                 self.ofiles.append(ofile)
 
     def mkdir(self, path):
-        info = path[1:].split(os.sep)
+        info = path[1:]._split(os.sep)
         info[0] = path[0] + info[0]
         p = ''
         for i in range(0, len(info)):
