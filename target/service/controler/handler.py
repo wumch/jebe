@@ -12,8 +12,9 @@ class Handler(object):
     ERR_CODE_OK     = 'ok'
     ERR_CODE_ERR    = 'err'
 
-    def __init__(self):
+    def __init__(self, sock):
         self.out = {'code':self.ERR_CODE_ERR}
+        self.sock = sock
 
     def handle(self, data):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
@@ -22,15 +23,16 @@ class Handler(object):
         self.out['code'] = self.ERR_CODE_OK
         self.response()
 
+    def replyError(self):
+        self.replyErr(self.sock)
+
     @classmethod    # to make global callable.
-    def replyErr(cls):
-        global sock
+    def replyErr(cls, sock):
         sock.send(config.jsonEncoder.encode({'code':cls.ERR_CODE_ERR}))
 
     def response(self, data = None):
-        global sock
         d = data or self.out
-        sock.send(d if isinstance(d, basestring) else config.jsonEncoder.encode(d))
+        self.sock.send(d if isinstance(d, basestring) else config.jsonEncoder.encode(d))
 
 class HMarve(Handler):
 
@@ -43,7 +45,7 @@ class HMarve(Handler):
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.response(self.marve(content))
         except Exception:
-            self.replyErr()
+            self.replyError()
             logger.error("marve failed")
 
     def marve(self, content):
@@ -65,7 +67,7 @@ class HPageExists(Handler):
     def handle(self, data):
         try:
             info = config.jsonDecoder.decode(data[0])
-            self.replyOk() if self.moveStorer.exists(info) else self.replyErr()
+            self.replyOk() if self.moveStorer.exists(info) else self.replyError()
         except Exception:
             self.replyOk()      # to make error-occured client no longer upload.
             logger.error("pageExists failed")
@@ -86,7 +88,7 @@ class HCrawl(Handler):
             self.store(meta, content)
             self.replyOk()
         except Exception:
-            self.replyErr()
+            self.replyError()
             logger.error("crawl failed")
 
     def store(self, meta, content):
@@ -102,7 +104,7 @@ class HShowAds(Handler):
         global sock
         try:
             info = config.jsonDecoder.decode(data)
-            self.replyOk() if info else self.replyErr()
+            self.replyOk() if info else self.replyError()
         except Exception:
-            self.replyErr()
+            self.replyError()
             logger.error("showAds failed")

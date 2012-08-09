@@ -20,7 +20,8 @@ class Dealer(object):
     def _getHandler(self, header):
         index = self.ucpacker.unpack(header[0])[0]
         if not 0 < index < len(self.handlerList):
-            Handler.replyErr()
+            global sock
+            Handler.replyErr(sock)
         return self.handlerList[index]
 
     def handle(self, header, payload):
@@ -34,4 +35,4 @@ if __name__ == '__main__':
         if len(data) > 1:
             dealer.handle(data[0], data[1:])
         else:
-            Handler.replyErr()
+            Handler.replyErr(sock)
