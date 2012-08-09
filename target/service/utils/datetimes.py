@@ -1,20 +1,23 @@
 #coding:utf-8
 
-import datetime
-import time
+import datetime, time
 
-from config.settings import DATE_FORMAT as DF
+DATE_FORMAT = '%Y-%m-%d'
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 weekdays = ('星期一', '星期二', '星期三', '星期四',
             '星期五', '星期六', '星期日', )
 
 def today():
-    return datetime.date.today().strftime(DF)
+    return datetime.date.today().strftime(DATE_FORMAT)
+
+def now():
+    return datetime.datetime.today().strftime(DATETIME_FORMAT)
 
 def fordays(delta=1):
     """date of `delta` days later(forward)"""
     t = time.time() + delta * 86400
-    return datetime.date.fromtimestamp(t).strftime(DF)
+    return datetime.date.fromtimestamp(t).strftime(DATE_FORMAT)
 
 def last28days():
     return fordays(delta=-28)
@@ -28,7 +31,7 @@ def formonths(delta=1):
     m = c.month + delta
     month = m % 12
     year = c.year + int(m / 12)
-    return c.replace(year=year, month=month).strftime(DF)
+    return c.replace(year=year, month=month).strftime(DATE_FORMAT)
 
 def lastmonth():
     return formonths(delta=-1)

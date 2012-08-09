@@ -10,11 +10,11 @@ int main (void)
     void *frontend = zmq_socket (context, ZMQ_ROUTER);
 //    int64_t hwm = 10 << 20;
 //    zmq_setsockopt(frontend, ZMQ_HWM, &hwm, sizeof(hwm));
-    zmq_bind (frontend, "tcp://10.10.11.163:10010");
+    zmq_bind (frontend, "tcp://*:10010");
 
     //  Socket facing services
     void *backend = zmq_socket (context, ZMQ_DEALER);
-    zmq_bind (backend, "tcp://10.10.11.163:10011");
+    zmq_bind (backend, "tcp://192.168.100.105:10011");
 
     //  Start built-in device
     zmq_device (ZMQ_QUEUE, frontend, backend);

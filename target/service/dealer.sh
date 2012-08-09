@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# rc-script for service `tcmd`
+# rc-script for service `dealer`
 #
 
 PROGRAM_NAME="dealer"

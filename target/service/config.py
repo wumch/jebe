@@ -2,10 +2,16 @@
 
 import os
 DEBUG = not not os.getenv('JEBE_DEBUG', False)
+from random import randint
 from utils.natip import natip
 from json import JSONDecoder, JSONEncoder
+from utils.log import mklogger
 
 class Config(object):
+
+    LOG_FILE = r'/var/log/crawler-server.log'
+
+    TIME_ZONE = 'Asia/Shanghai'
 
     router_port = 10010
     dealer_port = 10011
@@ -36,27 +42,20 @@ class Config(object):
             cls.__instance = Config()
         return cls.__instance
 
-    def __init__(self):
-        self.riak_cur = 0
-        self.tokenizer_cur = 0
+    def __init__(self): pass
 
     def getRouter(self):
         return self.routers[0]
 
     def getRiak(self):
-        self.riak_cur += 1
-        if self.riak_cur >= len(self.riaks):
-            self.riak_cur = 0
-        return self.riaks[self.riak_cur]
+        return self.riaks[randint(0, len(self.riaks) - 1)]
 
     def getTokenizer(self, action):
-        self.tokenizer_cur += 1
-        if self.tokenizer_cur >= len(self.tokenizers):
-            self.tokenizer_cur = 0
-        return self.tokenizers[self.tokenizer_cur] + action
+        return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
 
     # some handy objects.
     jsonDecoder = JSONDecoder(encoding='utf-8')
     jsonEncoder = JSONEncoder()
 
 config = Config.instance()
+logger = mklogger(config.LOG_FILE)

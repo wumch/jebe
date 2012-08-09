@@ -4,7 +4,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from urllib2 import urlopen
 import riak
-from config import config, DEBUG
+from config import config, logger, DEBUG
 from utils.UrlParser import UrlParser
 from utils.misc import *
 
@@ -34,10 +34,9 @@ class FileStorer(object):
 
 class RiakStorer(object):
 
-    buck = ':'      # make riak raise an error.
-    W_VALUE = 1
-    DW_VALUE = 0
+    buck = None      # make riak raise an error.
     R_VALUE = 1
+    R_VALUE_UP = 2
 
     def __init__(self):
         self.riakClient = riak.RiakClient(**config.getRiak())
@@ -56,7 +55,7 @@ class PageStorer(RiakStorer):
 
     @classmethod
     def instance(cls):
-        if cls._instance is None:
+        if not isinstance(cls._instance, cls):
             cls._instance = cls()
         return cls._instance
 
@@ -91,12 +90,30 @@ class PageStorer(RiakStorer):
 
 class MovesStorer(RiakStorer):
 
-    buck = 'm'      # web-moves
+    buck = 'mov'      # web-moves
+
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if not isinstance(cls._instance, cls):
+            cls._instance = cls()
+        return cls._instance
 
     def __init__(self):
         super(MovesStorer, self).__init__()
 
     def exists(self, url):
         if DEBUG: return False
-        # TODO: from bitcask
         return self.bucket.get(key=self._genKey(url), r=self.R_VALUE).exists()
+
+    def store(self, url, ref):
+        key = self._genKey(url)
+        obj = self.bucket.get(key=key, r=self.R_VALUE)
+        if obj.exists():
+            try:
+                obj.set_data(int(obj.get_data()) + 1).store()
+            except Exception:
+                logger.critical("failed no sotre web-moves")
+        else:
+            self.bucket.new_binary(key=key, data=1).store()

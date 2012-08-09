@@ -3,9 +3,10 @@
 import zlib
 import struct
 from urllib2 import urlopen
-from config import config, DEBUG
+from config import config, logger, DEBUG
 from utils.MarveWords import MarveWords
 from model.model import *
+from utils.datetimes import now
 
 class Handler(object):
 
@@ -44,7 +45,7 @@ class HMarve(Handler):
             self.response(self.marve(content))
         except Exception:
             self.replyErr()
-            print "marve failed: "
+            logger.error("marve failed")
 
     def marve(self, content):
         try:
@@ -73,7 +74,7 @@ class HPageExists(Handler):
             self.replyOk() if self.pageStorer.exists(info['url']) else self.replyErr()
         except Exception:
             self.replyOk()      # to make error-occured client no longer upload.
-            print "pageExists failed: "
+            logger.error("pageExists failed")
 
 class HCrawl(Handler):
 
@@ -92,7 +93,7 @@ class HCrawl(Handler):
             self.replyOk()
         except Exception:
             self.replyErr()
-            print "crawl failed: "
+            logger.error("crawl failed")
 
     def store(self, meta, content):
         self.fileStorer.store(content)
@@ -110,4 +111,4 @@ class HShowAds(Handler):
             self.replyOk() if info else self.replyErr()
         except Exception:
             self.replyErr()
-            print "showAds failed"
+            logger.error("showAds failed")
