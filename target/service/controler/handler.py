@@ -9,44 +9,41 @@ from model.model import *
 
 class Handler(object):
 
-    ERR_CODE_OK     = 'ok'
-    ERR_CODE_ERR    = 'err'
+    OK  = {'code' : 'ok'}
+    ERR = {'code' : 'err'}
 
     def __init__(self, sock):
-        self.out = {'code':self.ERR_CODE_ERR}
         self.sock = sock
 
     def handle(self, data):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
 
     def replyOk(self):
-        self.out['code'] = self.ERR_CODE_OK
-        self.response()
+        self.response(self.OK)
 
     def replyError(self):
         self.replyErr(self.sock)
 
     @classmethod    # to make global callable.
     def replyErr(cls, sock):
-        sock.send(config.jsonEncoder.encode({'code':cls.ERR_CODE_ERR}))
+        sock.send(config.jsonEncoder.encode(cls.ERR))
 
-    def response(self, data = None):
-        d = data or self.out
-        self.sock.send(d if isinstance(d, basestring) else config.jsonEncoder.encode(d))
+    def response(self, data):
+        self.sock.send(data if isinstance(data, basestring) else config.jsonEncoder.encode(data))
 
 class HMarve(Handler):
 
-    def __init__(self):
-        super(Handler, self).__init__()
+    def __init__(self, sock):
+        super(HMarve, self).__init__(sock)
 
     def handle(self, data):
         try:
             meta = config.jsonDecoder.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.response(self.marve(content))
-        except Exception:
+        except Exception, e:
             self.replyError()
-            logger.error("marve failed")
+            logger.error("marve failed: " + e.message)
 
     def marve(self, content):
         try:
@@ -61,24 +58,24 @@ class HPageExists(Handler):
 
     moveStorer = MoveStorer.instance()
 
-    def __init__(self):
-        super(HPageExists, self).__init__()
+    def __init__(self, sock):
+        super(HPageExists, self).__init__(sock)
 
     def handle(self, data):
         try:
             info = config.jsonDecoder.decode(data[0])
             self.replyOk() if self.moveStorer.exists(info) else self.replyError()
-        except Exception:
+        except Exception, e:
             self.replyOk()      # to make error-occured client no longer upload.
-            logger.error("pageExists failed")
+            logger.error("pageExists failed: " + e.message)
 
 class HCrawl(Handler):
 
     ucpacker = struct.Struct('B')     # ny
     pageStorer = PageStorer.instance()
 
-    def __init__(self):
-        super(HCrawl, self).__init__()
+    def __init__(self, sock):
+        super(HCrawl, self).__init__(sock)
         self.fileStorer = FileStorer()
 
     def handle(self, data):
@@ -87,9 +84,9 @@ class HCrawl(Handler):
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.replyOk()
-        except Exception:
+        except Exception, e:
             self.replyError()
-            logger.error("crawl failed")
+            logger.error("crawl failed: " + e.message)
 
     def store(self, meta, content):
         self.fileStorer.store(content)
@@ -97,14 +94,14 @@ class HCrawl(Handler):
 
 class HShowAds(Handler):
 
-    def __init__(self):
-        super(HShowAds, self).__init__()
+    def __init__(self, sock):
+        super(HShowAds, self).__init__(sock)
 
     def handle(self, data):
         global sock
         try:
             info = config.jsonDecoder.decode(data)
             self.replyOk() if info else self.replyError()
-        except Exception:
+        except Exception, e:
             self.replyError()
-            logger.error("showAds failed")
+            logger.error("showAds failed: " + e.message)

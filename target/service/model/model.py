@@ -43,11 +43,11 @@ class RiakStorer(object):
         self.bucket = self.riakClient.bucket(self.buck)
 
     def _genKey(self, url):
-        return md516(url)
+        return md5(url)
 
 class PageStorer(RiakStorer):
 
-    buck = 'loc'
+    buck = 'loc'        # page {url:..., words:...}
     urlparser = UrlParser()
     _instance = None
 
@@ -104,7 +104,7 @@ class MoveStorer(RiakStorer):
         self.bucket.set_property('backend', 'hdd1')
 
     def exists(self, info):
-        if DEBUG: return False
+#        if DEBUG: return False
         return self._store(info)
 
     def _store(self, info):
@@ -119,6 +119,7 @@ class MoveStorer(RiakStorer):
             return exists
         if exists:
             try:
+                print int(obj.get_data())
                 obj.set_data(int(obj.get_data()) + 1).store()
             except Exception:
                 logger.critical("failed no sotre web-moves")
