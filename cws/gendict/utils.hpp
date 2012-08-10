@@ -11,7 +11,7 @@ typedef std::wstring String;
 
 template<uint8_t plen> class MapHashBits { public: enum { bits = 13 }; };
 template<> class MapHashBits<1> { public: enum { bits = 12 }; };
-template<> class MapHashBits<2> { public: enum { bits = 24 }; };
+template<> class MapHashBits<2> { public: enum { bits = 24 }; };		// for 3.4GB, should 29
 template<> class MapHashBits<3> { public: enum { bits = 24 }; };
 template<> class MapHashBits<4> { public: enum { bits = 22 }; };
 template<> class MapHashBits<5> { public: enum { bits = 20 }; };

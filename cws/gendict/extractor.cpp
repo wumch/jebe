@@ -222,7 +222,7 @@ void Extractor::dump(const boost::filesystem::path& outfile)
 	azer->analysis();
 
 	std::wofstream ofile(outfile.string().c_str(), std::ios_base::trunc);
-	ofile.imbue(std::locale("C"));
+	ofile.imbue(std::locale(""));
 	const Analyzer::Words& words = azer->getWords();
 
 	std::size_t words_count = 0, words_atimes = 0;

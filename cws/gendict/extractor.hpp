@@ -165,7 +165,24 @@ public:
 
 	uint32_t operator()(const Ph& ph) const
 	{
-		return hasher(hfhash<plen>(ph));
+		return hfhash<plen>(ph);
+	}
+//	{
+//		return jshash(reinterpret_cast<const char*>(ph.str), sizeof(ph.str));
+//	}
+//		return hasher(hfhash<plen>(ph));
+//	{
+//		unsigned int hash = 0;
+//
+//		const char* str = reinterpret_cast<const char*>(ph.str);
+//		for (uint i = 0; i < (plen * sizeof(CharType)); ++i)
+//		{
+//			// equivalent to: hash = 65599*hash + (*str++);
+//			hash = (*str++) + (hash << 6) + (hash << 16) - hash;
+//		}
+//
+//		return hash & 0x7FFFFFFF;
+//	}
 //		uint32_t res = 0;
 //		char* const bytes = reinterpret_cast<char*>(&res);
 //		const char* const data = reinterpret_cast<const char*>(ph.str);
@@ -174,7 +191,7 @@ public:
 //			bytes[i % plen] ^= data[i];
 //		}
 //		return res;
-	}
+//	}
 };
 
 #define _JEBE_DEF_PHRASE(Z, n, N)		typedef Phrase<n> BOOST_PP_CAT(Ph, n);
