@@ -35,19 +35,25 @@ class FileStorer(object):
 class RiakStorer(object):
 
     buck = None      # make riak raise an error.
+    backend = None
     R_VALUE = 1
     R_VALUE_UP = 2
 
     def __init__(self):
         self.riakClient = riak.RiakClient(**config.getRiak())
         self.bucket = self.riakClient.bucket(self.buck)
+        self.bucket.set_property('backend', self.backend)
 
     def _genKey(self, url):
-        return md5(url)
+        return strenc(url)
 
 class PageStorer(RiakStorer):
 
     buck = 'loc'        # page {url:..., words:...}
+    backend = 'hdd1'
+    if not DEBUG:
+        backend = 'leveldb'
+
     urlparser = UrlParser()
     _instance = None
 
@@ -59,7 +65,6 @@ class PageStorer(RiakStorer):
 
     def __init__(self):
         super(PageStorer, self).__init__()
-        self.bucket.set_property('backend', 'hdd1')
 
     def store(self, meta, content):
         if DEBUG: return
@@ -89,7 +94,10 @@ class PageStorer(RiakStorer):
 
 class MoveStorer(RiakStorer):
 
-    buck = 'mov'      # web-moves
+    buck    = 'mov'      # web-moves
+    backend = 'hdd2'
+    if not DEBUG:
+        backend = 'leveldb'
 
     _instance = None
 
@@ -101,10 +109,9 @@ class MoveStorer(RiakStorer):
 
     def __init__(self):
         super(MoveStorer, self).__init__()
-        self.bucket.set_property('backend', 'hdd1')
 
     def exists(self, info):
-#        if DEBUG: return False
+        if DEBUG: return False
         return self._store(info)
 
     def _store(self, info):

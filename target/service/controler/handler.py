@@ -71,7 +71,7 @@ class HPageExists(Handler):
 
 class HCrawl(Handler):
 
-    ucpacker = struct.Struct('B')     # ny
+    ucpacker = struct.Struct('B')     # for resolve action
     pageStorer = PageStorer.instance()
 
     def __init__(self, sock):

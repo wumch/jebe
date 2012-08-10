@@ -10,7 +10,7 @@ sock.connect("tcp://%(host)s:%(port)d" % config.getRouter())
 
 class Dealer(object):
 
-    ucpacker = struct.Struct('B')     # ny
+    ucpacker = struct.Struct('B')
     handlerList = [None, HPageExists(sock), HCrawl(sock), HShowAds(sock)]
     if DEBUG:   # for test marve
         handlerList[2] = HMarve(sock)
