@@ -50,8 +50,8 @@ class RiakStorer(object):
 class PageStorer(RiakStorer):
 
     buck = 'loc'        # page {url:..., words:...}
-    backend = 'hdd1'
-    if not DEBUG:
+    backend = 'hdd2'
+    if DEBUG:
         backend = 'leveldb'
 
     urlparser = UrlParser()
@@ -95,8 +95,8 @@ class PageStorer(RiakStorer):
 class MoveStorer(RiakStorer):
 
     buck    = 'mov'      # web-moves
-    backend = 'hdd2'
-    if not DEBUG:
+    backend = 'hdd3'
+    if DEBUG:
         backend = 'leveldb'
 
     _instance = None
