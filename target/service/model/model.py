@@ -127,8 +127,8 @@ class MoveStorer(RiakStorer):
         if exists:
             try:
                 print int(obj.get_data())
-                obj.set_data(int(obj.get_data()) + 1).store()
+                obj.set_data(str(int(obj.get_data()) + 1)).store()
             except Exception:
                 logger.critical("failed no sotre web-moves")
         else:
-            self.bucket.new_binary(key=key, data=1).store()
+            self.bucket.new_binary(key=key, data=str(1)).store()

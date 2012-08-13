@@ -26,11 +26,11 @@ class UrlParser(object):
         return res
 
     def parsePath(self, path):
-        info = filter(len, [fragment.strip() for fragment in path._split(r'/')])
+        info = filter(len, [fragment.strip() for fragment in path.split(r'/')])
         return [(r'/' * i + info[i]) for i in range(0, len(info))]
 
     def parseDomain(self, domain):
-        info = (domain[:domain.find(':')] if ':' in domain else domain)._split('.')
+        info = (domain[:domain.find(':')] if ':' in domain else domain).split('.')
         parts = len(info)
         if parts == 1:
             return None
@@ -47,7 +47,7 @@ class UrlParser(object):
             return '.'.join(info[:subLen]), '.'.join(info[subLen:])
 
     def parseQuery(self, query):
-        return filter(len, query._split('&'))
+        return filter(len, query.split('&'))
 
     def parseScheme(self, scheme):
         return scheme if scheme in ('http', 'https') else None
