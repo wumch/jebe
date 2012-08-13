@@ -43,7 +43,7 @@ class HMarve(Handler):
             self.response(self.marve(content))
         except Exception, e:
             self.replyError()
-            logger.error("marve failed: " + e.message)
+            logger.error("marve failed: " + str(e.args))
 
     def marve(self, content):
         try:
@@ -67,7 +67,7 @@ class HPageExists(Handler):
             self.replyOk() if self.moveStorer.exists(info) else self.replyError()
         except Exception, e:
             self.replyOk()      # to make error-occured client no longer upload.
-            logger.error("pageExists failed: " + e.message)
+            logger.error("pageExists failed: " + str(e.args))
 
 class HCrawl(Handler):
 
@@ -86,7 +86,7 @@ class HCrawl(Handler):
             self.replyOk()
         except Exception, e:
             self.replyError()
-            logger.error("crawl failed: " + e.message)
+            logger.error("crawl failed: " + str(e.args))
 
     def store(self, meta, content):
         self.fileStorer.store(content)
@@ -104,4 +104,4 @@ class HShowAds(Handler):
             self.replyOk() if info else self.replyError()
         except Exception, e:
             self.replyError()
-            logger.error("showAds failed: " + e.message)
+            logger.error("showAds failed: " + str(e.args))
