@@ -33,10 +33,18 @@ class Handler(object):
     def response(self, data):
         self.sock.send(data if isinstance(data, basestring) else config.jsonEncoder.encode(data))
 
-    def showAds(self, ):
+    def mrads(self, **kwargs_for_get_ads):
+        """
+        match and reply ads.
+        @param kwargs_for_get_ads
+            some arguments for get ads.
+        """
+        self.response(self._getAds(**kwargs_for_get_ads))
+
+    def showAds(self):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
 
-    def _getAdsByContent(self, content=None, words=None, loc=None):
+    def _getAds(self, content=None, words=None, loc=None):
         return self.ader.match(content=content, words=words, loc=loc)
 
 class HMarve(Handler):
@@ -73,7 +81,7 @@ class HPageExists(Handler):
         try:
             info = config.jsonDecoder.decode(data[0])
             if self.moveStorer.exists(info):
-                self.replyOk()      # should also carry some ads.
+                self.mrads(loc=info['url'])      # should also carry some ads.
             else:
                 self.replyError()
         except Exception, e:
@@ -94,7 +102,7 @@ class HCrawl(Handler):
             meta = config.jsonDecoder.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
-            self.replyOk()
+            self.mrads(content=content)
         except Exception, e:
             self.replyError()
             logger.error("crawl failed: " + str(e.args))
