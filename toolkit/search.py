@@ -4,6 +4,7 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'target', 'service'))
 from riak import RiakClient
 from config import config
+from pprint import pprint
 
 bucks = ('loc', 'mov', 'ads')
 def search(*args):
@@ -12,6 +13,19 @@ def search(*args):
     term = ' '.join(map(lambda w: unicode(w, 'utf-8'), args[1:]))
     return riak.search(buck, u'loc:' + term)
 
+def export(var):
+    if isinstance(var, basestring):
+        return pprint(var)
+    if isinstance(var, dict):
+        for k, v in var.iteritems():
+            print k, ':',
+            export(v)
+        return
+    if isinstance(var, (list, tuple, set)):
+        for v in var:
+            export(v)
+        return
+
 riak = RiakClient(**config.getRiak())
 print riak.bucket('loc').get('http://www.baidu.com/').get_data()
 query = search('loc', '百度')
@@ -19,7 +33,7 @@ query = search('loc', '百度')
 count = 0
 for record in query.run():
     res = record.get().get_data()
-    print 'res: ', res
+    export(res)
     count += 1
     if count > 10:
         break
