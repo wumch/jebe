@@ -19,7 +19,7 @@ class MarveWords(object):
 
     def top(self, n=_default_topN):
         self._prepare()
-        return [self.words[i][0] for i in xrange(0, min(n, len(self.words)))]
+        return [self.words[i][0] for i in xrange(0, min(n, len(self.words) if self.words else 0))]
 
     def confidence(self, confidence = _default_confidence):
         self._prepare()
