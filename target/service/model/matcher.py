@@ -17,7 +17,7 @@ class Matcher(RiakStorer):
     def __init__(self):
         super(Matcher, self).__init__()
 
-    def match(self, words=None, content=None, loc=None, buck=Matcher.buck, field=Matcher.field):
+    def match(self, words=None, content=None, loc=None, buck=buck, field=field):
         if words is None and content is None and loc is not None:
             splited_content = self._fetchSplitedContent(loc)
             ws = MarveWords(content=splited_content).top()
@@ -25,7 +25,7 @@ class Matcher(RiakStorer):
              ws = MarveWords(words=words, content=content).top()
         return self.search(ws, buck=buck, field=field)
 
-    def search(self, words, buck=Matcher.buck, field=Matcher.field):
+    def search(self, words, buck=buck, field=field):
         return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
 
     def _search(self, words, buck, field):
