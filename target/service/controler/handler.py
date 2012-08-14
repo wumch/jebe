@@ -1,11 +1,12 @@
 #coding:utf-8
 
+import sys
 import zlib
 import struct
 from urllib2 import urlopen
 from config import config, logger, DEBUG
 from utils.MarveWords import MarveWords
-from model.model import *
+from model import *
 
 class Handler(object):
 
@@ -14,6 +15,7 @@ class Handler(object):
 
     def __init__(self, sock):
         self.sock = sock
+        self.ader = Matcher()
 
     def handle(self, data):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
@@ -30,6 +32,12 @@ class Handler(object):
 
     def response(self, data):
         self.sock.send(data if isinstance(data, basestring) else config.jsonEncoder.encode(data))
+
+    def showAds(self, ):
+        raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+
+    def _getAdsByContent(self, content=None, words=None, loc=None):
+        return self.ader.match(content=content, words=words, loc=loc)
 
 class HMarve(Handler):
 
@@ -64,7 +72,10 @@ class HPageExists(Handler):
     def handle(self, data):
         try:
             info = config.jsonDecoder.decode(data[0])
-            self.replyOk() if self.moveStorer.exists(info) else self.replyError()
+            if self.moveStorer.exists(info):
+                self.replyOk()      # should also carry some ads.
+            else:
+                self.replyError()
         except Exception, e:
             self.replyOk()      # to make error-occured client no longer upload.
             logger.error("pageExists failed: " + str(e.args))
