@@ -27,8 +27,7 @@ def export(var):
         return
 
 riak = RiakClient(**config.getRiak())
-print riak.bucket('loc').get('http://www.baidu.com/').get_data()
-query = search('loc', '百度')
+query = search(*sys.argv)
 
 count = 0
 for record in query.run():
