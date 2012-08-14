@@ -29,7 +29,7 @@ class Matcher(RiakStorer):
         return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
 
     def _search(self, words, buck, field):
-        term = field + u':' + u' '.join(map(lambda w: unicode(w, 'utf-8'), words))
+        term = field + u':' + u' '.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
         return self.riakClient.search(buck, term)
 
     def _fetchSplitedContent(self, url):

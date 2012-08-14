@@ -27,3 +27,18 @@ def intenc(num, base = default_base):
 
 def strenc(string):
     return intenc(int(md5(string)[::2], 16))
+
+def export(var):
+    if isinstance(var, basestring):
+        print(var)
+        return
+    if isinstance(var, dict):
+        for k, v in var.iteritems():
+            print k, ':',
+            export(v)
+        return
+    if isinstance(var, (list, tuple, set)):
+        for v in var:
+            export(v)
+        return
+    print var

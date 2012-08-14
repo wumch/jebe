@@ -28,7 +28,7 @@ class MarveWords(object):
     def _prepare(self):
         if self.words is None:
             if self.content is not None:
-                self._genWordsFromContent()
+                self.words = self._genWordsFromContent()
             else:
                 raise ValueError('kid, both words and content of <%s> are None.')
 
