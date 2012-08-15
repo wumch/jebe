@@ -19,7 +19,6 @@ class Matcher(RiakStorer):
 
     def match(self, words=None, content=None, loc=None, buck=buck, field=field):
         if words is None and content is None and loc is not None:
-            print words, content, loc
             splited_content = self._fetchSplitedContent(loc)
             ws = MarveWords(content=splited_content).top()
         else:
