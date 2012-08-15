@@ -19,6 +19,7 @@ class Matcher(RiakStorer):
 
     def match(self, words=None, content=None, loc=None, buck=buck, field=field):
         if words is None and content is None and loc is not None:
+            print words, content, loc
             splited_content = self._fetchSplitedContent(loc)
             ws = MarveWords(content=splited_content).top()
         else:
@@ -34,6 +35,6 @@ class Matcher(RiakStorer):
 
     def _fetchSplitedContent(self, url):
         try:
-            return config.jsonDecoder.decode(self.bucket.get(strenc(url)))['words']
+            return self.bucket.get(self._genKey(url)).get_data()['words']
         except Exception, e:
-            logger.error(('retrieve content by url:[%s] failed: ' % url) + str(e.args))
+            logger.error(('%s retrieve content by url:[%s] failed: ' % (type(e).__name__, url)) + str(e.args))

@@ -41,11 +41,9 @@ class Handler(object):
         """
         self.response(self._getAds(**kwargs_for_get_ads))
 
-    def showAds(self):
-        raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
-
     def _getAds(self, content=None, words=None, loc=None):
-        return self.ader.match(content=content, words=words, loc=loc)
+        ads = self.ader.match(content=content, words=words, loc=loc)
+        return [{'loc':a['loc']} for a in ads[:20]]
 
 class HMarve(Handler):
 
@@ -80,7 +78,7 @@ class HPageExists(Handler):
     def handle(self, data):
         try:
             info = config.jsonDecoder.decode(data[0])
-            if self.moveStorer.exists(info):
+            if self.moveStorer.exists(info) is True:
                 self.mrads(loc=info['url'])      # should also carry some ads.
             else:
                 self.replyError()

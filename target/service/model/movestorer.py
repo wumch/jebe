@@ -29,7 +29,7 @@ class MoveStorer(RiakStorer):
 
     def _store(self, info):
         if 'url' not in info:
-            return False
+            return None     # `None` means param is wrong.
         key = self._genKey(info['url'])
         obj = self.bucket.get(key=key, r=self.R_VALUE)
         if not obj.exists():
@@ -39,9 +39,11 @@ class MoveStorer(RiakStorer):
             return exists
         if exists:
             try:
-                print int(obj.get_data())
                 obj.set_data(str(int(obj.get_data()) + 1)).store()
-            except Exception:
-                logger.critical("failed no sotre web-moves")
+            except Exception, e:
+                logger.critical("failed no sotre web-moves: " + str(e.args))
+            finally:
+                return exists
         else:
             self.bucket.new_binary(key=key, data=str(1)).store()
+            return exists

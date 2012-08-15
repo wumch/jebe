@@ -21,7 +21,7 @@ class MarveWords(object):
         self._prepare()
         return [self.words[i][0] for i in xrange(0, min(n, len(self.words) if self.words else 0))]
 
-    def confidence(self, confidence = _default_confidence):
+    def confidence(self, confidence=_default_confidence):
         self._prepare()
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
 
@@ -33,4 +33,5 @@ class MarveWords(object):
                 raise ValueError('kid, both words and content of <%s> are None.')
 
     def _genWordsFromContent(self):
-        return config.jsonDecoder.decode(urlopen(config.getTokenizer('marve'), self.content, timeout=3).read())
+        data = self.content.encode('utf-8') if isinstance(self.content, unicode) else self.content
+        return config.jsonDecoder.decode(urlopen(url=config.getTokenizer('marve'), data=data, timeout=3).read())
