@@ -30,7 +30,7 @@ class MarveWords(object):
             if self.content is not None:
                 self.words = self._genWordsFromContent()
             else:
-                raise ValueError('kid, both words and content of <%s> are None.')
+                raise ValueError('kid, both words and content of <%s> are None.' % self.__class__.__name__)
 
     def _genWordsFromContent(self):
         data = self.content.encode('utf-8') if isinstance(self.content, unicode) else self.content

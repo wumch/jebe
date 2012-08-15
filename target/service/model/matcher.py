@@ -1,9 +1,8 @@
 #coding:utf-8
 
-from config import config, DEBUG, logger
+from config import DEBUG, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
-from utils.misc import strenc
 
 # match by words
 class Matcher(RiakStorer):
