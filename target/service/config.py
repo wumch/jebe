@@ -21,6 +21,13 @@ class Config(object):
         {'host':'192.168.88.2', 'port':riak_port, 'transport_options': {'timeout':3}},
         {'host':'192.168.88.3', 'port':riak_port, 'transport_options': {'timeout':3}},
         {'host':'192.168.88.4', 'port':riak_port, 'transport_options': {'timeout':3}},)
+    bucks = {
+        'loc' : {'buck':'ads', 'backend':'hdd2'},
+        'mov' : {'buck':'mov', 'backend':'hdd3'},
+        'usr' : {'buck':'usr', 'backend':'hdd4'},
+        'ads' : {'buck':'ads', 'backend':'hdd4'},
+        'asus' : {'buck':'ads', 'backend':'hdd4'},      # for test on frank's asus laptop box.
+    }
 
     tokenizers = ('http://192.168.88.2:10086/',
         'http://192.168.88.4:10086/',)

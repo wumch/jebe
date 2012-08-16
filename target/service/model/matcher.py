@@ -7,10 +7,9 @@ from utils.MarveWords import MarveWords
 # match by words
 class Matcher(RiakStorer):
 
-    buck = 'loc'
-    backend = 'hdd2'
+    buckId = 'ads'
     if DEBUG:
-        backend = 'leveldb'
+        backend = 'asus'
     field = u'words'
 
     def __init__(self):
