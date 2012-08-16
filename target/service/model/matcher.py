@@ -3,6 +3,7 @@
 from config import config, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
+from utils.misc import *
 
 # match by words
 class Matcher(RiakStorer):
@@ -22,6 +23,8 @@ class Matcher(RiakStorer):
             ws = MarveWords(content=splited_content).top()
         else:
              ws = MarveWords(words=words, content=content).top()
+        print 'words: ',
+        export(ws)
         return self.search(ws, buck=buck, field=field)
 
     def search(self, words, buck=config.bucks[buckId]['buck'], field=field):
