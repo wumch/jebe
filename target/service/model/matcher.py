@@ -31,10 +31,13 @@ class Matcher(RiakStorer):
         return self.search(ws, buck=buck, field=field)
 
     def search(self, words, buck=config.bucks[buckId]['buck'], field=field):
-        res = [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
-        print 'ads res: ',
-        export(res)
-        return res
+        for record in self._search(words=words, buck=buck, field=field).run():
+            export(record)
+            export(record.get().get_data())
+#        res = [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
+#        print 'ads res: ',
+#        export(res)
+        return [{'text':'yunyun','link':'fsdasdf'}]
 
     def _search(self, words, buck, field):
         term = field + u':' + u'+'.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
