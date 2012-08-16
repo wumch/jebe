@@ -30,14 +30,15 @@ class Matcher(RiakStorer):
         return self.search(ws, buck=buck, field=field)
 
     def search(self, words, buck=config.bucks[buckId]['buck'], field=field):
-        return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
+        res = [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
+        print 'ads res: ',
+        export(res)
+        return res
 
     def _search(self, words, buck, field):
         term = field + u':' + u'+'.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
         print 'term: ', term
-        res = self.riakClient.search(buck, term)
-        export(res)
-        return res
+        return self.riakClient.search(buck, term)
 
     def _fetchSplitedContent(self, url):
         try:
