@@ -1,10 +1,11 @@
+#!/usr/bin/env python
 #coding:utf-8
 
 import os, sys
 src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'target', 'service')
 if src_path not in sys.path:
     sys.path.append(src_path)
-from riakstorer import RiakStorer
+from model.riakstorer import RiakStorer
 from config import DEBUG
 
 class DataSource(object):
