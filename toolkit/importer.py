@@ -44,7 +44,7 @@ class AdsImpor(RiakStorer):
         super(AdsImpor, self).__init__()
 
     def put(self, key, data, isBinary=False):
-        print key, data[:50]
+        print key, data['text']
         if isBinary:
             self.bucket.new_binary(key=key, data=data).store()
         else:
@@ -61,7 +61,7 @@ def adsImport(files):
         ad['id'] = str(int(fp.readline().strip()))
         ad['link'] = fp.readline().strip()
         ad['text'] = fp.readline().strip()
-        ad['words'] = processWords(' '.join(map(lambda ln: ln.strip(), fp.readlines())))
+        ad['words'] = processWords(''.join(map(lambda ln: ln.strip(), fp.readlines())))
         riak.put(key=ad['id'], data=ad)
 
 if __name__ == '__main__':

@@ -43,7 +43,9 @@ class Handler(object):
 
     def _getAds(self, content=None, words=None, loc=None):
         ads = self.ader.match(content=content, words=words, loc=loc)
-        return [{'link':a['link'], 'text':a['text']} for a in ads[:20]] if ads else []
+        res = [{'link':a['link'], 'text':a['text']} for a in ads[:20]] if ads else []
+        if res: logger.info('ad shown: %(text)s [%(link)s]' % res[0])
+        return res
 
 class HMarve(Handler):
 
