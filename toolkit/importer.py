@@ -5,7 +5,7 @@ src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file_
 if src_path not in sys.path:
     sys.path.append(src_path)
 from riakstorer import RiakStorer
-from config import config, DEBUG
+from config import DEBUG
 
 class DataSource(object):
 
@@ -34,10 +34,9 @@ class FileSource(DataSource):
 
 class AdsImpor(RiakStorer):
 
-    buck = 'ads'
-    backend = 'hdd1'
+    buckId = 'ads'
     if DEBUG:
-        backend = 'leveldb'
+        buckId = 'asus'
 
     def __init__(self):
         super(AdsImpor, self).__init__()
@@ -53,10 +52,11 @@ def adsImport(files):
     for f in files:
         ad = {}
         fp = open(f, 'r')
+        ad['id'] = fp.readline().strip()
         ad['text'] = fp.readline().strip()
         ad['link'] = fp.readline().strip()
         ad['words'] = ' '.join(map(lambda ln: ln.strip(), fp.readlines()))
-        riak.put(ad['text'], ad)
+        riak.put(key=ad['id'], data=ad)
 
 if __name__ == '_main__':
     adsImport(sys.argv[1:])

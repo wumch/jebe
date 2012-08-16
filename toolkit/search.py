@@ -2,7 +2,9 @@
 #coding:utf-8
 
 import os, sys
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'target', 'service'))
+src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'target', 'service')
+if src_path not in sys.path:
+    sys.path.append(src_path)
 from riak import RiakClient
 from config import config
 
