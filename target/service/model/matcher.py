@@ -1,6 +1,6 @@
 #coding:utf-8
 
-from config import config, DEBUG, logger
+from config import config, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
 
