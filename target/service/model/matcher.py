@@ -34,11 +34,16 @@ class Matcher(RiakStorer):
 
     def _search(self, words, buck, field):
         term = field + u':' + u'+'.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
-        return self.riakClient.search(buck, term)
+        print 'term: ', term
+        res = self.riakClient.search(buck, term)
+        export(res)
+        return res
 
     def _fetchSplitedContent(self, url):
         try:
             obj = self.bucket.get(self._genKey(url))
+            print 'exists: ', obj.exists()
+            export(obj.get_data())
             return obj.get_data()['words'] if obj and obj.exists() else None
         except Exception, e:
             logger.error(('%s retrieve content by url:[%s] failed: ' % (type(e).__name__, url)) + str(e.args))
