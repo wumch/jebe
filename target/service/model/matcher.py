@@ -1,6 +1,6 @@
 #coding:utf-8
 
-from config import DEBUG, logger
+from config import config, DEBUG, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
 
@@ -9,7 +9,8 @@ class Matcher(RiakStorer):
 
     buckId = 'ads'
     if DEBUG:
-        backend = 'asus'
+        backId = 'asus'
+    buck, field = config.bucks[buckId]['buck'], config.bucks[buckId]['field']
     field = u'words'
 
     def __init__(self):
