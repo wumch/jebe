@@ -23,6 +23,7 @@ class Matcher(RiakStorer):
             ws = MarveWords(content=splited_content).top()
         else:
              ws = MarveWords(words=words, content=content).top()
+        ws[0] = u'坦克世界'
         print 'words: ',
         export(ws)
         return self.search(ws, buck=buck, field=field)
