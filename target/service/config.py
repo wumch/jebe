@@ -26,7 +26,6 @@ class Config(object):
         'mov' : {'buck':'mov', 'backend':'hdd3'},
         'usr' : {'buck':'usr', 'backend':'hdd4'},
         'ads' : {'buck':'ads', 'backend':'hdd4'},
-        'asus' : {'buck':'ads', 'backend':'hdd4'},      # for test on frank's asus laptop box.
     }
 
     tokenizers = ('http://192.168.88.2:10086/',
@@ -34,9 +33,11 @@ class Config(object):
 
     iothreads = 4
 
-    if DEBUG:
-        routers = ({'host':natip, 'port':dealer_port},)
+    if DEBUG:       # for test on frank's asus laptop box.
+        routers = ({'host':natip, 'port':dealer_port}, )
         riaks = ({'host':natip, 'port':riak_port}, )
+        for k in bucks:
+            bucks[k]['backend'] = 'leveldb'
         tokenizers = ('http://127.0.0.1:10086/', )
         iothreads = 1
 

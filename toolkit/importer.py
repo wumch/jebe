@@ -59,5 +59,5 @@ def adsImport(files):
         ad['words'] = ' '.join(map(lambda ln: ln.strip(), fp.readlines()))
         riak.put(key=ad['id'], data=ad)
 
-if __name__ == '_main__':
+if __name__ == '__main__':
     adsImport(sys.argv[1:])
