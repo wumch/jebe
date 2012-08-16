@@ -22,8 +22,8 @@ class Matcher(RiakStorer):
              ws = MarveWords(words=words, content=content).top()
         return self.search(ws, buck=buck, field=field)
 
-    def search(self, words, buck=buck, field=field):
-        return [record.get().get_data() for record in self._search(words=words, buck=config.bucks[buckId]['buck'], field=field).run()]
+    def search(self, words, buck=config.bucks[buckId]['buck'], field=field):
+        return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
 
     def _search(self, words, buck, field):
         term = field + u':' + u' '.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
