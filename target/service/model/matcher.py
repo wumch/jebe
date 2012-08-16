@@ -10,7 +10,8 @@ class Matcher(RiakStorer):
     buckId = 'ads'
     if DEBUG:
         backId = 'asus'
-    buck, field = config.bucks[buckId]['buck'], config.bucks[buckId]['field']
+    buck = config.bucks[buckId]['buck']
+    field = 'words'
     field = u'words'
 
     def __init__(self):
