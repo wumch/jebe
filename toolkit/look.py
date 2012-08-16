@@ -2,22 +2,20 @@
 #coding:utf-8
 
 import os, sys
-from hashlib import md5
+src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'target', 'service')
+if src_path not in sys.path:
+    sys.path.append(src_path)
 from urllib2 import urlopen
 from json import JSONDecoder
-from target import config
+from config import config
+from utils.misc import strenc
 
 def urlComplete(pageUrl):
     url = pageUrl if pageUrl.startswith('http') else ('http://' + pageUrl)
     return url if url.find('/', 10) != -1 else (url + '/')
 
-def genKey(url):
-    m = md5()
-    m.update(url)
-    return m.hexdigest()
-
 def genRequestUrl(pageUrl):
-    return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) + genKey(pageUrl)
+    return ('http://%(host)s:%(port)s/riak/loc/' % config.getRiak()) + strenc(pageUrl)
 
 def look(url):
     try:
