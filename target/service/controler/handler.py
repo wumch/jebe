@@ -43,7 +43,7 @@ class Handler(object):
 
     def _getAds(self, content=None, words=None, loc=None):
         ads = self.ader.match(content=content, words=words, loc=loc)
-        return [{'loc':a['loc']} for a in ads[:20]]
+        return [{'loc':a['loc']} for a in ads[:20]] if ads else []
 
 class HMarve(Handler):
 
