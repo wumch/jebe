@@ -1,7 +1,5 @@
 #coding:utf-8
 
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from urllib2 import urlopen
 from config import config, DEBUG
 from utils.UrlParser import UrlParser
