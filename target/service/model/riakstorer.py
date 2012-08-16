@@ -14,7 +14,6 @@ class RiakStorer(object):
 
     def __init__(self):
         self.riakClient = riak.RiakClient(**config.getRiak())
-        print 'self.__class__.__name__', self.__class__.__name__
         if self.buckId is not None:
             info = config.bucks[self.buckId]
             if self.buck is None:

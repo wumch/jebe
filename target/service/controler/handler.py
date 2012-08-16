@@ -43,7 +43,7 @@ class Handler(object):
 
     def _getAds(self, content=None, words=None, loc=None):
         ads = self.ader.match(content=content, words=words, loc=loc)
-        return [{'loc':a['loc']} for a in ads[:20]] if ads else []
+        return [{'link':a['link'], 'text':a['text']} for a in ads[:20]] if ads else []
 
 class HMarve(Handler):
 
@@ -79,10 +79,8 @@ class HPageExists(Handler):
         try:
             info = config.jsonDecoder.decode(data[0])
             if self.moveStorer.exists(info) is True:
-                print 'page already exists'
                 self.mrads(loc=info['url'])      # should also carry some ads.
             else:
-                print 'page non-exists'
                 self.replyError()
         except Exception, e:
             self.replyOk()      # to make error-occured client no longer upload.

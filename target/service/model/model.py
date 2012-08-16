@@ -125,7 +125,6 @@ class MoveStorer(RiakStorer):
             return exists
         if exists:
             try:
-                print int(obj.get_data())
                 obj.set_data(str(int(obj.get_data()) + 1)).store()
             except Exception:
                 logger.critical("failed no sotre web-moves")
