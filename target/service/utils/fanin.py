@@ -4,6 +4,7 @@ from urllib2 import urlopen
 from model.riakstorer import RiakStorer
 from config import config, logger
 
+# fetch any type of corresponding data by supplied parameter.
 class Fanin(RiakStorer):
 
     buck = 'loc'

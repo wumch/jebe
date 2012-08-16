@@ -5,7 +5,6 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'target', 'service'))
 from riak import RiakClient
 from config import config
-from pprint import pprint
 
 bucks = {u'loc':u'words', u'mov':u'ref', u'ads':u'words'}
 default_buck = u'loc'
