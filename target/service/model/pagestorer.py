@@ -1,7 +1,7 @@
 #coding:utf-8
 
 from urllib2 import urlopen
-from config import config, DEBUG
+from config import config, DEBUG, logger
 from utils.UrlParser import UrlParser
 from riakstorer import RiakStorer
 
@@ -48,4 +48,5 @@ class PageStorer(RiakStorer):
     def _split(self, content):
         try:
             return urlopen(config.getTokenizer('split'), content, timeout=3).read()
-        except Exception: pass
+        except Exception, e:
+            logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
