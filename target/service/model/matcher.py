@@ -4,7 +4,7 @@ from config import config, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
 from utils.misc import *
-from model.pagestorer import PageStorer
+from pagestorer import PageStorer
 
 # match by words
 class Matcher(RiakStorer):
