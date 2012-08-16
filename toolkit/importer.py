@@ -6,7 +6,8 @@ src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file_
 if src_path not in sys.path:
     sys.path.append(src_path)
 from model.riakstorer import RiakStorer
-from config import DEBUG
+from config import DEBUG, config
+from urllib2 import urlopen
 
 class DataSource(object):
 
@@ -43,20 +44,24 @@ class AdsImpor(RiakStorer):
         super(AdsImpor, self).__init__()
 
     def put(self, key, data, isBinary=False):
+        print key, data[:50]
         if isBinary:
             self.bucket.new_binary(key=key, data=data).store()
         else:
             self.bucket.new(key=key, data=data).store()
+
+def processWords(content):
+    return urlopen(config.getTokenizer('split'), data=content, timeout=10).read()
 
 def adsImport(files):
     riak = AdsImpor()
     for f in files:
         ad = {}
         fp = open(f, 'r')
-        ad['id'] = fp.readline().strip()
-        ad['text'] = fp.readline().strip()
+        ad['id'] = str(int(fp.readline().strip()))
         ad['link'] = fp.readline().strip()
-        ad['words'] = ' '.join(map(lambda ln: ln.strip(), fp.readlines()))
+        ad['text'] = fp.readline().strip()
+        ad['words'] = processWords(' '.join(map(lambda ln: ln.strip(), fp.readlines())))
         riak.put(key=ad['id'], data=ad)
 
 if __name__ == '__main__':
