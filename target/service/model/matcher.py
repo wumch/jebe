@@ -4,6 +4,7 @@ from config import config, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
 from utils.misc import *
+from model.pagestorer import PageStorer
 
 # match by words
 class Matcher(RiakStorer):
@@ -42,7 +43,7 @@ class Matcher(RiakStorer):
 
     def _fetchSplitedContent(self, url):
         try:
-            obj = self.bucket.get(self._genKey(url))
+            obj = PageStorer.instance().bucket.get(self._genKey(url))
             print 'exists: ', obj.exists()
             export(obj.get_data())
             return obj.get_data()['words'] if obj and obj.exists() else None
