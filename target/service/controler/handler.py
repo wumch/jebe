@@ -28,10 +28,10 @@ class Handler(object):
 
     @classmethod    # to make global callable.
     def replyErr(cls, sock):
-        sock.send(config.jsonEncoder.encode(cls.ERR))
+        sock.send(config.jsoner.encode(cls.ERR))
 
     def response(self, data):
-        self.sock.send(data if isinstance(data, basestring) else config.jsonEncoder.encode(data))
+        self.sock.send(data if isinstance(data, basestring) else config.jsoner.encode(data))
 
     def mrads(self, **kwargs_for_get_ads):
         """
@@ -54,7 +54,7 @@ class HMarve(Handler):
 
     def handle(self, data):
         try:
-            meta = config.jsonDecoder.decode(data[0])
+            meta = config.jsoner.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.response(self.marve(content))
         except Exception, e:
@@ -64,7 +64,7 @@ class HMarve(Handler):
     def marve(self, content):
         try:
             json = urlopen(config.getTokenizer('marve'), data=content, timeout=3).read()
-            res = MarveWords(config.jsonDecoder.decode(json)).top()
+            res = MarveWords(config.jsoner.decode(json)).top()
             if DEBUG: print res
             return res
         except Exception:
@@ -79,7 +79,7 @@ class HPageExists(Handler):
 
     def handle(self, data):
         try:
-            info = config.jsonDecoder.decode(data[0])
+            info = config.jsoner.decode(data[0])
             if self.moveStorer.exists(info) is True:
                 self.mrads(loc=info['url'])      # should also carry some ads.
             else:
@@ -99,7 +99,7 @@ class HCrawl(Handler):
 
     def handle(self, data):
         try:
-            meta = config.jsonDecoder.decode(data[0])
+            meta = config.jsoner.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.mrads(content=content)
@@ -119,7 +119,7 @@ class HShowAds(Handler):
     def handle(self, data):
         global sock
         try:
-            info = config.jsonDecoder.decode(data)
+            info = config.jsoner.decode(data)
             self.replyOk() if info else self.replyError()
         except Exception, e:
             self.replyError()

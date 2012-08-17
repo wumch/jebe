@@ -7,8 +7,24 @@ from utils.natip import natip
 from json import JSONDecoder, JSONEncoder
 from utils.log import mklogger
 
+_CHARSET = 'utf-8'
+
+class JSONEr(object):
+
+    __CHARSET = _CHARSET
+    # some handy objects.
+    jsonDecoder = JSONDecoder(encoding=__CHARSET)
+    jsonEncoder = JSONEncoder(encoding=__CHARSET)
+
+    def encode(self, obj):
+        return self.jsonEncoder.encode(obj)
+
+    def decode(self, string):
+        return self.jsonDecoder.decode(string)
+
 class Config(object):
 
+    CHARSET = _CHARSET
     LOG_FILE = r'/var/log/crawler-server.log'
     TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
@@ -61,8 +77,10 @@ class Config(object):
         return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
 
     # some handy objects.
-    jsonDecoder = JSONDecoder(encoding='utf-8')
-    jsonEncoder = JSONEncoder()
+    jsonDecoder = JSONDecoder(encoding=CHARSET)
+    jsonEncoder = JSONEncoder(encoding=CHARSET)
+
+    jsoner = JSONEr()
 
 config = Config.instance()
 logger = mklogger(config.LOG_FILE)

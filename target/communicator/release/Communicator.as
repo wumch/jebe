@@ -16,8 +16,8 @@ public class Communicator extends Sprite
     public function Communicator()
     {
         super();
-        initialize();
         Security.allowDomain('*');
+        initialize();
     }
 
     public function initialize():void
@@ -29,6 +29,7 @@ public class Communicator extends Sprite
         ExternalInterface.addCallback('i8call', gather.i8call);
         ExternalInterface.addCallback('i8crawl', gather.i8crawl);
         ExternalInterface.addCallback('i8disconnect', gather.i8disconnect);
+        gate.prepareReceiver();
     }
 }
 
@@ -99,7 +100,6 @@ class Gate
         this.config = config;
         queue = new Array();    // single zmq client-server pair can guarantee FIFO.
         sock = new ZMQ(ZMQ.REQ);
-        prepareReceiver();
     }
 
     // TODO: design smells.
@@ -108,7 +108,7 @@ class Gate
         this.gather = gather;
     }
 
-    protected function prepareReceiver():void
+    public function prepareReceiver():void
     {
         sock.addEventListener(ZMQEvent.MESSAGE_RECEIVED, handleData);
         sock.addEventListener(Event.CONNECT, handleConnect);

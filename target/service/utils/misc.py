@@ -3,10 +3,10 @@
 from hashlib import md5 as MD5
 
 def md5(string):
-    return MD5(string).hexdigest()
+    return MD5(string.encode('utf-8') if isinstance(string, unicode) else string).hexdigest()
 
 def md516(string):
-    return MD5(string).digest()
+    return MD5(string.encode('utf-8') if isinstance(string, unicode) else string).digest()
 
 reserve_chars = ('-', )
 # base-converter, (riak key shortner)
