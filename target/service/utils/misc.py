@@ -41,4 +41,5 @@ def export(var):
         for v in var:
             export(v)
         return
+    # if missed all of patterns specified above:
     print var

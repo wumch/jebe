@@ -76,10 +76,6 @@ class Config(object):
     def getTokenizer(self, action):
         return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
 
-    # some handy objects.
-    jsonDecoder = JSONDecoder(encoding=CHARSET)
-    jsonEncoder = JSONEncoder(encoding=CHARSET)
-
     jsoner = JSONEr()
 
 config = Config.instance()

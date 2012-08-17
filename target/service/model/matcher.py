@@ -3,7 +3,6 @@
 from config import config, logger
 from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
-from utils.misc import *
 from pagestorer import PageStorer
 
 # match by words
