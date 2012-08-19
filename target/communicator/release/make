@@ -1,7 +1,13 @@
 #!/bin/sh
 
 flexhome="/opt/flexSDK"
-debug="1"
+
+if [ "${1}" == "debug" ]; then
+    debug="1"
+else
+    debug=""
+fi
+
 if [ -n "${debug}" ]; then
     branch=src
 else
