@@ -42,4 +42,4 @@ class HAdsByLoc(Handler):
     def _fetchAds(self):
         if DEBUG: return
         if 'url' in self.params:
-            self.ads = self.matcher.match(loc=self.params['loc'])
+            self.ads = self.matcher.match(loc=self.params['url'])
