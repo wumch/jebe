@@ -4,14 +4,14 @@ import sys
 import zlib
 import struct
 from urllib2 import urlopen
-from config import config, logger, DEBUG
+from config import config, sysconfig, logger, DEBUG
 from utils.MarveWords import MarveWords
 from model import *
 
 class Handler(object):
 
-    OK  = {'code' : 'ok'}
-    ERR = {'code' : 'err'}
+    OK  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_OK}
+    ERR  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_ERR}
 
     def __init__(self, sock):
         self.sock = sock

@@ -1,0 +1,28 @@
+<uwsgi>
+	<socket mode="dev">127.0.0.1:10020</socket>
+	<socket mode="pippo">127.0.0.1:10020</socket>
+    <!--home></home>
+    <chdir></chdir>
+    <python-path></python-path-->
+
+	<module>target</module>
+    <limit-as>256MB</limit-as>
+    <processes>1</processes>
+    <master/>
+    <memory/>
+
+    <logto>/var/log/uwsgi/target.log</logto>
+    <daemonize>/var/log/uwsgi/daemonize.log</daemonize>
+    <max-requests>1</max-requests>
+
+	<routing base="target" modifier1="0" modifier2="0">
+		<!--route method="GET" pattern="^/pippo/(\d+)$" requires="REMOTE_USER">homepage</route>
+		<route method="GET|POST" pattern="^/ciccia/(\d+)/(\w+)$">view1</route>
+		<route action="wsgi" pattern="^/amf">amfapp</route>
+		<route pattern="^/open/">rtmpt_open</route>
+		<route pattern="^/idle/(\d+)/(\d+)$">rtmpt_idle</route>
+		<route pattern="^/send/(\d+)/(\d+)$">rtmpt_send</route>
+		<route pattern="^/$">index</route-->
+		<route pattern="^/target">portal</route>
+	</routing>
+</uwsgi>

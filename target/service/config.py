@@ -78,5 +78,14 @@ class Config(object):
 
     jsoner = JSONEr()
 
+class SysConfig(object):
+
+    ERR_CODE_KEY_NAME = 'code'
+    ERR_CODE_OK = 'ok'
+    ERR_CODE_ERR = 'err'
+
+    MAX_ADS = 3
+
 config = Config.instance()
+sysconfig = SysConfig()
 logger = mklogger(config.LOG_FILE)
