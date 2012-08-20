@@ -23,7 +23,13 @@ class Handler(object):
         self._reply()
 
     def _reply(self, data=None):
-        self.response.data = config.jsoner.encode(data or self.ads or [])
+        if DEBUG:
+            self.response.data = 'alert(%(ads)s);%(rpc)s(%(ads)s);' % {
+                'rpc' : config.RPC_FUNC_NAME,
+                'ads' : config.jsoner.encode(data or self.ads or []),
+            }
+        else:
+            self.response.data = config.RPC_FUNC_NAME + '(' + config.jsoner.encode(data or self.ads or []) + ');'
 
     def _fetchAds(self):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))

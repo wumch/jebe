@@ -84,6 +84,8 @@ class SysConfig(object):
     ERR_CODE_OK = 'ok'
     ERR_CODE_ERR = 'err'
 
+    RPC_FUNC_NAME = 'i8vars.showAds'
+
     MAX_ADS = 3
 
 config = Config.instance()

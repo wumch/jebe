@@ -358,7 +358,8 @@ class Gather extends LocalConnection
             bytes.compress();
             compressed = true;
         }
-        this.send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
+        bytes.position = 0;
+        send(config.LC_CON_NAME, 'invoke', id, 'crawlBytes', callbackName, [meta, bytes, compressed]);
     }
 
     public function callback(callbackName:String, data:*):void
