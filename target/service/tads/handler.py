@@ -25,11 +25,11 @@ class Handler(object):
     def _reply(self, data=None):
         if DEBUG:
             self.response.data = 'alert(%(ads)s);%(rpc)s(%(ads)s);' % {
-                'rpc' : config.RPC_FUNC_NAME,
+                'rpc' : sysconfig.RPC_FUNC_NAME,
                 'ads' : config.jsoner.encode(data or self.ads or []),
             }
         else:
-            self.response.data = config.RPC_FUNC_NAME + '(' + config.jsoner.encode(data or self.ads or []) + ');'
+            self.response.data = sysconfig.RPC_FUNC_NAME + '(' + config.jsoner.encode(data or self.ads or []) + ');'
 
     def _fetchAds(self):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
