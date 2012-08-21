@@ -85,7 +85,7 @@ class SysConfig(object):
     ERR_CODE_ERR = 'err'
 
     RPC_FUNC_NAME = {
-        'showAds'       : 'i8vars.showAds',
+        'showAds'      : 'i8vars.showAds',
         'crawlPage'    : 'i8vars.crawlPage',
     }
 
