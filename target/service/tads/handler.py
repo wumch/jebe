@@ -23,14 +23,18 @@ class Handler(object):
         self._filter()
         self._reply()
 
-    def _reply(self, data=None):
+    def _reply(self):
+        if not len(self.response.data):     # bug... how to reply empty string?
+            self._replyAds()
+
+    def _replyAds(self, ads=None):
         if DEBUG:
             self.response.data = 'alert(%(ads)s);%(rpc)s(%(ads)s);' % {
                 'rpc' : sysconfig.RPC_FUNC_NAME['showAds'],
-                'ads' : config.jsoner.encode(data or self.ads or []),
+                'ads' : config.jsoner.encode(ads or self.ads or []),
             }
         else:
-            self.response.data = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + config.jsoner.encode(data or self.ads or []) + ');'
+            self.response.data = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + config.jsoner.encode(ads or self.ads or []) + ');'
 
     def _replyContent(self, content):
         self.response.data = content
