@@ -50,3 +50,6 @@ class PageStorer(RiakStorer):
             return urlopen(config.getTokenizer('split'), content, timeout=3).read()
         except Exception, e:
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
+
+    def exists(self, url):
+        return self.bucket.get(self._genKey(url)).exists()

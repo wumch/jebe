@@ -4,6 +4,7 @@ import sys
 from werkzeug.wrappers import Response
 from config import config, sysconfig, logger, DEBUG
 from model.matcher import Matcher
+from model.pagestorer import PageStorer
 
 class Handler(object):
 
@@ -25,11 +26,14 @@ class Handler(object):
     def _reply(self, data=None):
         if DEBUG:
             self.response.data = 'alert(%(ads)s);%(rpc)s(%(ads)s);' % {
-                'rpc' : sysconfig.RPC_FUNC_NAME,
+                'rpc' : sysconfig.RPC_FUNC_NAME['showAds'],
                 'ads' : config.jsoner.encode(data or self.ads or []),
             }
         else:
-            self.response.data = sysconfig.RPC_FUNC_NAME + '(' + config.jsoner.encode(data or self.ads or []) + ');'
+            self.response.data = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + config.jsoner.encode(data or self.ads or []) + ');'
+
+    def _replyContent(self, content):
+        self.response.data = content
 
     def _fetchAds(self):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
@@ -41,12 +45,18 @@ class Handler(object):
 class HAdsByLoc(Handler):
 
     matcher = Matcher()
+    pageExsits = PageStorer()
 
     def __init__(self, request):
         super(HAdsByLoc, self).__init__(request)
 
     def _fetchAds(self):
         if DEBUG: return
-        if 'url' in self.params:
-            self.ads = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in self.matcher.match(loc=self.params['url'])]
+        if 'url' not in self.params:
+            return
+        url = self.params['url']
+        if self.pageExsits.exists(url):
+            self.ads = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in self.matcher.match(loc=url)]
             if self.ads: logger.info('ad shown: %(text)s [%(link)s]' % self.ads[0])
+        else:
+            self._replyContent(sysconfig.RPC_FUNC_NAME['showAds'] + '();')

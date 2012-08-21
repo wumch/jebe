@@ -84,7 +84,10 @@ class SysConfig(object):
     ERR_CODE_OK = 'ok'
     ERR_CODE_ERR = 'err'
 
-    RPC_FUNC_NAME = 'i8vars.showAds'
+    RPC_FUNC_NAME = {
+        'showAds'       : 'i8vars.showAds',
+        'crawlPage:'    : 'i8vars.crawlPage',
+    }
 
     MAX_ADS = 3
 
