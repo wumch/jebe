@@ -63,4 +63,4 @@ class HAdsByLoc(Handler):
             self.ads = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in self.matcher.match(loc=url)]
             if self.ads: logger.info('ad shown: %(text)s [%(link)s]' % self.ads[0])
         else:
-            self._replyContent(sysconfig.RPC_FUNC_NAME['showAds'] + '();')
+            self._replyContent(sysconfig.RPC_FUNC_NAME['crawlPage'] + '();')

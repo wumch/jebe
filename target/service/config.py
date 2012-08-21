@@ -86,7 +86,7 @@ class SysConfig(object):
 
     RPC_FUNC_NAME = {
         'showAds'       : 'i8vars.showAds',
-        'crawlPage:'    : 'i8vars.crawlPage',
+        'crawlPage'    : 'i8vars.crawlPage',
     }
 
     MAX_ADS = 3
