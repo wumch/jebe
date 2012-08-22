@@ -3,15 +3,12 @@
 from urllib2 import urlopen
 from config import config, DEBUG, logger
 from utils.UrlParser import UrlParser
-from riakstorer import RiakStorer
+#from riakstorer import RiakStorer
+from model.leveldbstorer import LevelDBStorer
 
-class PageStorer(RiakStorer):
+class PageStorer(LevelDBStorer):
 
-    buck = 'loc'        # page {url:..., words:...}
-    backend = 'hdd2'
-    if DEBUG:
-        backend = 'leveldb'
-
+    dbId = 'loc'
     urlparser = UrlParser()
     _instance = None
 
@@ -28,7 +25,7 @@ class PageStorer(RiakStorer):
         if DEBUG: return
         data = self._getData(meta, content)
         if data is None: return
-        self.bucket.new(self._genKey(meta['url']), data).store()
+        self.put(self._encodeUrl(meta['url']), data)
 
     def _getData(self, meta, content):
         if 'url' not in meta:
@@ -52,4 +49,9 @@ class PageStorer(RiakStorer):
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
 
     def exists(self, url):
-        return self.bucket.get(self._genKey(url)).exists()
+        return self.keyExists(self._encodeUrl(url))
+
+    def fetchSplitedContent(self, url=None, encodedUrl=None):
+        key = encodedUrl or self._encodeUrl(url)
+        res = self.getAuto(key)
+        return res['words'] if res else None

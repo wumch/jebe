@@ -1,9 +1,10 @@
 #coding:utf-8
 
 from config import logger, DEBUG
-from riakstorer import RiakStorer
+#from riakstorer import RiakStorer
+from model.leveldbstorer import LevelDBStorer
 
-class MoveStorer(RiakStorer):
+class MoveStorer(LevelDBStorer):
 
     buck    = 'mov'      # web-moves
     backend = 'hdd3'
@@ -28,20 +29,18 @@ class MoveStorer(RiakStorer):
     def _store(self, info):
         if 'url' not in info:
             return None     # `None` means param is wrong.
-        key = self._genKey(info['url'])
-        obj = self.bucket.get(key=key, r=self.R_VALUE)
-        if not obj.exists():
-            obj = self.bucket.get(key=key, r=self.R_VALUE_UP)
-        exists = obj.exists()
+        key = self._encodeUrl(info['url'])
+        count = self.getInt(key)
+        exists = count > 0
         if 'ref' not in info:   # donot store in this case.
             return exists
         if exists:
             try:
-                obj.set_data(str(int(obj.get_data()) + 1)).store()
+                self.put(key, count + 1)
             except Exception, e:
                 logger.critical("failed no sotre web-moves: " + str(e.args))
             finally:
                 return exists
         else:
-            self.bucket.new_binary(key=key, data=str(1)).store()
+            self.put(key, 1)
             return exists

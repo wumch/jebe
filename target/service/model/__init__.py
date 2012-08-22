@@ -11,5 +11,6 @@ from filestorer import FileStorer
 from movestorer import MoveStorer
 from pagestorer import PageStorer
 from matcher import Matcher
+from leveldbstorer import LevelDBStorer
 
-__all__ = ['RiakStorer', 'FileStorer', 'PageStorer', 'MoveStorer', 'Matcher']
+__all__ = ['RiakStorer', 'FileStorer', 'PageStorer', 'MoveStorer', 'Matcher', 'LevelDBStorer', 'Tokenizer']

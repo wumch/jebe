@@ -1,20 +1,30 @@
 #encoding:utf-8
 
-import os
+import os, sys
 DEBUG = not not os.getenv('JEBE_DEBUG', False)
 from random import randint
 from utils.natip import natip
 from json import JSONDecoder, JSONEncoder
 from utils.log import mklogger
+import msgpack
 
-_CHARSET = 'utf-8'
+_DEFAULT_CHARSET = 'utf-8'
 
-class JSONEr(object):
+class Packer(object):
 
-    __CHARSET = _CHARSET
+    _CHARSET = _DEFAULT_CHARSET
+
+    def encode(self, obj):
+        raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+
+    def decode(self, string, **kw):
+        raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+
+class JSONEr(Packer):
+
     # some handy objects.
-    jsonDecoder = JSONDecoder(encoding=__CHARSET)
-    jsonEncoder = JSONEncoder(encoding=__CHARSET)
+    jsonDecoder = JSONDecoder(encoding=Packer._CHARSET)
+    jsonEncoder = JSONEncoder(encoding=Packer._CHARSET)
 
     def encode(self, obj):
         return self.jsonEncoder.encode(obj)
@@ -22,9 +32,20 @@ class JSONEr(object):
     def decode(self, string):
         return self.jsonDecoder.decode(string)
 
+class MsgPacker(Packer):
+
+    packer = msgpack.Packer(default=None, encoding=Packer._CHARSET)
+    unpacker = msgpack.Unpacker(encoding=Packer._CHARSET)
+
+    def encode(self, obj):
+        return self.packer.pack(obj)
+
+    def decode(self, string, encoding=Packer._CHARSET, use_list=True, **kw):
+        return msgpack.unpackb(string, encoding=encoding, use_list=use_list, **kw)
+
 class Config(object):
 
-    CHARSET = _CHARSET
+    CHARSET = _DEFAULT_CHARSET
     LOG_FILE = r'/var/log/crawler-server.log'
     TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
@@ -43,6 +64,16 @@ class Config(object):
         'usr' : {'buck':'usr', 'backend':'hdd4'},
         'ads' : {'buck':'ads', 'backend':'hdd4'},
     }
+    __dbpath_prefix = os.path.join('/', 'riak')
+    dbs = {
+        'mov' : {'path' : os.path.join(__dbpath_prefix, 'hdd1')},
+        'loc' : {'path' : os.path.join(__dbpath_prefix, 'hdd2')},
+        'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3')},
+        'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4')},
+    }
+    dbs['fti'] = dbs['idx']
+    for k in dbs:
+        dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
 
     tokenizers = ('http://192.168.88.2:10086/',
         'http://192.168.88.4:10086/',)
@@ -52,8 +83,8 @@ class Config(object):
     if DEBUG:       # for test on frank's asus laptop box.
         routers = ({'host':natip, 'port':dealer_port}, )
         riaks = ({'host':natip, 'port':riak_port}, )
-        for k in bucks:
-            bucks[k]['backend'] = 'leveldb'
+        for k in dbs:
+            dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
         tokenizers = ('http://127.0.0.1:10086/', )
         iothreads = 1
 
@@ -77,8 +108,12 @@ class Config(object):
         return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
 
     jsoner = JSONEr()
+    msgpack = MsgPacker()
+    packer = msgpack
 
 class SysConfig(object):
+
+    INT_BIT = 64
 
     ERR_CODE_KEY_NAME = 'code'
     ERR_CODE_OK = 'ok'

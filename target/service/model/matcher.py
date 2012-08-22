@@ -44,7 +44,6 @@ class Matcher(RiakStorer):
 
     def _fetchSplitedContent(self, url):
         try:
-            obj = PageStorer.instance().bucket.get(self._genKey(url))
-            return obj.get_data()['words'] if obj and obj.exists() else None
+            return PageStorer.instance().fetchSplitedContent(url=url)
         except Exception, e:
             logger.error(('%s retrieve content by url:[%s] failed: ' % (type(e).__name__, url)) + str(e.args))
