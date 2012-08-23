@@ -67,11 +67,12 @@ class Config(object):
     }
     __dbpath_prefix = os.path.join('/', 'riak')
     _total_mem = (32 << 30)
+    _2GB = (2 << 30) - 1
     dbs = {
-        'mov' : {'path' : os.path.join(__dbpath_prefix, 'hdd1'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
-        'loc' : {'path' : os.path.join(__dbpath_prefix, 'hdd2'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
-        'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3'), 'block_cache_size':_total_mem * 0.01, 'write_buffer_cache':_total_mem * 0.01, },
-        'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
+        'mov' : {'path' : os.path.join(__dbpath_prefix, 'hdd1'), 'options': {'block_cache_size':_2GB, 'write_buffer_size':int(_total_mem * 0.025)}, },
+        'loc' : {'path' : os.path.join(__dbpath_prefix, 'hdd2'), 'options': {'block_cache_size':_2GB, 'write_buffer_size':int(_total_mem * 0.025)}, },
+        'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3'), 'options': {'block_cache_size':(50 << 20),  'write_buffer_size':int(_total_mem * 0.01)}, },
+        'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4'), 'options': {'block_cache_size':_2GB, 'write_buffer_size':int(_total_mem * 0.025)}, },
     }
     for k in dbs:
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)

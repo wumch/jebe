@@ -24,7 +24,10 @@ class LevelDBStorer(object):
                 self._dbpath = info['path']
         if self._dbpath is None:
             raise ValueError('kid, <%s>.dbpath is None' % self.__class__.__name__)
-        self.db = leveldb.LevelDB(self._dbpath, create_if_missing=True)
+        if self._dbId is None:
+            self.db = leveldb.LevelDB(self._dbpath, create_if_missing=True)
+        else:
+            self.db = leveldb.LevelDB(self._dbpath, create_if_missing=True, **config.dbs[self._dbId]['options'])
 
     def get(self, key, raw_key=False, **kw):
         return self.getRaw(key, raw_key=raw_key, **kw)
