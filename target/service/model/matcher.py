@@ -1,23 +1,26 @@
 #coding:utf-8
 
+import zmq, struct
 from config import config, logger
-from riakstorer import RiakStorer
 from utils.MarveWords import MarveWords
 from pagestorer import PageStorer
+from leveldbstorer import LevelDBStorer
+from ftindex import FTIndex
 
 # match by words
-class Matcher(RiakStorer):
+class Matcher(object):
 
-    buckId = 'ads'
     field = 'words'
     field = u'words'
-
     max_ads = 1
 
     def __init__(self):
-        super(Matcher, self).__init__()
+        self.finder = FTIndex()
+        self.ads = LevelDBStorer(dbId='ads')
+        self.pageAccesser = zmq.Context(1).socket(zmq.REQ)
+        self.pageAccesser.connect("tcp://%s:%d" % (config.getRouter()['host'], config.router_port))
 
-    def match(self, words=None, content=None, loc=None, buck=config.bucks[buckId]['buck'], field=field):
+    def match(self, words=None, content=None, loc=None):
         if words is None and content is None and loc is not None:
             splited_content = self._fetchSplitedContent(loc)
             if splited_content is None:
@@ -25,25 +28,31 @@ class Matcher(RiakStorer):
             ws = MarveWords(content=splited_content).top()
         else:
              ws = MarveWords(words=words, content=content).top()
-        return self.search(ws, buck=buck, field=field)
+        return self.search(ws)
 
-    def search(self, words, buck=config.bucks[buckId]['buck'], field=field):
+    def search(self, words):
 #        return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
-        res = []
+        res = set()
         count = 0
-        for record in self._search(words=words, buck=buck, field=field).run():
+        for docid, marve in self.finder.match(words=words):
             count += 1
             if count > self.max_ads:
                 break
-            res.append(record.get().get_data())
-        return res
+            res.add(docid)
+        return [self.ads.getAuto(doc) for doc in res]
 
-    def _search(self, words, buck, field):
-        term = field + u':' + u' OR '.join(map(lambda w: w if isinstance(w, unicode) else unicode(w, 'utf-8'), words))
-        return self.riakClient.search(buck, term)
-
-    def _fetchSplitedContent(self, url):
+    def old_fetchSplitedContent(self, url):
         try:
             return PageStorer.instance().fetchSplitedContent(url=url)
         except Exception, e:
             logger.error(('%s retrieve content by url:[%s] failed: ' % (type(e).__name__, url)) + str(e.args))
+
+    def _fetchSplitedContent(self, url):
+        self.pageAccesser.send_multipart([struct.pack('B', 4), config.packer.encode(url)])
+        resp = self.pageAccesser.recv_multipart()
+        return config.packer.decode(resp[0])
+
+    def pageExists(self, url):
+        self.pageAccesser.send_multipart([struct.pack('B', 5), config.packer.encode(url)])
+        resp = self.pageAccesser.recv_multipart()
+        return not not config.packer.decode(resp[0])

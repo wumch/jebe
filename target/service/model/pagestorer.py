@@ -3,12 +3,11 @@
 from urllib2 import urlopen
 from config import config, DEBUG, logger
 from utils.UrlParser import UrlParser
-#from riakstorer import RiakStorer
-from model.leveldbstorer import LevelDBStorer
+from leveldbstorer import LevelDBStorer
 
 class PageStorer(LevelDBStorer):
 
-    dbId = 'loc'
+    _dbId = 'loc'
     urlparser = UrlParser()
     _instance = None
 

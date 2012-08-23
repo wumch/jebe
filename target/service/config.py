@@ -3,9 +3,10 @@
 import os, sys
 DEBUG = not not os.getenv('JEBE_DEBUG', False)
 from random import randint
-from utils.natip import natip
 from json import JSONDecoder, JSONEncoder
+from utils.natip import natip
 from utils.log import mklogger
+from utils.misc import MOVE_KEY_HYPHEN as _MK_HYPHEN
 import msgpack
 
 _DEFAULT_CHARSET = 'utf-8'
@@ -118,6 +119,8 @@ class SysConfig(object):
     ERR_CODE_KEY_NAME = 'code'
     ERR_CODE_OK = 'ok'
     ERR_CODE_ERR = 'err'
+
+    MOVE_KEY_HYPHEN = _MK_HYPHEN
 
     RPC_FUNC_NAME = {
         'showAds'      : 'i8vars.showAds',

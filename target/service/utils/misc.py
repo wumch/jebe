@@ -8,7 +8,8 @@ def md5(string):
 def md516(string):
     return MD5(string.encode('utf-8') if isinstance(string, unicode) else string).digest()
 
-reserve_chars = ('-', )
+MOVE_KEY_HYPHEN = '-'
+reserve_chars = (MOVE_KEY_HYPHEN, )
 # base-converter, (riak key shortner)
 # NOTE: should not depend on any python features.
 numrep = map(str, range(0, 10)) + \

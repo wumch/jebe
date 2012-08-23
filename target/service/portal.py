@@ -4,7 +4,7 @@
 #    yield 'Hello World\n'
 #    yield 'This is uWsgi application.\n'
 
-from werkzeug.wrappers import Request
+from werkzeug.wrappers import Request, Response
 from tads.handler import HAdsByLoc
 
 @Request.application

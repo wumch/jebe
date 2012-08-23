@@ -1,15 +1,12 @@
 #coding:utf-8
 
-from config import logger, DEBUG
+from config import logger, sysconfig
 #from riakstorer import RiakStorer
-from model.leveldbstorer import LevelDBStorer
+from leveldbstorer import LevelDBStorer
 
 class MoveStorer(LevelDBStorer):
 
-    buck    = 'mov'      # web-moves
-    backend = 'hdd3'
-    if DEBUG:
-        backend = 'leveldb'
+    _dbId = 'mov'      # web-moves
 
     _instance = None
 
@@ -22,18 +19,13 @@ class MoveStorer(LevelDBStorer):
     def __init__(self):
         super(MoveStorer, self).__init__()
 
-    def exists(self, info):
-        if DEBUG: return False
-        return self._store(info)
-
-    def _store(self, info):
-        if 'url' not in info:
+    def store(self, info):
+        if 'url' not in info or info['url'] == ''       \
+            'ref' not in info or info['ref'] == '':
             return None     # `None` means param is wrong.
-        key = self._encodeUrl(info['url'])
+        key = self._encodeUrl(info['url']) + sysconfig.MOVE_KEY_HYPHEN + self._encodeUrl(info['ref'])
         count = self.getInt(key)
-        exists = count > 0
-        if 'ref' not in info:   # donot store in this case.
-            return exists
+        exists = count is not None
         if exists:
             try:
                 self.put(key, count + 1)

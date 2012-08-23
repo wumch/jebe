@@ -73,6 +73,7 @@ class HMarve(Handler):
 class HPageExists(Handler):
 
     moveStorer = MoveStorer.instance()
+    pageExists = PageStorer.instance()
 
     def __init__(self, sock):
         super(HPageExists, self).__init__(sock)
@@ -80,7 +81,8 @@ class HPageExists(Handler):
     def handle(self, data):
         try:
             info = config.jsoner.decode(data[0])
-            if self.moveStorer.exists(info) is True:
+            self.moveStorer.store(info)
+            if self.pageExists.exists(info['url']) is True:
                 self.mrads(loc=info['url'])      # should also carry some ads.
             else:
                 self.replyError()
@@ -124,3 +126,35 @@ class HShowAds(Handler):
         except Exception, e:
             self.replyError()
             logger.error("showAds failed: " + str(e.args))
+
+class HPageAccesser(Handler):
+
+    pageStorer = PageStorer.instance()
+
+    def __init__(self, sock):
+        super(HPageAccesser, self).__init__(sock)
+
+    def handle(self, data):
+        print data
+        url = config.packer.decode(data[0])
+        print 'page access: [%s]' % url
+        words = config.packer.encode(self.pageStorer.fetchSplitedContent(url=url))
+        print words
+        self.response(words)
+
+class HPageExistsIPC(Handler):
+
+    pageStorer = PageStorer.instance()
+
+    def __init__(self, sock):
+        super(HPageExistsIPC, self).__init__(sock)
+
+    def handle(self, data):
+        print data
+        url = config.packer.decode(data[0])
+        print 'page exists: [%s]' % url
+        res = config.packer.encode(self.pageStorer.exists(url=url))
+        print res
+        self.response(config.packer.encode(res))
+
+

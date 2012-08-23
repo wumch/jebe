@@ -4,7 +4,7 @@ import sys
 from werkzeug.wrappers import Response
 from config import config, sysconfig, logger, DEBUG
 from model.matcher import Matcher
-from model.pagestorer import PageStorer
+#from model.pagestorer import PageStorer
 
 class Handler(object):
 
@@ -49,18 +49,20 @@ class Handler(object):
 class HAdsByLoc(Handler):
 
     matcher = Matcher()
-    pageExsits = PageStorer()
 
     def __init__(self, request):
         super(HAdsByLoc, self).__init__(request)
 
     def _fetchAds(self):
-        if DEBUG: return
         if 'url' not in self.params:
             return
         url = self.params['url']
-        if self.pageExsits.exists(url):
+        print 'url: [%s]' % url
+        if self.pageExists(url):
             self.ads = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in self.matcher.match(loc=url)]
             if self.ads: logger.info('ad shown: %(text)s [%(link)s]' % self.ads[0])
         else:
             self._replyContent(sysconfig.RPC_FUNC_NAME['crawlPage'] + '();')
+
+    def pageExists(self, url):
+        return self.matcher.pageExists(url)

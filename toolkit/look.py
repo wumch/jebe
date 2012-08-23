@@ -5,10 +5,11 @@ import os, sys
 src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'target', 'service')
 if src_path not in sys.path:
     sys.path.append(src_path)
+import zmq, struct
 from urllib2 import urlopen
 from json import JSONDecoder
 from config import config
-from utils.misc import strenc
+from utils.misc import strenc, export
 
 def urlComplete(pageUrl):
     url = pageUrl if pageUrl.startswith('http') else ('http://' + pageUrl)
@@ -19,9 +20,18 @@ def genRequestUrl(pageUrl):
 
 def look(url):
     try:
-        return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())['words']
+        return JSONDecoder().decode(urlopen(genRequestUrl(url), timeout=3).read())
     except Exception:
         return None
+
+def look(url):
+    sock = zmq.Context(1).socket(zmq.REQ)
+    uri = "tcp://%s:%d" % (config.getRouter()['host'], config.router_port)
+    sock.connect(uri)
+    sock.send_multipart([struct.pack('B', 4), config.packer.encode(url)])
+    resp = sock.recv_multipart()
+    print 'resp:[%s]' % resp
+    return config.packer.decode(resp[0])
 
 
 if __name__ == '__main__':
@@ -32,4 +42,4 @@ if __name__ == '__main__':
         url = urlComplete(pageUrl)
         print 'url: ', url
         print 'words:'
-        print look(url), os.linesep
+        export(look(url))

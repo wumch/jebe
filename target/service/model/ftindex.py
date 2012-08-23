@@ -39,12 +39,8 @@ class FTIndex(LevelDBStorer):
     # TODO: currently it's a fucking crazy implementation!
     def match(self, words, rate=None):
         unions = {}
-        print 'minMarve', self._minMarve
-        print words
         for w in words:
-            print type(w), w
             docs = self.getAuto(w, raw_key=True)
-            print 'docs:', docs
             if docs is not None:
                 for docId, m in docs:
                     if docId in unions:
@@ -52,7 +48,9 @@ class FTIndex(LevelDBStorer):
                     else:
                         unions[docId] = m
         minMarve = rate if rate else min(len(words) * 0.2, 1) * self._minMarve
-        return self._filterWords([[w, m] for w,m in unions.iteritems()], marve=minMarve)
+        res = self._filterWords([[w, m] for w,m in unions.iteritems()], marve=minMarve)
+        res.sort(lambda a,b: -cmp(a[1], b[1]))
+        return res
 
     def _filterWords(self, words, marve=_minMarve):
         return filter(lambda wm: len(wm) == 2 and wm[1] >= marve, words)
