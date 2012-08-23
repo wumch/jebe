@@ -66,11 +66,12 @@ class Config(object):
         'ads' : {'buck':'ads', 'backend':'hdd4'},
     }
     __dbpath_prefix = os.path.join('/', 'riak')
+    _total_mem = (32 << 30)
     dbs = {
-        'mov' : {'path' : os.path.join(__dbpath_prefix, 'hdd1')},
-        'loc' : {'path' : os.path.join(__dbpath_prefix, 'hdd2')},
-        'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3')},
-        'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4')},
+        'mov' : {'path' : os.path.join(__dbpath_prefix, 'hdd1'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
+        'loc' : {'path' : os.path.join(__dbpath_prefix, 'hdd2'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
+        'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3'), 'block_cache_size':_total_mem * 0.01, 'write_buffer_cache':_total_mem * 0.01, },
+        'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4'), 'block_cache_size':_total_mem * 0.125, 'write_buffer_cache':_total_mem * 0.025, },
     }
     for k in dbs:
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
