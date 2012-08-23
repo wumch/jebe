@@ -2,7 +2,6 @@
 
 import sys
 import zlib
-import struct
 from urllib2 import urlopen
 from config import config, sysconfig, logger, DEBUG
 from utils.MarveWords import MarveWords
@@ -15,7 +14,6 @@ class Handler(object):
 
     def __init__(self, sock):
         self.sock = sock
-        self.ader = Matcher()
 
     def handle(self, data):
         raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
@@ -42,6 +40,7 @@ class Handler(object):
         self.response(self._getAds(**kwargs_for_get_ads))
 
     def _getAds(self, content=None, words=None, loc=None):
+        return []
         ads = self.ader.match(content=content, words=words, loc=loc)
         res = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in ads[:20]] if ads else []
         if res: logger.info('ad shown: %(text)s [%(link)s]' % res[0])
@@ -69,92 +68,3 @@ class HMarve(Handler):
             return res
         except Exception:
             return None
-
-class HPageExists(Handler):
-
-    moveStorer = MoveStorer.instance()
-    pageExists = PageStorer.instance()
-
-    def __init__(self, sock):
-        super(HPageExists, self).__init__(sock)
-
-    def handle(self, data):
-        try:
-            info = config.jsoner.decode(data[0])
-            self.moveStorer.store(info)
-            if self.pageExists.exists(info['url']) is True:
-                self.mrads(loc=info['url'])      # should also carry some ads.
-            else:
-                self.replyError()
-        except Exception, e:
-            self.replyOk()      # to make error-occured client no longer upload.
-            logger.error("pageExists failed: " + str(e.args))
-
-class HCrawl(Handler):
-
-    ucpacker = struct.Struct('B')     # for resolve action
-    pageStorer = PageStorer.instance()
-
-    def __init__(self, sock):
-        super(HCrawl, self).__init__(sock)
-        self.fileStorer = FileStorer()
-
-    def handle(self, data):
-        try:
-            meta = config.jsoner.decode(data[0])
-            content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
-            self.store(meta, content)
-            self.mrads(content=content)
-        except Exception, e:
-            self.replyError()
-            logger.error("crawl failed: " + str(e.args))
-
-    def store(self, meta, content):
-        self.fileStorer.store(content)
-        self.pageStorer.store(meta, content)
-
-class HShowAds(Handler):
-
-    def __init__(self, sock):
-        super(HShowAds, self).__init__(sock)
-
-    def handle(self, data):
-        global sock
-        try:
-            info = config.jsoner.decode(data)
-            self.replyOk() if info else self.replyError()
-        except Exception, e:
-            self.replyError()
-            logger.error("showAds failed: " + str(e.args))
-
-class HPageAccesser(Handler):
-
-    pageStorer = PageStorer.instance()
-
-    def __init__(self, sock):
-        super(HPageAccesser, self).__init__(sock)
-
-    def handle(self, data):
-        print data
-        url = config.packer.decode(data[0])
-        print 'page access: [%s]' % url
-        words = config.packer.encode(self.pageStorer.fetchSplitedContent(url=url))
-        print words
-        self.response(words)
-
-class HPageExistsIPC(Handler):
-
-    pageStorer = PageStorer.instance()
-
-    def __init__(self, sock):
-        super(HPageExistsIPC, self).__init__(sock)
-
-    def handle(self, data):
-        print data
-        url = config.packer.decode(data[0])
-        print 'page exists: [%s]' % url
-        res = config.packer.encode(self.pageStorer.exists(url=url))
-        print res
-        self.response(config.packer.encode(res))
-
-

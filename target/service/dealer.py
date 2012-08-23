@@ -2,7 +2,9 @@
 
 import zmq, struct
 from config import config, DEBUG
-from controler.handler import *
+from controler.handler import Handler
+from controler.hcrawl import HCrawl
+from controler.hpageaccesser import HPageAccesser, HPageExistsIPC
 
 context = zmq.Context(1)
 sock = context.socket(zmq.REP)
@@ -13,8 +15,6 @@ class Dealer(object):
     ucpacker = struct.Struct('B')
 #    handlerList = [None, HPageExists(sock), HCrawl(sock), HShowAds(sock), HPageAccesser(sock)]
     handlerList = [None, None, HCrawl(sock), None, HPageAccesser(sock), HPageExistsIPC(sock)]
-    if DEBUG:   # for test marve
-        handlerList[2] = HMarve(sock)
 
     def __init__(self): pass
 

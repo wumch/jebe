@@ -14,8 +14,16 @@ class Matcher(object):
     field = u'words'
     max_ads = 1
 
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __init__(self):
-        self.finder = FTIndex()
+        self.finder = FTIndex.instance()
         self.ads = LevelDBStorer(dbId='ads')
         self.pageAccesser = zmq.Context(1).socket(zmq.REQ)
         self.pageAccesser.connect("tcp://%s:%d" % (config.getRouter()['host'], config.router_port))
@@ -32,6 +40,7 @@ class Matcher(object):
 
     def search(self, words):
 #        return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
+        print 'pattern: [%s]' % words
         res = set()
         count = 0
         for docid, marve in self.finder.match(words=words):

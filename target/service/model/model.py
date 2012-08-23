@@ -66,7 +66,6 @@ class PageStorer(RiakStorer):
         super(PageStorer, self).__init__()
 
     def store(self, meta, content):
-        if DEBUG: return
         data = self._getData(meta, content)
         if data is None: return
         self.bucket.new(self._genKey(meta['url']), data).store()

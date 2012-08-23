@@ -13,6 +13,14 @@ class FTIndex(LevelDBStorer):
     if DEBUG:
         _minMarve = 1
 
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __init__(self, **kw):
         super(FTIndex, self).__init__(**kw)
 

@@ -69,7 +69,6 @@ function i8main()
 
 	//crawl
 //	if( i8vars.rand(1,100)<=15 )
-    requestAds();
 
 	//fuzzy (partial match) value search in array
 	function partOf(haystack, needles){
@@ -163,6 +162,7 @@ function i8main()
 		keywordLinks(links);
 
         i8vars.links = links;
+        requestAds();
 //		i8vars.srvTestAds= 'World Of Tank';
 //
 //		setTimeout( function(){adTest(links);}, 500);
@@ -375,17 +375,19 @@ function i8main()
         if (window.i8vars.showAds) return;
         window.i8vars.showAds = function(ads)
        	{
+            alert('ads: [' + ads + ']');
        	    if (!ads || ads.constructor !== Array) return;
-               for (var i = 0; i < ads.length; ++i)
-               {
-                   i8vars.links.insertBefore(i8vars.create('a', {
-                       'css':'font-weight:700;float:right;line-height:18px;',
-                       'href':ads[i].link,
-                       'innerText': ads[i].text,
-                       'onclick': function() { i8vars.log("http://211.154.172.172/adclick?ad=" + ads[i].id); },
-                       'target':'_blank'
-                   }), i8vars.links.firstChild);
-               }
+            for (var i = 0; i < ads.length; ++i)
+            {
+                i8vars.links.insertBefore(i8vars.create('a', {
+                    'css':'font-weight:700;float:right;line-height:18px;',
+                    'href':ads[i].link,
+                    'innerText': ads[i].text,
+                    'onclick': function() { i8vars.log("http://211.154.172.172/adclick?ad=" + ads[i].id); },
+                    'rel':ads[i].id,
+                    'target':'_blank'
+                }), i8vars.links.firstChild);
+            }
        	}
     }
 
@@ -396,7 +398,7 @@ function i8main()
 		{
 			sendText(body.innerText.replace(/\s{2,}/g,  ' '));
 		}
-		var host = "211.154.172.172", port = "10010";
+		var host = "www.jebe.com", port = "10010";
 		var swf = 'http://' + host + '/crawl.swf?a=' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
 		var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
 				'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
@@ -431,24 +433,25 @@ function i8main()
 			}
 		}
 		var meta = {url:document.location.href, ref:document.referrer};
+        /*
 		window.i8crawlPage = function(resp)
 		{
 			var res =  eval('(' + resp + ')');
 			if (res && res.code)
 			{
                 if (res.code == 'err')
-                {
+                {*/
                     var callbackName = "i8AfterCrawl";
 			        window[callbackName] = function(r)
                     {
-                        var rs = eval('(' + r + ')');
+                        var res = eval('(' + r + ')');
                         if (res && res.code && res.code == 'ok')
                         {
                             requestAds();
                         }
                     }
 				    cmtor.i8crawl(callbackName, meta, text);
-                }
+                /*}
                 else
                 {
                     requestAds();
@@ -460,7 +463,7 @@ function i8main()
                 requestAds();
 			}
 		};
-		cmtor.i8call("pageExists", "i8crawlPage", meta, i8vars.charset);
+		cmtor.i8call("pageExists", "i8crawlPage", meta, i8vars.charset);*/
 	}
 
     function requestAds()
@@ -475,9 +478,9 @@ function i8main()
             return;
         }
         installShowAds();
+        alert('request ads for ' + window.i8vars.requestAdsCounter + ' time');
 /////        var url = 'http://211.154.172.172/target/?url=' + encodeURIComponent(location.href);
         var url = 'http://127.0.0.1:10020/target/?url=' + encodeURIComponent(location.href);
-        alert(url);
         if (url.length > i8vars.url_max_len) return;
         var pad = '&ref=' + encodeURIComponent(document.referrer);
         if (url.length + pad.length <= i8vars.url_max_len)

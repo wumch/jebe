@@ -21,7 +21,6 @@ class PageStorer(LevelDBStorer):
         super(PageStorer, self).__init__()
 
     def store(self, meta, content):
-        if DEBUG: return
         data = self._getData(meta, content)
         if data is None: return
         self.put(self._encodeUrl(meta['url']), data)

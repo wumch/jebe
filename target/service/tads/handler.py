@@ -48,7 +48,7 @@ class Handler(object):
 
 class HAdsByLoc(Handler):
 
-    matcher = Matcher()
+    matcher = Matcher.instance()
 
     def __init__(self, request):
         super(HAdsByLoc, self).__init__(request)
@@ -63,6 +63,12 @@ class HAdsByLoc(Handler):
             if self.ads: logger.info('ad shown: %(text)s [%(link)s]' % self.ads[0])
         else:
             self._replyContent(sysconfig.RPC_FUNC_NAME['crawlPage'] + '();')
+#
+#    def handle(self):
+#        if self.pageExists():
+#            super(HAdsByLoc, self).handle()
+#        else:
+#            self.re
 
     def pageExists(self, url):
         return self.matcher.pageExists(url)
