@@ -373,9 +373,13 @@ function i8main()
     function installShowAds()
     {
         if (window.i8vars.showAds) return;
+        window.i8vars.reFetchAdsTimer = setTimeout(requestAds, 1000);
         window.i8vars.showAds = function(ads)
        	{
-            alert('ads: [' + ads + ']');
+            if (window.i8vars.reFetchAdsTimer)
+            {
+                window.clearTimeout(window.i8vars.reFetchAdsTimer);
+            }
        	    if (!ads || ads.constructor !== Array) return;
             for (var i = 0; i < ads.length; ++i)
             {
@@ -478,7 +482,6 @@ function i8main()
             return;
         }
         installShowAds();
-        alert('request ads for ' + window.i8vars.requestAdsCounter + ' time');
 /////        var url = 'http://211.154.172.172/target/?url=' + encodeURIComponent(location.href);
         var url = 'http://127.0.0.1:10020/target/?url=' + encodeURIComponent(location.href);
         if (url.length > i8vars.url_max_len) return;
