@@ -72,9 +72,9 @@ class Config(object):
         'ads' : {'path' : os.path.join(__dbpath_prefix, 'hdd3')},
         'idx' : {'path' : os.path.join(__dbpath_prefix, 'hdd4')},
     }
-    dbs['fti'] = dbs['idx']
     for k in dbs:
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
+    dbs['fti'] = dbs['idx']
 
     tokenizers = ('http://192.168.88.2:10086/',
         'http://192.168.88.4:10086/',)
