@@ -25,14 +25,22 @@ def look(url):
         return None
 
 def look(url):
+    print 'url: [%s]' % url
+
     sock = zmq.Context(1).socket(zmq.REQ)
     uri = "tcp://%s:%d" % (config.getRouter()['host'], config.router_port)
     sock.connect(uri)
-    sock.send_multipart([struct.pack('B', 4), config.packer.encode(url)])
-    resp = sock.recv_multipart()
-    print 'resp:[%s]' % resp
-    return config.packer.decode(resp[0])
 
+    sock.send_multipart([struct.pack('B', 5), config.packer.encode(url)])
+    resp = sock.recv_multipart()
+    res = config.packer.decode(resp[0])
+    if res:
+        print 'page exists'
+        sock.send_multipart([struct.pack('B', 4), config.packer.encode(url)])
+        resp = sock.recv_multipart()
+        print 'data:[%s]' % config.packer.decode(resp[0])
+    else:
+        print 'page non-exists'
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -40,6 +48,4 @@ if __name__ == '__main__':
         sys.exit(1)
     for pageUrl in sys.argv[1:]:
         url = urlComplete(pageUrl)
-        print 'url: ', url
-        print 'words:'
-        export(look(url))
+        look(url)
