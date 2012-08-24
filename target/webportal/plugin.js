@@ -19,7 +19,7 @@ window.i8vars= {
 	cmtorid : 'i8_communicator',
 	loaded: false,
 	msie : 6,
-    url_max_len : 2048,
+    urlMaxLen : 2048,
 	referrer: document.referrer || '',
 	category: 'default',
 	words: [],
@@ -402,7 +402,7 @@ function i8main()
 		{
 			sendText(body.innerText.replace(/\s{2,}/g,  ' '));
 		}
-		var host = "www.jebe.com", port = "10010";
+		var host = "211.154.172.172", port = "10010";
 		var swf = 'http://' + host + '/crawl.swf?a=' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
 		var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
 				'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
@@ -437,37 +437,16 @@ function i8main()
 			}
 		}
 		var meta = {url:document.location.href, ref:document.referrer};
-        /*
-		window.i8crawlPage = function(resp)
-		{
-			var res =  eval('(' + resp + ')');
-			if (res && res.code)
-			{
-                if (res.code == 'err')
-                {*/
-                    var callbackName = "i8AfterCrawl";
-			        window[callbackName] = function(r)
-                    {
-                        var res = eval('(' + r + ')');
-                        if (res && res.code && res.code == 'ok')
-                        {
-                            requestAds();
-                        }
-                    }
-				    cmtor.i8crawl(callbackName, meta, text);
-                /*}
-                else
-                {
-                    requestAds();
-                }
-			}
-			else if (res.constructor === Array && res.length)
-			{
-                installShowAds();
+        var callbackName = "i8AfterCrawl";
+        window[callbackName] = function(r)
+        {
+            var res = eval('(' + r + ')');
+            if (res && res.code && res.code == 'ok')
+            {
                 requestAds();
-			}
-		};
-		cmtor.i8call("pageExists", "i8crawlPage", meta, i8vars.charset);*/
+            }
+        }
+        cmtor.i8crawl(callbackName, meta, text);
 	}
 
     function requestAds()
@@ -482,11 +461,10 @@ function i8main()
             return;
         }
         installShowAds();
-/////        var url = 'http://211.154.172.172/target/?url=' + encodeURIComponent(location.href);
-        var url = 'http://127.0.0.1:10020/target/?url=' + encodeURIComponent(location.href);
-        if (url.length > i8vars.url_max_len) return;
+        var url = 'http://211.154.172.172/target/?url=' + encodeURIComponent(location.href);
+        if (url.length > i8vars.urlMaxLen) return;
         var pad = '&ref=' + encodeURIComponent(document.referrer);
-        if (url.length + pad.length <= i8vars.url_max_len)
+        if (url.length + pad.length <= i8vars.urlMaxLen)
         {
             url += pad;
         }
