@@ -13,7 +13,7 @@ class Handler(object):
 
     def __init__(self, request):
         self.request = request
-        self.response = Response(mimetype='application/x-javascript')
+        self.response = Response(mimetype='application/x-javascript; charset=utf-8')
         self.response.headers['Pragma'] = 'no-cache'
         self.params = self.request.args
         self.ads = []
