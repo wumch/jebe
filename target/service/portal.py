@@ -11,14 +11,17 @@ try:
 except ImportError:
     pass
 
-from werkzeug.wrappers import Request
+from werkzeug.wrappers import Request, Response
 from tads.handler import HAdsByLoc, config
 
 @Request.application
 def application(request):
-    handler = HAdsByLoc(request)
-    handler.handle()
-    return handler.response
+    try:
+        handler = HAdsByLoc(request)
+        handler.handle()
+        return handler.response
+    except Exception:
+        return Response(mimetype='application/x-javascript; charset=utf-8')
 
 if __name__ == '__main__':
     from werkzeug.serving import run_simple

@@ -42,6 +42,9 @@ if __name__ == '__main__':
         data = sock.recv_multipart()
         if DEBUG: print "received", len(data)
         if len(data) > 1:
-            dealer.handle(data[0], data[1:])
+            try:
+                dealer.handle(data[0], data[1:])
+            except Exception:
+                pass
         else:
             Handler.replyErr(sock)
