@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+try:
+    import psyco
+    psyco.jit()
+    from psyco.classes import *
+except ImportError:
+    pass
+
 import zmq, struct
 from config import config, DEBUG
 from controler.handler import Handler

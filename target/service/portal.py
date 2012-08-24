@@ -4,6 +4,13 @@
 #    yield 'Hello World\n'
 #    yield 'This is uWsgi application.\n'
 
+try:
+    import psyco
+    psyco.jit()
+    from psyco.classes import *
+except ImportError:
+    pass
+
 from werkzeug.wrappers import Request
 from tads.handler import HAdsByLoc, config
 

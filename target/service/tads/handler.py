@@ -14,7 +14,7 @@ class Handler(object):
     def __init__(self, request):
         self.request = request
         self.response = Response(mimetype='application/x-javascript')
-        self.response.headers['Pragma: no-cache'] = 'no-cache'
+        self.response.headers['Pragma'] = 'no-cache'
         self.params = self.request.args
         self.ads = []
 
