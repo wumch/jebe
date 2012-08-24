@@ -40,7 +40,6 @@ class Matcher(object):
 
     def search(self, words):
 #        return [record.get().get_data() for record in self._search(words=words, buck=buck, field=field).run()]
-        print 'pattern: [%s]' % words
         res = set()
         count = 0
         for docid, marve in self.finder.match(words=words):

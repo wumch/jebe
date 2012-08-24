@@ -21,11 +21,9 @@ class HCrawl(Handler):
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
             self.store(meta, content)
             self.replyOk()
-            print 'crawlpage success, meta: %s' % meta
 #            self.mrads(content=content)
         except Exception, e:
             self.replyError()
-            print 'crawlpage failed'
             logger.error("crawl failed: " + str(e.args))
 
     def store(self, meta, content):

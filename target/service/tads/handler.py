@@ -57,7 +57,6 @@ class HAdsByLoc(Handler):
         if 'url' not in self.params:
             return
         url = self.params['url']
-        print 'url: [%s]' % url
         if self.pageExists(url):
             self.ads = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in self.matcher.match(loc=url)]
             if self.ads: logger.info('ad shown: %(text)s [%(link)s]' % self.ads[0])
