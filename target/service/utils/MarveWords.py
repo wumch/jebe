@@ -9,7 +9,7 @@ from urllib2 import urlopen
 # currently useless
 _default_confidence = 0.8
 
-_default_topN = 50
+_default_topN = 20
 
 class MarveWords(object):
 

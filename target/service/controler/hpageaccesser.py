@@ -3,6 +3,7 @@
 from config import config
 from model import *
 from handler import Handler
+from utils.MarveWords import MarveWords
 
 class HPageAccesser(Handler):
 
@@ -15,9 +16,10 @@ class HPageAccesser(Handler):
         print data
         url = config.packer.decode(data[0])
         print 'page access: [%s]' % url
-        words = config.packer.encode(self.pageStorer.fetchSplitedContent(url=url))
+        splited_content = self.pageStorer.fetchSplitedContent(url=url)
+        words = MarveWords(content=splited_content).top()
         print words
-        self.response(words)
+        self.response(config.packer.encode(words))
 
 class HPageExistsIPC(Handler):
 

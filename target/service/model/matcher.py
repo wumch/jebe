@@ -30,10 +30,10 @@ class Matcher(object):
 
     def match(self, words=None, content=None, loc=None):
         if words is None and content is None and loc is not None:
-            splited_content = self._fetchSplitedContent(loc)
-            if splited_content is None:
+            ws = self._fetchSplitedContent(loc)
+            if ws is None:
                 return []
-            ws = MarveWords(content=splited_content).top()
+#            ws = MarveWords(content=splited_content).top()
         else:
              ws = MarveWords(words=words, content=content).top()
         return self.search(ws)
