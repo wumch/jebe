@@ -383,11 +383,12 @@ function i8main()
        	    if (!ads || ads.constructor !== Array) return;
             for (var i = 0; i < ads.length; ++i)
             {
+                var logUrl = "http://211.154.172.172/adclick?ad=" + ads[i].id;
                 i8vars.links.insertBefore(i8vars.create('a', {
                     'css':'font-weight:700;float:right;line-height:18px;',
                     'href':ads[i].link,
                     'innerText': ads[i].text,
-                    'onclick': function() { i8vars.log("http://211.154.172.172/adclick?ad=" + ads[i].id); },
+                    'onclick': function() { i8vars.log(logUrl); },
                     'rel':ads[i].id,
                     'target':'_blank'
                 }), i8vars.links.firstChild);
