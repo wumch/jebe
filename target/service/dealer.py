@@ -50,6 +50,6 @@ if __name__ == '__main__':
             try:
                 dealer.handle(data[0], data[1:])
             except Exception:
-                pass
+                Handler.replyErr(sock)
         else:
             Handler.replyErr(sock)
