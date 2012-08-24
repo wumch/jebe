@@ -33,7 +33,12 @@ class Dealer(object):
         return self.handlerList[index]
 
     def handle(self, header, payload):
-        return self._getHandler(header).handle(payload)
+        handler = self._getHandler(header)
+        if handler is None:
+            global sock
+            Handler.replyErr(sock)
+        else:
+            handler.handle(payload)
 
 if __name__ == '__main__':
     if DEBUG: print 'running in DEBUG mode'
