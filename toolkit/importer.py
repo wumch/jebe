@@ -42,7 +42,7 @@ class AdsImpor(object):
 
     def put(self, id, data):
         self.ftindex.store(docId=id, words=data['words'])
-        self.adsDB.put(id, data)
+        self.adsDB.put(id, data, sync=True)
 
     def check(self, ad):
         assert ad['id'] > 0
