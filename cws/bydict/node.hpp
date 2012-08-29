@@ -55,7 +55,14 @@ public:
     CS_FORCE_INLINE const Node* const cichildat(byte_t atom) const
     {
     	BOOST_STATIC_ASSERT(('A' | 32) == 'a');
-    	return CS_BUNLIKELY('A' <= atom && atom <= 'Z') ? children[atom | 32] : children[atom];
+    	if (CS_BUNLIKELY(atom <= 'Z'))
+    	{
+    		if (CS_BLIKELY('A' <= atom))
+    		{
+    			return children[atom | 32];
+    		}
+    	}
+    	return children[atom];
     }
 
     CS_FORCE_INLINE atimes_t atimes() const

@@ -61,7 +61,7 @@ void Ftree::attach_word(const char* const word)
     		node = node->attach_child(patten[i]);
     	}
     }
-    CS_SAY("[" << word << "] atimes: " << atimes << ", total_atimes: " << total_atimes << ", freq: " << (static_cast<double>(atimes) / total_atimes));
+    CS_SAY("[" << std::string(word, i) << "] atimes: " << atimes << ", total_atimes: " << total_atimes << ", freq: " << (static_cast<double>(atimes) / total_atimes));
     node->endswith(std::string(word, i), atimes, static_cast<double>(atimes) / total_atimes);
 }
 

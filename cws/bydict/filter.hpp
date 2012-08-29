@@ -61,7 +61,7 @@ public:
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree.root;
-    	tsize_t offset = 0;
+    	tsize_t offset = 1;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
@@ -70,11 +70,12 @@ public:
     	{
     		CS_PREFETCH(node->children, 0, 2);
 #else
-		for (tsize_t i = 0; i < len ; ++i)
+		for (tsize_t i = 0; i < len ; )
 		{
 #endif
 			if (CS_LIKELY(node = node->cichildat(atoms[i])))
 			{
+				++i;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				if (CS_BUNLIKELY(begin_from_root))
 				{
@@ -88,7 +89,8 @@ public:
 #endif
 				if (CS_BUNLIKELY(node->patten_end))
 				{
-					offset = i;
+//					offset = i;
+					callback(*node);
 					if (CS_BLIKELY(node->is_leaf))
 					{
 #if _JEBE_ENABLE_MAXMATCH
@@ -100,7 +102,6 @@ public:
 							}
 						}
 #endif
-						callback(*node);
 						node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 						begin_from_root = true;
@@ -117,7 +118,7 @@ public:
 #if _JEBE_SCAN_FROM_RIGHT
 				i = offset--;
 #else
-				i = offset++;
+				i = ++offset;
 #endif
 			}
 		}
