@@ -19,6 +19,6 @@ class Tokenizer(object):
 
     def request(self, data, action):
         try:
-            return urlopen(config.getTokenizer(action), data, timeout=3).read()
+            return urlopen(config.getTokenizer(action), data.encode(config.CHARSET) if isinstance(data, unicode) else data, timeout=3).read()
         except Exception, e:
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(data)) + str(e.args))

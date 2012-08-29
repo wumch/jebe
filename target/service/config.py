@@ -55,7 +55,8 @@ class Config(object):
     routers = ({'host':'192.168.88.1', 'port':dealer_port},)
 
     riak_port = 8098
-    riaks = ({'host':'192.168.88.1', 'port':riak_port, 'transport_options': {'timeout':3}},
+    riaks = (
+        {'host':'192.168.88.1', 'port':riak_port, 'transport_options': {'timeout':3}},
         {'host':'192.168.88.2', 'port':riak_port, 'transport_options': {'timeout':3}},
         {'host':'192.168.88.3', 'port':riak_port, 'transport_options': {'timeout':3}},
         {'host':'192.168.88.4', 'port':riak_port, 'transport_options': {'timeout':3}},)

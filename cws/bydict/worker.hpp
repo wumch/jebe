@@ -22,7 +22,7 @@ public:
         : io(*(new boost::asio::io_service())), work(*(new boost::asio::io_service::work(io))), busy(false),
           request(Config::getInstance()->request_max_size, 0),
           response(Config::getInstance()->request_max_size * 2, 0),
-          res(new byte_t[Config::getInstance()->body_max_size << 1])
+          res(new byte_t[Config::getInstance()->msg_max_size << 1])
     {
     }
 

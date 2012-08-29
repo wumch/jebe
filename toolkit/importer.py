@@ -44,8 +44,13 @@ class AdsImpor(object):
         self.ftindex.store(docId=id, words=data['words'])
         self.adsDB.put(id, data)
 
+    def check(self, ad):
+        assert ad['id'] > 0
+        assert ad['link'].startswith('http://')
+        assert len(ad['text']) > 0
+        assert len(ad['words'][0]) == 2
+
 def adsImport(files):
-    db = AdsImpor()
     marver = Tokenizer()
     for f in files:
         ad = {}
@@ -54,7 +59,25 @@ def adsImport(files):
         ad['link'] = fp.readline().strip()
         ad['text'] = fp.readline().strip()
         ad['words'] = marver.marve(''.join(map(lambda ln: ln.strip(), fp.readlines())))
-        db.put(id=ad['id'], data=ad)
+        importSingle(**ad)
+
+_ads_importer = None
+def getImporter():
+    global _ads_importer
+    if _ads_importer is None:
+        _ads_importer = AdsImpor()
+    return _ads_importer
+
+def importSingle(id=0, link='', text='', words=None):
+    ad = {
+        'id' : id,
+        'link' : link,
+        'text' : text,
+        'words' : words
+    }
+    db = getImporter()
+    db.check(ad)
+    db.put(id=ad['id'], data=ad)
 
 if __name__ == '__main__':
     adsImport(sys.argv[1:])

@@ -10,7 +10,7 @@
 extern int main(int, char*[]);
 
 namespace jebe {
-namespace cws {
+namespace qdb {
 
 class Config
 {
@@ -30,18 +30,17 @@ public:
 
     std::string program_name;
     std::size_t worker_count;
+    std::size_t io_threads;
+    std::size_t stack_size;
+
     bool reuse_address;
     std::size_t max_connections;
     bool tcp_nodelay;
     std::size_t receive_buffer_size;
     std::size_t send_buffer_size;
     std::size_t timeout;
-    std::size_t max_write_times;
     
-    std::size_t header_max_size;
     std::size_t msg_max_size;
-    std::size_t request_max_size;
-    std::size_t max_match;
 
     bool memlock;
     boost::dynamic_bitset<> cpuaffinity;
@@ -50,11 +49,6 @@ public:
     boost::program_options::options_description desc;
 
     void initDesc();
-
-    static void initialize()
-    {
-
-    }
 
 protected:
 	CS_FORCE_INLINE static Config* getInst()

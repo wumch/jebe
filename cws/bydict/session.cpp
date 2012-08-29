@@ -116,7 +116,7 @@ void Session::finish_by_wait(const boost::system::error_code& error)
 void Session::config()
 {
     header_max_len = Config::getInstance()->header_max_size;
-    body_max_len = Config::getInstance()->body_max_size;
+    body_max_len = Config::getInstance()->msg_max_size;
     timeout = (Config::getInstance()->timeout > 0) ? Config::getInstance()->timeout : 0;
     max_write_times = (0 < Config::getInstance()->max_write_times) ? Config::getInstance()->max_write_times : 10;
 
