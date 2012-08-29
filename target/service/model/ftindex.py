@@ -24,14 +24,14 @@ class FTIndex(LevelDBStorer):
     def __init__(self, **kw):
         super(FTIndex, self).__init__(**kw)
 
-    def store(self, url=None, docId=None, content=None, words=None):
+    def store(self, url=None, docId=None, content=None, words=None, **kw):
         docId = docId or self._encodeUrl(url)
         words = words or self._marveWords(content)
         if docId is None or words is None:
             return
-        self._store(docId=docId, words=self._filterWords(words))
+        self._store(docId=docId, words=self._filterWords(words), **kw)
 
-    def _store(self, docId, words):
+    def _store(self, docId, words, **kw):
         batch = WriteBatch()
         for w, c in words:
             key = w.encode(config.CHARSET)
@@ -42,7 +42,7 @@ class FTIndex(LevelDBStorer):
             else:
                 docs.append(pad)
             batch.Put(key, config.msgpack.encode(docs))
-        self.db.Write(batch)
+        self.db.Write(batch, **kw)
 
     # TODO: currently it's a fucking crazy implementation!
     def match(self, words, rate=None):

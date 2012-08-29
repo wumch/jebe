@@ -41,7 +41,7 @@ class AdsImpor(object):
         self.adsDB = LevelDBStorer(dbId='ads')
 
     def put(self, id, data):
-        self.ftindex.store(docId=id, words=data['words'])
+        self.ftindex.store(docId=id, words=data['words'], sync=True)
         self.adsDB.put(id, data, sync=True)
 
     def check(self, ad):
