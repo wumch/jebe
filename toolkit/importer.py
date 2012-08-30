@@ -48,7 +48,7 @@ class AdsImpor(object):
         assert ad['id'] > 0
         assert ad['link'].startswith('http://')
         assert len(ad['text']) > 0
-        assert len(ad['words'][0]) == 2
+        assert len(ad['words'][0]) == 2, 'maybe no words for ad[%d]' % ad['id']
 
 def adsImport(files):
     marver = Tokenizer()

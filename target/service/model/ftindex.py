@@ -41,6 +41,8 @@ class FTIndex(LevelDBStorer):
                 docs = [pad]
             else:
                 docs.append(pad)
+            from utils.misc import export
+            export(docs)
             batch.Put(key, config.msgpack.encode(docs))
         self.db.Write(batch, **kw)
 
