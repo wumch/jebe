@@ -6,27 +6,33 @@
 #include <utility>
 #include <boost/unordered_map.hpp>
 #include <boost/pool/pool_alloc.hpp>
+#include <boost/bind.hpp>
+#include <leveldb/db.h>
 #include "hash.hpp"
 #include "config.hpp"
 
 namespace jebe {
 namespace fts {
 
+inline boost::arg<1> arg1()
+{
+	return boost::arg<1>();
+}
+
+inline boost::arg<2> arg2()
+{
+	return boost::arg<2>();
+}
+
 class Index
 {
-private:
-	static const Index* const instance;
 public:
 	// would better call this in bootstrap period.
 	CS_FORCE_INLINE static const Index* getInstance()
 	{
+		static Index* instance = new Index;
 		return instance;
 	}
-
-public:
-	typedef boost::unordered_map<docid_t, marve_t> DocWeightMap;
-protected:
-	mutable DocWeightMap dwmap;
 
 protected:
 	typedef boost::fast_pool_allocator<std::string,
@@ -45,8 +51,21 @@ protected:
 public:
 	Index();
 
-public:
-	void match(const WordWeightList& words, std::vector<docid_t>& docids, std::size_t max_match = 0) const;
+	void match(const WordWeightList& words, std::vector<docid_t>& docids, DocWeightMap dwmap, std::size_t max_match = 0) const;
+
+protected:
+	void build();
+
+	void unpack(const leveldb::Slice& value, DocWeightList& list);
+//	{
+//		Storage store;
+//		store.walk(boost::bind(Index::add, this, boost::arg<1>(), arg1, arg2));
+//	}
+
+	void add(const std::string& word, const DocWeightList& list)
+	{
+		map[word] = list;
+	}
 
 };
 

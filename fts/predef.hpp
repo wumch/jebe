@@ -18,6 +18,7 @@
 #include "misc.hpp"
 #include <utility>
 #include <vector>
+#include <boost/unordered_map.hpp>
 #include "weighted_type.hpp"
 
 #define JEBE_FTS_WORDS_NUM			(1<<20)
@@ -31,6 +32,8 @@ typedef std::vector<DocWeight> DocWeightList;
 typedef std::vector<Word> WordList;
 
 typedef std::vector<WordWeight> WordWeightList;
+
+typedef boost::unordered_map<docid_t, marve_t> DocWeightMap;
 
 }
 }

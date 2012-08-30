@@ -1,5 +1,8 @@
 
 #include "worker.hpp"
+#ifdef __linux
+#	include <unistd.h>
+#endif
 #include <zmq.hpp>
 #include "config.hpp"
 #include "bus.hpp"
@@ -20,6 +23,7 @@ void Worker::run()
 
 	{
 		const Config* const config = Config::getInstance();
+		usleep(10000);
 		sock.connect(config->internal.c_str());
 		sock.setsockopt(ZMQ_SNDBUF, &config->send_buffer_size, sizeof(config->send_buffer_size));
 		sock.setsockopt(ZMQ_RCVBUF, &config->receive_buffer_size, sizeof(config->receive_buffer_size));

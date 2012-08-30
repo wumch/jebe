@@ -2,6 +2,7 @@
 #pragma once
 
 #include "predef.hpp"
+#include <iostream>
 #include <zmq.hpp>
 
 namespace jebe {
@@ -22,12 +23,13 @@ public:
 			if (CS_BUNLIKELY(process(req, rep) != success))
 			{
 				// nothing to, maybe log sth.
+				CS_ERR("handle request failed");
 			}
 		}
 	}
 
 protected:
-	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep) const = 0;
+	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep) = 0;
 
 	virtual bool validate(zmq::message_t& req) const
 	{

@@ -26,7 +26,7 @@ public:
     std::string listen;
     std::string internal;
 
-    boost::filesystem::path patten_file;
+    std::string dbpath;
     boost::filesystem::path pidfile;
 
     std::string program_name;

@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/fts
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -29,7 +29,7 @@ ifeq ($(COMPILER), G++)
   INCLUDES = -I../staging
 # LIBS = -lgc
 #  LIBS = -lluaplus -lboost_system -lboost_thread
-  LIBS = -lboost_system -lboost_thread -lboost_program_options -lboost_filesystem -lzmq -lmsgpack
+  LIBS = -lboost_system -lboost_thread -lboost_program_options -lboost_filesystem -lzmq -lmsgpack -lleveldb
 # LIBPATH = -L../gc/.libs
   LIBPATH =
   CPPFLAGS = $(COPT) $(INCLUDES)
@@ -49,7 +49,7 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/storage.o $(OBJECT_PATH)/index.o $(OBJECT_PATH)/handler.o $(OBJECT_PATH)/bus.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
+OBJS = $(OBJECT_PATH)/index.o $(OBJECT_PATH)/handler.o $(OBJECT_PATH)/bus.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o
 
 all: $(OBJS)
 	@echo Linking...

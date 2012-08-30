@@ -2,7 +2,6 @@
 #pragma once
 
 #include <msgpack.hpp>
-#include <msgpack/object.hpp>
 
 namespace jebe {
 namespace fts {
@@ -10,7 +9,7 @@ namespace fts {
 typedef std::string Word;
 typedef uint32_t docid_t;
 
-typedef long double marve_t;
+typedef double marve_t;
 typedef double weight_t;
 
 class WordWeight
@@ -39,7 +38,7 @@ public:
 public:
 	DocWeight() {}
 
-	explicit DocWeight(const docid_t& docid_, weight_t weight_)
+	explicit DocWeight(docid_t docid_, weight_t weight_)
 		: docid(docid_), weight(weight_)
 	{
 	}

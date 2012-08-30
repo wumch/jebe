@@ -7,10 +7,12 @@
 #include <boost/thread.hpp>
 #ifdef __linux
 #	include <sys/prctl.h>
+#	include <unistd.h>
 #endif
 #include <zmq.hpp>
 #include "config.hpp"
 #include "worker.hpp"
+#include "index.hpp"
 
 namespace jebe {
 namespace fts {
@@ -25,32 +27,19 @@ public:
 
 	void run()
 	{
+		init();
 		prety();
-
-		boost::thread* router_thread = new boost::thread(boost::bind(&Master::start_router, this));
-
-		for (std::size_t i = 0; i < Config::getInstance()->worker_count; ++i)
-		{
-			Worker* const worker = new Worker(context);
-			boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&Worker::run, worker)));
-			threads.push_back(thread);
-		}
-
-		router_thread->join();
-		for (ThreadList::iterator it = threads.begin(); it != threads.end(); ++it)
-		{
-			(*it)->join();
-		}
-	}
-
-	void _run()
-	{
-		prety();
-		start_router();
-		start_worker();
+		create_router();
+		create_worker();
+		run_all();
 	}
 
 protected:
+	void init() const
+	{
+		Index::getInstance();	// <Index>.build()
+	}
+
 	void prety() const
 	{
 #ifdef __linux
@@ -58,15 +47,28 @@ protected:
 #endif
 	}
 
-	void start_worker()
+	void run_all()
+	{
+		router->join();
+		for (ThreadList::iterator it = threads.begin(); it != threads.end(); ++it)
+		{
+			(*it)->join();
+		}
+	}
+
+	void create_worker()
 	{
 		for (std::size_t i = 0; i < Config::getInstance()->worker_count; ++i)
 		{
 			Worker* const worker = new Worker(context);
 			boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&Worker::run, worker)));
 			threads.push_back(thread);
-			thread->join();
 		}
+	}
+
+	void create_router()
+	{
+		router = new boost::thread(boost::bind(&Master::start_router, this));
 	}
 
 	void start_router()
@@ -94,6 +96,8 @@ protected:
 	}
 
 private:
+	boost::thread* router;
+
 	typedef std::vector<boost::shared_ptr<boost::thread> > ThreadList;
 	ThreadList threads;
 

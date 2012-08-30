@@ -63,8 +63,8 @@ void Config::initDesc()
 				"internal communicate address, defaults to `inproc://fts`")
 		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
 				"pid file, defaults to /var/run/tokenizer.pid")
-		("patten-file", boost::program_options::value<typeof(patten_file)>()->default_value("etc/words.txt"),
-				"pattens file, defaults to etc/words.txt")
+		("db-path", boost::program_options::value<typeof(dbpath)>()->default_value("etc/ftsdb"),
+				"leveldb path, defaults to etc/ftsdb")
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
 				"whether reuse-address on startup or not, default is on")
 		("receive-buffer-size", boost::program_options::value<typeof(receive_buffer_size)>()->default_value((4 << 10)),
@@ -99,7 +99,7 @@ void Config::load(const std::string& config_file)
 	listen = options["listen"].as<typeof(listen)>();
 	internal = options["internal"].as<typeof(internal)>();
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
-	patten_file = options["patten-file"].as<typeof(patten_file)>();
+	dbpath = options["db-path"].as<typeof(dbpath)>();
 	reuse_address = options["reuse-address"].as<typeof(reuse_address)>();
 	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>();
 	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>();
@@ -113,8 +113,12 @@ void Config::load(const std::string& config_file)
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
 	{
+#if CS_DEBUG
 		int res = mlockall(MCL_CURRENT | MCL_FUTURE);
 		assert(!res);
+#else
+		mlockall(MCL_CURRENT | MCL_FUTURE);
+#endif
 	}
 
 	// `cpu-affinity` no longer useable since the threads-model changed.

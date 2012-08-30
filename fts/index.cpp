@@ -1,18 +1,19 @@
 
 #include "index.hpp"
+#include <iostream>
 
 namespace jebe {
 namespace fts {
 
-const Index* const Index::instance = new Index;
-
 Index::Index()
 {
+	build();
 }
 
-void Index::match(const WordWeightList& words, std::vector<docid_t>& docids, std::size_t max_match) const
+void Index::match(const WordWeightList& words, std::vector<docid_t>& docids, DocWeightMap dwmap, std::size_t max_match) const
 {
 	dwmap.clear();
+	docids.clear();
 
 	for (WordWeightList::const_iterator wit = words.begin(); wit != words.end(); ++wit)
 	{
@@ -46,10 +47,54 @@ void Index::match(const WordWeightList& words, std::vector<docid_t>& docids, std
 	{
 		if (it->second >= min_marve)
 		{
-			docids[0] = it->first;
+			if (docids.empty())
+			{
+				docids.push_back(it->first);
+			}
+			else
+			{
+				docids[0] = it->first;
+			}
 			min_marve = it->second;
 		}
 	}
+}
+
+void Index::build()
+{
+	leveldb::Options options;
+	options.create_if_missing = false;
+	leveldb::DB* db;
+	leveldb::Status status = leveldb::DB::Open(options, Config::getInstance()->dbpath, &db);
+	if (!status.ok())
+	{
+		CS_DIE(status.ToString());
+	}
+
+	leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
+	for (it->SeekToFirst(); it->Valid(); it->Next())
+	{
+		Word word = it->key().ToString();
+		CS_DUMP(word);
+		map[word] = DocWeightList();
+		unpack(it->value(), map[word]);
+		CS_DUMP(map[word][0].docid);
+		CS_DUMP(map[word][0].weight);
+	}
+
+	delete db;
+}
+
+
+void Index::unpack(const leveldb::Slice& value, DocWeightList& list)
+{
+	CS_DUMP(value.size());
+	msgpack::unpacker unpacker;
+	memcpy(unpacker.buffer(), value.data(), value.size());
+	unpacker.buffer_consumed(value.size());
+	msgpack::unpacked result;
+	unpacker.next(&result);
+	result.get().convert(&list);
 }
 
 } /* namespace fts */
