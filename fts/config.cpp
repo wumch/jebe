@@ -15,7 +15,7 @@ extern "C" {
 }
 #include "sys.hpp"
 
-#define _JEBE_OUT_CONFIG_PROPERTY(property)		<< #property << ":\t" << property << std::endl
+#define _JEBE_OUT_CONFIG_PROPERTY(property)		<< #property << ":\t\t" << property << std::endl
 
 namespace jebe {
 namespace fts {
@@ -78,7 +78,7 @@ void Config::initDesc()
 		("memlock", boost::program_options::value<typeof(memlock)>()->default_value(false))
 		("stack-size", boost::program_options::value<typeof(stack_size)>()->default_value(staging::getRlimitCur(RLIMIT_STACK)))
 		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""))
-		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(staging::getCpuNum()))
+		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(staging::getCpuNum() - 1))
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
 		("message-max-size", boost::program_options::value<typeof(msg_max_size)>()->default_value(100 << 20))
 		("max-connections", boost::program_options::value<typeof(max_connections)>()->default_value(10000))
@@ -106,7 +106,8 @@ void Config::load(const std::string& config_file)
 	timeout = options["timeout"].as<typeof(timeout)>();
 	tcp_nodelay = options["tcp-nodelay"].as<typeof(tcp_nodelay)>();
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
-	msg_max_size = options["body-max-size"].as<typeof(msg_max_size)>();
+	io_threads = options["io-threads"].as<typeof(io_threads)>();
+	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>();
 	max_connections = options["max-connections"].as<typeof(max_connections)>();
 
 	memlock = options["memlock"].as<typeof(memlock)>();
@@ -140,6 +141,8 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(internal)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
 		_JEBE_OUT_CONFIG_PROPERTY(worker_count)
+		_JEBE_OUT_CONFIG_PROPERTY(io_threads)
+		_JEBE_OUT_CONFIG_PROPERTY(stack_size)
 		_JEBE_OUT_CONFIG_PROPERTY(reuse_address)
 		_JEBE_OUT_CONFIG_PROPERTY(receive_buffer_size)
 		_JEBE_OUT_CONFIG_PROPERTY(send_buffer_size)
@@ -152,3 +155,5 @@ void Config::load(const std::string& config_file)
 
 }
 }
+
+#undef _JEBE_OUT_CONFIG_PROPERTY

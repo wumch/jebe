@@ -26,16 +26,10 @@
 namespace jebe {
 namespace fts {
 
-typedef long double marve_t;
-typedef uint32_t docid_t;
-
-typedef WeightedType<docid_t, marve_t> DocWeight;
 typedef std::vector<DocWeight> DocWeightList;
 
-typedef std::string Word;
 typedef std::vector<Word> WordList;
 
-typedef WeightedType<Word, marve_t> WordWeight;
 typedef std::vector<WordWeight> WordWeightList;
 
 }

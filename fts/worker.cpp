@@ -27,9 +27,15 @@ void Worker::run()
 
 	while (true)
 	{
+		recv_buf.rebuild();
+		send_buf.rebuild();
+		CS_SAY("waiting for incoming");
 		sock.recv(&recv_buf, 0);
+		CS_SAY("received bytes: " << recv_buf.size());
 		bus.route(recv_buf, send_buf);
+		CS_SAY("processed, res bytes: " << send_buf.size());
 		sock.send(send_buf);
+		CS_SAY("sent");
 	}
 }
 

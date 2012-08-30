@@ -7,7 +7,7 @@ from json import JSONDecoder, JSONEncoder
 from utils.natip import natip
 from utils.log import mklogger
 from utils.misc import MOVE_KEY_HYPHEN as _MK_HYPHEN
-import msgpack
+import zmq, msgpack
 
 _DEFAULT_CHARSET = 'utf-8'
 
@@ -79,6 +79,8 @@ class Config(object):
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
     dbs['fti'] = dbs['idx']
 
+    ftengines = ('tcp://192.168.88.3:10050', )
+
     tokenizers = ('http://192.168.88.2:10086/',
         'http://192.168.88.4:10086/',)
 
@@ -90,6 +92,7 @@ class Config(object):
         for k in dbs:
             dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
         tokenizers = ('http://127.0.0.1:10086/', )
+        ftengines = ('tcp://127.0.0.1:10050', )
         iothreads = 1
 
     __instance = None
@@ -108,8 +111,22 @@ class Config(object):
     def getRiak(self):
         return self.riaks[randint(0, len(self.riaks) - 1)]
 
+    # NOTE: random is not fast enough (about 2000,000 times per second)
     def getTokenizer(self, action):
-        return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
+        if isinstance(self.ftengines, basestring):
+            return self.tokenizers + action
+        elif len(self.ftengines) == 1:
+            return self.tokenizers[0] + action
+        else:
+            return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
+
+    def getFTEngine(self):
+        if isinstance(self.ftengines, basestring):
+            return self.ftengines
+        elif len(self.ftengines) == 1:
+            return self.ftengines[0]
+        else:
+            return self.ftengines[randint(0, len(self.ftengines) - 1)]
 
     jsoner = JSONEr()
     msgpack = MsgPacker()
@@ -131,6 +148,8 @@ class SysConfig(object):
     }
 
     MAX_ADS = 3
+
+    zmq_context = zmq.Context(Config.iothreads)
 
 config = Config.instance()
 sysconfig = SysConfig()

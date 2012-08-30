@@ -2,7 +2,7 @@
 
 from config import config, logger, DEBUG
 from leveldbstorer import LevelDBStorer
-from tokenizer import Tokenizer
+from drivers.tokenizer import Tokenizer
 from leveldb import WriteBatch
 
 class FTIndex(LevelDBStorer):

@@ -16,21 +16,20 @@ void Index::match(const WordWeightList& words, std::vector<docid_t>& docids, std
 
 	for (WordWeightList::const_iterator wit = words.begin(); wit != words.end(); ++wit)
 	{
-		MapType::const_iterator entry = map.find(wit->first);
+		MapType::const_iterator entry = map.find(wit->word);
 		if (entry != map.end())
 		{
 			const DocWeightList& docs = entry->second;
 			for (DocWeightList::const_iterator dit = docs.begin(); dit != docs.end(); ++dit)
 			{
-				DocWeightMap::iterator doc = dwmap.find(dit->first);
+				DocWeightMap::iterator doc = dwmap.find(dit->docid);
 				if (doc == dwmap.end())
 				{
-					dwmap[dit->first] = dit->second * wit->second;
+					dwmap[dit->docid] = dit->weight * wit->weight;
 				}
 				else
 				{
-					doc->second += dit->second * wit->second;
-//					dwmap[dit->first] += dit->second * wit->second;
+					doc->second += dit->weight * wit->weight;
 				}
 			}
 

@@ -14,7 +14,8 @@ namespace jebe {
 namespace fts {
 
 enum Action {
-	match = 0x01,
+	// reserve 0-9 for system.
+	match = 10,
 };
 
 // route received message.

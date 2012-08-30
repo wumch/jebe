@@ -40,9 +40,18 @@ private:
 			CS_ERR("error occured while unpacking request message: " << e.what());
 			return wws;
 		}
-		msgpack::object obj = msg.get();
+		msgpack::object obj =
+		msg.get();//.as<WordWeightList>();
+		CS_SAY("obj.type: [" << obj.type << "]");
 		wws.clear();
-//		obj.convert(&wws);
+		CS_SAY("will convert to <WordWeightList>");
+		obj.convert(&wws);
+
+		for (WordWeightList::iterator it = wws.begin(); it != wws.end(); ++it)
+		{
+			CS_SAY("word: [" << it->word << "], weight: [" << it->weight << "]");
+		}
+
 		return wws;
 	}
 

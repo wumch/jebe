@@ -7,7 +7,7 @@ if src_path not in sys.path:
     sys.path.append(src_path)
 from model.leveldbstorer import LevelDBStorer
 from model.ftindex import FTIndex
-from model.tokenizer import Tokenizer
+from drivers.tokenizer import Tokenizer
 
 class DataSource(object):
 

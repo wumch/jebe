@@ -6,7 +6,7 @@ src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file_
 if src_path not in sys.path:
    sys.path.append(src_path)
 import xlrd
-from model.tokenizer import Tokenizer
+from drivers.tokenizer import Tokenizer
 from utils.misc import export
 from importer import *
 
