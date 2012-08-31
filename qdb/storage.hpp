@@ -39,6 +39,7 @@ public:
 
 	virtual ~Storage()
 	{
+		db->~DB();
 		delete db;
 	}
 

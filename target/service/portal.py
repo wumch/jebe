@@ -11,18 +11,23 @@ try:
 except ImportError:
     pass
 
-from werkzeug.wrappers import Request, Response
-from tads.handler import HAdsByLoc, config
+import tornado.ioloop
+import tornado.web
+from tads.handler import HAdsByLoc, logger
+from utils.natip import natip
 
-@Request.application
-def application(request):
-    try:
-        handler = HAdsByLoc(request)
-        handler.handle()
-        return handler.response
-    except Exception:
-        return Response(mimetype='application/x-javascript; charset=utf-8')
+class Portal(tornado.web.RequestHandler):
+    def get(self, *args, **kw):
+        try:
+            handler = HAdsByLoc(self.application, self.request)
+            handler.handle()
+        except Exception, e:
+            print e.args
+
+app = tornado.web.Application([
+    (r"/target", HAdsByLoc)
+])
 
 if __name__ == '__main__':
-    from werkzeug.serving import run_simple
-    run_simple('localhost', 10020, application)
+    app.listen(port=10020, address=natip)
+    tornado.ioloop.IOLoop.instance().start()

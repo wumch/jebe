@@ -33,7 +33,7 @@ protected:
 
 	virtual bool validate(zmq::message_t& req) const
 	{
-		return true;
+		return req.size() > 0;
 	}
 };
 

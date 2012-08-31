@@ -17,7 +17,6 @@ class MarveHandler
 {
 public:
 	MarveHandler()
-		: packer(packerBuffer)
 	{
 	}
 
@@ -25,35 +24,34 @@ private:
 	// assist temporary holders.
 	mutable WordWeightList wws;
 
-	msgpack::sbuffer packerBuffer;
-	msgpack::packer<msgpack::sbuffer> packer;
-	msgpack::unpacker unpacker;
-
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		unpacker.reset();
-		CS_SAY(__LINE__);
+		msgpack::unpacker unpacker;
 		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
-		CS_SAY(__LINE__);
 		unpacker.buffer_consumed(req.size() - 1);
-		CS_SAY(__LINE__);
 		msgpack::unpacked result;
-		CS_SAY(__LINE__);
 		unpacker.next(&result);
-		CS_SAY(__LINE__);
-		std::string key(result.get().as<std::string>());
-		CS_SAY(__LINE__);
-		bool exists = Storage::getInstance()->marve(key, wws, 20);
-		CS_SAY(__LINE__);
-		makeResponse(rep, exists);
-		CS_SAY(__LINE__);
-		return success;
+
+		try
+		{
+			std::string key(result.get().as<std::string>());
+			bool exists = Storage::getInstance()->marve(key, wws, 20);
+			makeResponse(rep, exists);
+			return success;
+		}
+		catch (const std::exception& e)
+		{
+			CS_ERR("error occured while unpacking `key` inside <MarveHandler>.process: " << e.what() << ", request-message.size(): " << req.size());
+		}
+		return failed;
 	}
 
 private:
 	void makeResponse(zmq::message_t& rep, bool exists)
 	{
+		msgpack::sbuffer packerBuffer;
+		msgpack::packer<msgpack::sbuffer> packer(packerBuffer);
 		rep.rebuild();
 		CS_DUMP(wws.size());
 		if (!exists)
