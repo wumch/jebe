@@ -26,7 +26,7 @@ class FTEngine(object):
         return self.request(words=self.decorateWords(words), action='match')
 
     def matchDecorated(self, decoratedWords):
-        return self.request(words=words, action='match')
+        return self.request(words=decoratedWords, action='match')
 
     def decorateWords(self, words):
         if not all(map(lambda wm: isinstance(wm[0], str) and isinstance(wm[1], float), words)):
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     begin = clock()
     for i in xrange(0, times):
         res = ftengine.matchDecorated(words)
-        assert res == correct
+        assert res == correct, "got different results by same arguments."
     consumed = clock() - begin
     print "time: ", consumed
     print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'

@@ -14,16 +14,6 @@
 namespace jebe {
 namespace fts {
 
-inline boost::arg<1> arg1()
-{
-	return boost::arg<1>();
-}
-
-inline boost::arg<2> arg2()
-{
-	return boost::arg<2>();
-}
-
 class Index
 {
 public:
@@ -57,10 +47,6 @@ protected:
 	void build();
 
 	void unpack(const leveldb::Slice& value, DocWeightList& list);
-//	{
-//		Storage store;
-//		store.walk(boost::bind(Index::add, this, boost::arg<1>(), arg1, arg2));
-//	}
 
 	void add(const std::string& word, const DocWeightList& list)
 	{

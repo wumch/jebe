@@ -85,7 +85,6 @@ void Index::build()
 	delete db;
 }
 
-
 void Index::unpack(const leveldb::Slice& value, DocWeightList& list)
 {
 	CS_DUMP(value.size());
