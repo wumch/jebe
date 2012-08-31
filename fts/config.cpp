@@ -10,6 +10,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/version.hpp>
 extern "C" {
 #include <sched.h>
 }
@@ -30,7 +31,11 @@ void Config::init(int argc, char* argv[])
 	;
 
 	boost::filesystem::path program_path = argv[0];
+#if BOOST_VERSION > 104200
 	program_name = program_path.filename().string();
+#else
+	program_name = program_path.filename();
+#endif
 
 	boost::program_options::variables_map cmdOptions;
 	try
