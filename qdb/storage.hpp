@@ -19,13 +19,9 @@ private:
 	leveldb::Options options;
 	leveldb::DB* db;
 
-	mutable std::string retrieve_buffer;
-	mutable msgpack::unpacker unpacker;
-	mutable msgpack::unpacked result;
-
 public:
 	// would better call this in bootstrap period.
-	CS_FORCE_INLINE static const Storage* getInstance()
+	CS_FORCE_INLINE static Storage* getInstance()
 	{
 		static Storage* instance = new Storage;
 		return instance;
@@ -34,8 +30,6 @@ public:
 	Storage()
 	{
 		build();
-		std::size_t bufsize = Config::getInstance()->max_retrieve_elements * sizeof(WordWeight);
-		unpacker.reserve_buffer(bufsize);
 	}
 
 	leveldb::DB* operator->()
@@ -48,9 +42,14 @@ public:
 		delete db;
 	}
 
-	bool marve(const char* key, std::size_t keylen, WordWeightList& wws, std::size_t n) const
+	bool marve(const std::string& key, WordWeightList& wws, std::size_t n)
 	{
-		return _marve(leveldb::Slice(key, keylen), wws, n);
+		return _marve(leveldb::Slice(key), wws, n);
+	}
+
+	bool store(const std::string& key, const std::string& value)
+	{
+		return _store(leveldb::Slice(key), leveldb::Slice(value));
 	}
 
 protected:
@@ -58,27 +57,49 @@ protected:
 
 	void unpack(const leveldb::Slice& value, DocWeightList& list);
 
-	bool _marve(const leveldb::Slice& key, WordWeightList& wws, std::size_t n) const
+	bool _store(const leveldb::Slice& key, const leveldb::Slice& value)
 	{
-		bool exists = retrieve(key);
+		return db->Put(leveldb::WriteOptions(), key, value).ok();
+	}
+
+	bool _marve(const leveldb::Slice& key, WordWeightList& wws, std::size_t n)
+	{
+		CS_SAY(__LINE__);
+		std::string retrieve_buffer;
+		bool exists = retrieve(key, retrieve_buffer);
+		CS_SAY(__LINE__);
+
 		if (exists)
 		{
-			for (uint32_t i = 0; i < n && unpacker.next(&result); ++i)
-			{
-				wws.push_back(result.get().as<WordWeight>());
-			}
+			msgpack::unpacked res;
+			msgpack::unpack(&res, retrieve_buffer.data(), retrieve_buffer.size());
+			res.get().convert(&wws);
 		}
 		return exists;
 	}
 
-	bool retrieve(const leveldb::Slice& key) const
+	bool retrieve(const leveldb::Slice& key, std::string& retrieve_buffer)
 	{
-		unpacker.reset();
-		bool ok = db->Get(leveldb::ReadOptions(), key, &retrieve_buffer).ok();
+		CS_SAY(__LINE__);
+		bool ok = false;
+		try
+		{
+			ok = db->Get(leveldb::ReadOptions(), key, &retrieve_buffer).ok();
+		}
+		catch (const std::exception& e)
+		{
+			CS_SAY("error occured while <leveldb::DB>.Get: " << e.what());
+			return false;
+		}
+		CS_SAY("ok:" << ok);
 		if (ok)
 		{
+			msgpack::unpacker unpacker;
+			CS_SAY(__LINE__);
 			memcpy(unpacker.buffer(), retrieve_buffer.data(), retrieve_buffer.size());
+			CS_SAY(__LINE__);
 			unpacker.buffer_consumed(retrieve_buffer.size());
+			CS_SAY(__LINE__);
 		}
 		return ok;
 	}

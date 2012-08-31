@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/qdb
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)

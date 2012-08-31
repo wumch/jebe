@@ -12,15 +12,13 @@
 namespace jebe {
 namespace qdb {
 
-class MatchHandler
+class MarveHandler
 	: public Handler
 {
 public:
-	MatchHandler()
-		: //packerBuffer(Config::getInstance()->receive_buffer_size),
-		  packer(&packerBuffer)
+	MarveHandler()
+		: packer(packerBuffer)
 	{
-		unpacker.reserve_buffer(Config::getInstance()->receive_buffer_size);
 	}
 
 private:
@@ -34,8 +32,22 @@ private:
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		bool exists = Storage::getInstance()->marve(reinterpret_cast<char*>(req.data()), req.size(), wws, 20);
+		unpacker.reset();
+		CS_SAY(__LINE__);
+		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
+		CS_SAY(__LINE__);
+		unpacker.buffer_consumed(req.size() - 1);
+		CS_SAY(__LINE__);
+		msgpack::unpacked result;
+		CS_SAY(__LINE__);
+		unpacker.next(&result);
+		CS_SAY(__LINE__);
+		std::string key(result.get().as<std::string>());
+		CS_SAY(__LINE__);
+		bool exists = Storage::getInstance()->marve(key, wws, 20);
+		CS_SAY(__LINE__);
 		makeResponse(rep, exists);
+		CS_SAY(__LINE__);
 		return success;
 	}
 
@@ -68,7 +80,7 @@ private:
 		CS_DUMP(rep.size());
 	}
 
-	virtual ~MatchHandler()
+	virtual ~MarveHandler()
 	{
 
 	}

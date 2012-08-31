@@ -80,6 +80,12 @@ class Config(object):
     dbs['fti'] = dbs['idx']
 
     ftengines = ('tcp://192.168.88.3:10050', )
+    locdbs = (
+        'tcp://192.168.88.1:10051',
+        'tcp://192.168.88.2:10051',
+        'tcp://192.168.88.3:10051',
+        'tcp://192.168.88.4:10051',
+    )
 
     tokenizers = ('http://192.168.88.2:10086/',
         'http://192.168.88.4:10086/',)
@@ -93,6 +99,7 @@ class Config(object):
             dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
         tokenizers = ('http://127.0.0.1:10086/', )
         ftengines = ('tcp://127.0.0.1:10050', )
+        locdbs = ('tcp://127.0.0.1:10051', )
         iothreads = 1
 
     __instance = None
@@ -127,6 +134,14 @@ class Config(object):
             return self.ftengines[0]
         else:
             return self.ftengines[randint(0, len(self.ftengines) - 1)]
+
+    def getLocDB(self):
+        if isinstance(self.locdbs, basestring):
+            return self.locdbs
+        elif len(self.locdbs) == 1:
+            return self.locdbs[0]
+        else:
+            return self.locdbs[randint(0, len(self.locdbs) - 1)]
 
     jsoner = JSONEr()
     msgpack = MsgPacker()

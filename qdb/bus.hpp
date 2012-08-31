@@ -8,13 +8,15 @@
 #include <zmq.hpp>
 #include "handler.hpp"
 #include "marve_handler.hpp"
+#include "store_handler.hpp"
 
 namespace jebe {
 namespace qdb {
 
 enum Action {
 	// reserve 0-9 for system.
-	match = 10,
+	marve = 11,
+	store = 101,
 };
 
 // route received message.
@@ -36,12 +38,15 @@ public:
 
 	void route(zmq::message_t& req, zmq::message_t& rep)
 	{
+		CS_SAY("action: [" << static_cast<int>(getAction(req)) << "]");
 		if (CS_BLIKELY(handlers[getAction(req)] != NULL))
 		{
+			CS_SAY("action exists");
 			handlers[getAction(req)]->handle(req, rep);
 		}
 		else
 		{
+			CS_SAY("action non-exists");
 			handleError(req, rep);
 		}
 	}
@@ -54,7 +59,8 @@ protected:
 
 	void initHandlers()
 	{
-		handlers[match] = new MatchHandler;
+		handlers[marve] = new MarveHandler;
+		handlers[store] = new StoreHandler;
 	}
 
 	void handleError(zmq::message_t& req, zmq::message_t& rep) const

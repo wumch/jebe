@@ -82,6 +82,11 @@ void Config::initDesc()
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
 		("message-max-size", boost::program_options::value<typeof(msg_max_size)>()->default_value(100 << 20))
 		("max-connections", boost::program_options::value<typeof(max_connections)>()->default_value(10000))
+
+		("max-open-files", boost::program_options::value<typeof(max_open_files)>()->default_value(staging::getRlimitCur(RLIMIT_NOFILE)))
+		("block-size", boost::program_options::value<typeof(block_size)>()->default_value(32))
+		("write-buffer-size", boost::program_options::value<typeof(write_buffer_size)>()->default_value(256))
+		("max-retrieve-elements", boost::program_options::value<typeof(max_retrieve_elements)>()->default_value(50))
 		;
 }
 
@@ -109,6 +114,11 @@ void Config::load(const std::string& config_file)
 	io_threads = options["io-threads"].as<typeof(io_threads)>();
 	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>();
 	max_connections = options["max-connections"].as<typeof(max_connections)>();
+
+	max_open_files = options["max-open-files"].as<typeof(max_open_files)>();
+	block_size = options["block-size"].as<typeof(block_size)>() << 10;
+	write_buffer_size = options["write-buffer-size"].as<typeof(write_buffer_size)>() << 20;
+	max_retrieve_elements = options["max-retrieve-elements"].as<typeof(max_retrieve_elements)>();
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
@@ -154,6 +164,11 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(tcp_nodelay)
 		_JEBE_OUT_CONFIG_PROPERTY(msg_max_size)
 		_JEBE_OUT_CONFIG_PROPERTY(max_connections)
+
+		_JEBE_OUT_CONFIG_PROPERTY(max_open_files)
+		_JEBE_OUT_CONFIG_PROPERTY(block_size)
+		_JEBE_OUT_CONFIG_PROPERTY(write_buffer_size)
+		_JEBE_OUT_CONFIG_PROPERTY(max_retrieve_elements)
 	);
 }
 
