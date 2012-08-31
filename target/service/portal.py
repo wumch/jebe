@@ -25,7 +25,8 @@ class Portal(tornado.web.RequestHandler):
             print e.args
 
 app = tornado.web.Application([
-    (r"/target", HAdsByLoc)
+    (r"/target/", HAdsByLoc),
+    (r"/",tornado.web.ErrorHandler)
 ])
 
 if __name__ == '__main__':

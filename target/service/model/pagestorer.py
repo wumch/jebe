@@ -3,11 +3,10 @@
 from urllib2 import urlopen
 from config import config, DEBUG, logger
 from utils.UrlParser import UrlParser
-from leveldbstorer import LevelDBStorer
+from drivers.locdb import LocDB
 
-class PageStorer(LevelDBStorer):
+class PageStorer(object):
 
-    _dbId = 'loc'
     urlparser = UrlParser()
     _instance = None
 
@@ -18,12 +17,12 @@ class PageStorer(LevelDBStorer):
         return cls._instance
 
     def __init__(self):
-        super(PageStorer, self).__init__()
+        self.locdb = LocDB()
 
     def store(self, meta, content):
         data = self._getData(meta, content)
         if data is None: return
-        self.put(self._encodeUrl(meta['url']), data)
+        self.locdb.store(meta['url'], data)
 
     def _getData(self, meta, content):
         if 'url' not in meta:
@@ -31,25 +30,13 @@ class PageStorer(LevelDBStorer):
         urlinfo = self.urlparser.parse(meta['url'])
         if urlinfo is None:
             return None
-        words = self._split(content)
+        words = self.marve(content)
         if words is None:
             return None
-        return {
-            'loc' : urlinfo,
-            'ref' : meta['ref'] if 'ref' in meta else '',
-            'words' : words,
-        }
+        return words
 
-    def _split(self, content):
+    def marve(self, content):
         try:
-            return urlopen(config.getTokenizer('split'), content, timeout=3).read()
+            return config.jsoner.decode(urlopen(config.getTokenizer('marve'), content, timeout=3).read())
         except Exception, e:
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
-
-    def exists(self, url):
-        return self.keyExists(self._encodeUrl(url))
-
-    def fetchSplitedContent(self, url=None, encodedUrl=None):
-        key = encodedUrl or self._encodeUrl(url)
-        res = self.getAuto(key)
-        return res['words'] if res else None

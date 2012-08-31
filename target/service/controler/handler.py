@@ -5,7 +5,6 @@ import zlib
 from urllib2 import urlopen
 from config import config, sysconfig, logger, DEBUG
 from utils.MarveWords import MarveWords
-from model import *
 
 class Handler(object):
 

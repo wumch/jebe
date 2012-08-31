@@ -5,9 +5,11 @@ if __name__ == '__main__':
     src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     if src_path not in sys.path:
         sys.path.append(src_path)
+
 import struct
 import zmq, msgpack
 from config import config, sysconfig
+from utils.misc import md5
 
 class LocDB(object):
 
@@ -20,18 +22,24 @@ class LocDB(object):
         self.actionPacker = struct.Struct('B')
         self.packer = msgpack.Packer(encoding=config.CHARSET)
         self.unpacker = msgpack.Unpacker(encoding=config.CHARSET)
-        self.sock = sysconfig.zmq_context.socket(zmq.REQ)
-        self.sock.connect(config.getLocDB())
+        self.createSocks()
+
+    def createSocks(self):
+        self.socks = []
+        for uri in config.locdbs:
+            sock = sysconfig.zmq_context.socket(zmq.REQ)
+            sock.connect(uri)
+            self.socks.append(sock)
 
     def marve(self, url):
-        res = self.request(self.packer.pack(url), action='marve')
+        res = self.request(self.getSock(url), self.packer.pack(url), action='marve')
         self.unpacker.feed(res)
         return self.unpacker.unpack()
 
     def store(self, url, words):
         words_binary = str(self.packer.pack(self.decorateWords(words)))
         data = self.packer.pack(url) + self.packer.pack(words_binary)
-        res = self.request(data, action='store')
+        res = self.request(self.getSock(url), data, action='store')
         self.unpacker.feed(res)
         return self.unpacker.next()
 
@@ -41,12 +49,19 @@ class LocDB(object):
         words.sort(lambda a, b: cmp(a[1], b[1]), reverse=True)
         return words
 
-    def request(self, data, action):
-        self.sock.send(self.actionPacker.pack(self.actions[action]) + data)
-        return self.sock.recv()
+    def request(self, sock, data, action):
+        sock.send(self.actionPacker.pack(self.actions[action]) + data)
+        return sock.recv()
+
+    def getSock(self, url):
+        return self.socks[self.urlHash(url)]
+
+    def urlHash(self, url):
+        return int(md5(url)[::2], 16) % len(self.socks)
 
     def __del__(self):
-        self.sock.close()
+        for sock in self.socks:
+            sock.close()
 
 if __name__ == '__main__':
     from utils.misc import *
@@ -69,7 +84,3 @@ if __name__ == '__main__':
     consumed = clock() - begin
     print "time: ", consumed
     print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
-#    if res is None:
-#        print 'return None'
-#    else:
-#        export(res)
