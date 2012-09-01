@@ -58,6 +58,6 @@ for i in xrange(0,255):
 
 def crc32(szString):
     dwCrc32 = 0xFFFFFFFFL
-    for i in szString:
+    for i in (szString if isinstance(szString, basestring) else str(szString)):
         dwCrc32 = (dwCrc32 >> 8) ^ m_pdwCrc32Table[ord(i) ^ (dwCrc32 & 0x000000FF)]
     return dwCrc32 ^ 0xFFFFFFFFL

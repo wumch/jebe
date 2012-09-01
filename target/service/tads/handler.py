@@ -2,7 +2,7 @@
 
 import sys
 import tornado.web
-from config import config, sysconfig, logger, DEBUG
+from config import config, sysconfig, logger, DEBUG, NotImplementedException
 from model.leveldbstorer import LevelDBStorer
 from drivers.locdb import LocDB
 from drivers.ftengine import FTEngine
@@ -48,7 +48,7 @@ class Handler(tornado.web.RequestHandler):
         self.write(content)
 
     def _fetchAds(self):
-        raise NotImplementedError("<%s>.%s" % (self.__class__.__name__, sys._getframe().f_code.co_name))
+        raise NotImplementedException()
 
     def _filter(self):
         if len(self.ads) > sysconfig.MAX_ADS:
@@ -66,7 +66,7 @@ class HAdsByLoc(Handler):
 
     def _fetchAds(self):
         url = self.params['url']
-        if url is None:
+        if not isinstance(url, basestring):
             return self._reply()
         words = self.locdb.marve(url)
         if words is False:

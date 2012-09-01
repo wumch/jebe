@@ -5,9 +5,10 @@ DEBUG = not not os.getenv('JEBE_DEBUG', False)
 from random import randint
 from json import JSONDecoder, JSONEncoder
 from utils.natip import natip
-from utils.log import mklogger
+from utils.log import Logger
 from utils.misc import MOVE_KEY_HYPHEN as _MK_HYPHEN
 import zmq, msgpack
+from utils.debug import *
 
 _DEFAULT_CHARSET = 'utf-8'
 
@@ -168,4 +169,5 @@ class SysConfig(object):
 
 config = Config.instance()
 sysconfig = SysConfig()
-logger = mklogger(config.LOG_FILE)
+logger = Logger(logfile=config.LOG_FILE)
+backtracer = BackTracer(max_depth=10)
