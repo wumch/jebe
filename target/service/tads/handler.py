@@ -20,7 +20,10 @@ class Handler(tornado.web.RequestHandler):
         self.out = ""
 
     def get(self, *args, **kw):
-        return self.handle()
+        try:
+            return self.handle()
+        except Exception, e:
+            logger.error("kid, error occured inside <%s>.%s: %s" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e.args)))
 
     def handle(self):
         self._fetchAds()
