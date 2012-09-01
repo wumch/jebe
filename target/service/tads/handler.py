@@ -29,6 +29,7 @@ class Handler(tornado.web.RequestHandler):
             logger.logException(e)
 
     def handle(self):
+        self.clear_header('Server')
         self._fetchAds()
         self._filter()
         self._reply()
@@ -50,6 +51,8 @@ class Handler(tornado.web.RequestHandler):
     def _filter(self):
         if len(self.ads) > sysconfig.MAX_ADS:
             self.ads = self.ads[:sysconfig.MAX_ADS]
+
+    def compute_etag(self):pass
 
 class HAdsByLoc(Handler):
 
