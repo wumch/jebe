@@ -26,7 +26,7 @@ class Handler(tornado.web.RequestHandler):
         try:
             return self.handle()
         except Exception, e:
-            logger.error("kid, error occured inside <%s>.%s: %s" % (self.__class__.__name__, sys._getframe().f_code.co_name, str(e.args)))
+            logger.logException(e)
 
     def handle(self):
         self._fetchAds()
@@ -35,17 +35,11 @@ class Handler(tornado.web.RequestHandler):
 
     def _reply(self):
         if not len(self.out) and self.ads:     # bug... how to reply empty string?
-            self._replyAds()
+            self._genOut()
         self._replyContent(self.out)
 
-    def _replyAds(self, ads=None):
-        if DEBUG:
-            self.out = 'alert(%(ads)s);%(rpc)s(%(ads)s);' % {
-                'rpc' : sysconfig.RPC_FUNC_NAME['showAds'],
-                'ads' : config.jsoner.encode(ads or self.ads or []),
-            }
-        else:
-            self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + config.jsoner.encode(ads or self.ads or []) + ');'
+    def _genOut(self, ads=None):
+        self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + config.jsoner.encode(ads or self.ads or []) + ');'
 
     def _replyContent(self, content):
         self.write(content)
@@ -63,9 +57,11 @@ class HAdsByLoc(Handler):
     ftengine = FTEngine()
     adsdb = LevelDBStorer(dbId='ads')
     cachedAds = {}
+    jsCrawlPage = sysconfig.RPC_FUNC_NAME['crawlPage'] + '();'
 
     def __init__(self, application, request, **kw):
         super(HAdsByLoc, self).__init__(application, request, **kw)
+        self._initAds()
 
     def _fetchAds(self):
         url = self.params['url']
@@ -73,21 +69,40 @@ class HAdsByLoc(Handler):
             return self._reply()
         words = self.locdb.marve(url)
         if words is False:
-            return self._replyContent(sysconfig.RPC_FUNC_NAME['crawlPage'] + '();')
+            return self._replyContent(self.jsCrawlPage)
         adids = self.ftengine.match(words=words)
         self.ads = [self.getAd(adid[0]) for adid in adids]
-        if self.ads: logger.info(('ad shown: %(text)s [%(link)s] on [%%s]' % self.ads[0]) % url)
+        self._logShownAds(url)
+
+    def _logShownAds(self, pageUrl):
+        if self.ads:
+            shown = ','.join([('%(text)s [%(link)s]' % ad) for ad in self.ads])
+            logger.info('ad shown: ' + shown + ' on ' + pageUrl)
 
     def getAd(self, adid):
         if adid not in self.cachedAds:
-            self.cachedAds[adid] = self.adsdb.getAuto(adid)
+            ad = self.adsdb.getAuto(adid)
+            if ad:
+                self.cachedAds[adid] = {
+                    'id' : ad['id'],
+                    'link' : ad['link'],
+                    'text' : ad['text']
+                }
         return self.cachedAds.get(adid)
-#
-#    def handle(self):
-#        if self.pageExists():
-#            super(HAdsByLoc, self).handle()
-#        else:
-#            self.re
 
     def pageExists(self, url):
         return self.locdb.marve(url)
+
+    @classmethod
+    def _initAds(cls):
+        for aid in xrange(1, 150):
+            ad = cls.adsdb.getAuto(aid)
+            if ad is not None:
+                cls.cachedAds[aid] = {
+                    'id' : ad['id'],
+                    'link' : ad['link'],
+                    'text' : ad['text']
+                }
+
+if not HAdsByLoc.cachedAds:
+    HAdsByLoc._initAds()

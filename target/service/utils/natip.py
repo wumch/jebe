@@ -12,8 +12,7 @@ def get_ip_addr(ifname = 'lo'):
 wanip = None
 try:
     natip = get_ip_addr('eth0:1')
-    if natip:
-        wanip = get_ip_addr('eth0')
+    wanip = get_ip_addr('eth0')
 except IOError:
     try:
         natip = get_ip_addr('eth0')
