@@ -61,7 +61,6 @@ class HAdsByLoc(Handler):
 
     def __init__(self, application, request, **kw):
         super(HAdsByLoc, self).__init__(application, request, **kw)
-        self._initAds()
 
     def _fetchAds(self):
         url = self.params['url']
@@ -103,6 +102,7 @@ class HAdsByLoc(Handler):
                     'link' : ad['link'],
                     'text' : ad['text']
                 }
+        del cls.adsdb.db
 
 if not HAdsByLoc.cachedAds:
     HAdsByLoc._initAds()

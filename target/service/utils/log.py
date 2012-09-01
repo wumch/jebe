@@ -31,7 +31,7 @@ class Logger(logging.RootLogger):
         self.addHandler(LogHandler(filename=logfile))
         self.backtracer = backtracer or BackTracer(max_depth=10, extra_skip=2)
 
-    def logExceprion(self, e):
+    def logException(self, e):
         self.error("kid, error occured: " + str(e.args))
 
     def error(self, msg, *args, **kwargs):

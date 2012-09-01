@@ -15,10 +15,11 @@ import tornado.ioloop
 import tornado.web
 from tads.handler import HAdsByLoc
 from utils.natip import natip
+from config import DEBUG
 
 app = tornado.web.Application([
     (r"/target/", HAdsByLoc),
-])
+], debug=DEBUG)
 
 if __name__ == '__main__':
     app.listen(port=10020, address=natip)
