@@ -169,5 +169,5 @@ class SysConfig(object):
 
 config = Config.instance()
 sysconfig = SysConfig()
-logger = Logger(logfile=config.LOG_FILE)
+logger = Logger.instance(logfile=config.LOG_FILE)
 backtracer = BackTracer(max_depth=10)
