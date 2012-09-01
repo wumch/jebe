@@ -25,7 +25,7 @@ class Logger(logging.RootLogger):
         return cls._instance
 
     def __init__(self, logfile, backtracer=None):
-        super(Logger, self).__init__(logging.NOTSET)
+        logging.RootLogger.__init__(self, logging.NOTSET)
         self.setLevel(logging.NOTSET)
         self.removeHandler(self.handlers)
         self.addHandler(LogHandler(filename=logfile))
