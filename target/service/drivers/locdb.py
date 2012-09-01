@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
 import struct
 import zmq, msgpack
-from config import config, sysconfig
+from config import config, sysconfig, logger
 from utils.misc import crc32
 
 class LocDB(object):
@@ -34,6 +34,8 @@ class LocDB(object):
     def marve(self, url):
         res = self.request(self.getSock(url), self.packer.pack(url), action='marve')
         if (not isinstance(res, basestring)) or (len(res) == 0):
+            detect = ("len(%s)=%d" % (type(res), len(res))) if isinstance(res, basestring) else str(type(res))
+            logger.error("kid, qdb response " + detect)
             return None
         self.unpacker.feed(res)
         return self.unpacker.unpack()

@@ -67,8 +67,10 @@ class HAdsByLoc(Handler):
         if not isinstance(url, basestring):
             return self._reply()
         words = self.locdb.marve(url)
-        if words is False:
+        if words is False:      # page non-exists
             return self._replyContent(self.jsCrawlPage)
+        if words is None:       # error occured (from locdb server)
+            return
         adids = self.ftengine.match(words=words)
         self.ads = [self.getAd(adid[0]) for adid in adids]
         self._logShownAds(url)
