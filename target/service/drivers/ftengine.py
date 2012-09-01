@@ -29,6 +29,8 @@ class FTEngine(object):
         return self.request(words=decoratedWords, action='match')
 
     def decorateWords(self, words):
+        if words is None:
+            return []
         if not all(map(lambda wm: isinstance(wm[0], str) and isinstance(wm[1], float), words)):
             return [[w.encode(config.CHARSET) if isinstance(w, unicode) else str(w), float(m)] for w,m in words]
         return words
