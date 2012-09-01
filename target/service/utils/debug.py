@@ -43,7 +43,7 @@ class BackTracer(object):
         cur = 0
         path = []
         for filepath, lineno, funcname, code in traceback.extract_tb(tb=tb):
-            path.append(self._genInfo(filepath=filepath, lineno=lineno, funcname=funcname, code=code))
+            path.insert(0, self._genInfo(filepath=filepath, lineno=lineno, funcname=funcname, code=code))
             cur += 1
             if cur > depth:
                 break
