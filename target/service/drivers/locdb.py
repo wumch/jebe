@@ -33,7 +33,7 @@ class LocDB(object):
 
     def marve(self, url):
         res = self.request(self.getSock(url), self.packer.pack(url), action='marve')
-        if not isinstance(res, basestring) or len(res) == 0:
+        if (not isinstance(res, basestring)) or (len(res) == 0):
             return None
         self.unpacker.feed(res)
         return self.unpacker.unpack()

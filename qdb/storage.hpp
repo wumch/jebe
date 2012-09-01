@@ -39,8 +39,8 @@ public:
 
 	virtual ~Storage()
 	{
-		db->~DB();
 		delete db;
+		db = NULL;
 	}
 
 	bool marve(const std::string& key, WordWeightList& wws, std::size_t n)

@@ -18,10 +18,17 @@ public:
 	void stop();
 
 private:
+	void reset()
+	{
+		memset(send_buf_area, 0, 16);
+	}
+
 	zmq::context_t& context;
 
+	char* recv_buf_area;
 	zmq::message_t recv_buf;
 
+	char* send_buf_area;
 	zmq::message_t send_buf;
 
 	Bus bus;

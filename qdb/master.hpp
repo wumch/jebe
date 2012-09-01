@@ -8,6 +8,7 @@
 #ifdef __linux
 #	include <sys/prctl.h>
 #	include <unistd.h>
+#	include <signal.h>
 #endif
 #include <zmq.hpp>
 #include "config.hpp"
@@ -34,10 +35,21 @@ public:
 		run_all();
 	}
 
+	~Master()
+	{
+		stop();
+	}
+
+	static void stop()
+	{
+		delete Storage::getInstance();
+	}
+
 protected:
 	void init() const
 	{
 		Storage::getInstance();	// <Storage>.build()
+		signal_init();
 	}
 
 	void prety() const
@@ -93,6 +105,19 @@ protected:
 		}
 
 		zmq::device(ZMQ_QUEUE, router, dealer);
+	}
+
+	static void signal_init()
+	{
+		std::set_terminate(stop);
+		signal(SIGTERM, onexit);
+		signal(SIGHUP, onexit);
+	}
+
+	static void onexit(int sig)
+	{
+		stop();
+		std::exit(0);
 	}
 
 private:
