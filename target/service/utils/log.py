@@ -35,7 +35,7 @@ class Logger(logging.RootLogger):
         self.error("kid, error occured: " + str(e.args))
 
     def error(self, msg, *args, **kwargs):
-        super(Logger, self).error(msg + ", call-chain: " + self.backtracer.prety())
+        logging.RootLogger.error(self, msg + ", call-chain: " + self.backtracer.prety())
 
 def mklogger(logfile):
     logger = logging.getLogger()
