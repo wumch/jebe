@@ -17,12 +17,26 @@ class MarveHandler
 {
 public:
 	MarveHandler()
+		: falsePacker(falsePackerBuffer),
+		  nullPacker(nullPackerBuffer),
+		  packer(packerBuffer)
 	{
+		falsePacker.pack_false();
+		nullPacker.pack_nil();
 	}
 
 private:
 	// assist temporary holders.
-	mutable WordWeightList wws;
+	WordWeightList wws;
+
+	msgpack::sbuffer falsePackerBuffer;
+	msgpack::packer<msgpack::sbuffer> falsePacker;
+
+	msgpack::sbuffer nullPackerBuffer;
+	msgpack::packer<msgpack::sbuffer> nullPacker;
+
+	msgpack::sbuffer packerBuffer;
+	msgpack::packer<msgpack::sbuffer> packer;
 
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
@@ -35,6 +49,7 @@ protected:
 
 		try
 		{
+			wws.clear();		// SGI-STL only
 			std::string key(result.get().as<std::string>());
 			bool exists = Storage::getInstance()->marve(key, wws, 20);
 			makeResponse(rep, exists);
@@ -50,26 +65,18 @@ protected:
 private:
 	void makeResponse(zmq::message_t& rep, bool exists)
 	{
-		msgpack::sbuffer packerBuffer;
-		msgpack::packer<msgpack::sbuffer> packer(packerBuffer);
-		rep.rebuild();
 		if (!exists)
 		{
-			packerBuffer.clear();
-			packer.pack_false();
+			rep.rebuild(falsePackerBuffer.data(), falsePackerBuffer.size(), NULL, NULL);
 		}
 		else if (wws.empty())
 		{
-			return;
+			rep.rebuild(nullPackerBuffer.data(), nullPackerBuffer.size(), NULL, NULL);
 		}
 		else
 		{
 			packerBuffer.clear();
 			packer.pack(wws);
-		}
-
-		if (packerBuffer.size())
-		{
 			rep.rebuild(packerBuffer.data(), packerBuffer.size(), NULL, NULL);
 		}
 	}
