@@ -10,9 +10,12 @@ def get_ip_addr(ifname = 'lo'):
     )
 
 try:
-    natip = get_ip_addr('eth0')
-except Exception:
-    natip = get_ip_addr()
+    natip = get_ip_addr('eth0:1')
+except IOError:
+    try:
+        natip = get_ip_addr('eth0')
+    except IOError:
+        natip = get_ip_addr()
 
 if __name__ == '__main__':      # for Makefile
     print natip if len(sys.argv) == 1 else get_ip_addr(sys.argv[1])
