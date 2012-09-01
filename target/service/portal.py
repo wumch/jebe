@@ -13,20 +13,11 @@ except ImportError:
 
 import tornado.ioloop
 import tornado.web
-from tads.handler import HAdsByLoc, logger
+from tads.handler import HAdsByLoc
 from utils.natip import natip
-
-class Portal(tornado.web.RequestHandler):
-    def get(self, *args, **kw):
-        try:
-            handler = HAdsByLoc(self.application, self.request)
-            handler.handle()
-        except Exception, e:
-            print e.args
 
 app = tornado.web.Application([
     (r"/target/", HAdsByLoc),
-    (r"/",tornado.web.ErrorHandler)
 ])
 
 if __name__ == '__main__':

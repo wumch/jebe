@@ -19,6 +19,9 @@ class Handler(tornado.web.RequestHandler):
         self.ads = []
         self.out = ""
 
+    def initialize(self, **kw):
+        pass
+
     def get(self, *args, **kw):
         try:
             return self.handle()
