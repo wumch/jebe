@@ -53,7 +53,6 @@ private:
 		msgpack::sbuffer packerBuffer;
 		msgpack::packer<msgpack::sbuffer> packer(packerBuffer);
 		rep.rebuild();
-		CS_DUMP(wws.size());
 		if (!exists)
 		{
 			packerBuffer.clear();
@@ -69,13 +68,10 @@ private:
 			packer.pack(wws);
 		}
 
-		CS_DUMP(packerBuffer.size());
-
 		if (packerBuffer.size())
 		{
 			rep.rebuild(packerBuffer.data(), packerBuffer.size(), NULL, NULL);
 		}
-		CS_DUMP(rep.size());
 	}
 
 	virtual ~MarveHandler()

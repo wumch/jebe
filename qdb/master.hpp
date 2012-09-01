@@ -93,7 +93,6 @@ protected:
 			const Config* const config = Config::getInstance();
 			router.bind(config->listen.c_str());
 			dealer.bind(config->internal.c_str());
-			CS_SAY("binded");
 		}
 		catch (const zmq::error_t& e)
 		{

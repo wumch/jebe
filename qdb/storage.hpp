@@ -65,10 +65,8 @@ protected:
 
 	bool _marve(const leveldb::Slice& key, WordWeightList& wws, std::size_t n)
 	{
-		CS_SAY(__LINE__);
 		std::string retrieve_buffer;
 		bool exists = retrieve(key, retrieve_buffer);
-		CS_SAY(__LINE__);
 
 		if (exists)
 		{
@@ -81,7 +79,6 @@ protected:
 
 	bool retrieve(const leveldb::Slice& key, std::string& retrieve_buffer)
 	{
-		CS_SAY(__LINE__);
 		bool ok = false;
 		try
 		{
@@ -96,11 +93,8 @@ protected:
 		if (ok)
 		{
 			msgpack::unpacker unpacker;
-			CS_SAY(__LINE__);
 			memcpy(unpacker.buffer(), retrieve_buffer.data(), retrieve_buffer.size());
-			CS_SAY(__LINE__);
 			unpacker.buffer_consumed(retrieve_buffer.size());
-			CS_SAY(__LINE__);
 		}
 		return ok;
 	}
