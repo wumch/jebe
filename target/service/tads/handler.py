@@ -14,7 +14,6 @@ class Handler(tornado.web.RequestHandler):
 
     def __init__(self, application, request, **kw):
         super(Handler, self).__init__(application, request, **kw)
-        self.add_header('Pragma', 'no-cache')
         self.params = {'url':self.get_argument('url', None)}
         self.ads = []
         self.out = ""
@@ -29,10 +28,15 @@ class Handler(tornado.web.RequestHandler):
             logger.logException(e)
 
     def handle(self):
-        self.clear_header('Server')
+        self.prepare()
         self._fetchAds()
         self._filter()
         self._reply()
+
+    def _prepare(self):
+        self.add_header('Pragma', 'no-cache')
+        self.add_header('Content-Type', 'application/x-javascript; charset=utf-8')
+        self.clear_header('Server')
 
     def _reply(self):
         if not len(self.out) and self.ads:     # bug... how to reply empty string?
