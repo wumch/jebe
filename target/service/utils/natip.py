@@ -9,8 +9,11 @@ def get_ip_addr(ifname = 'lo'):
         fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', ifname[:15]))[20:24]
     )
 
+wanip = None
 try:
     natip = get_ip_addr('eth0:1')
+    if natip:
+        wanip = get_ip_addr('eth0')
 except IOError:
     try:
         natip = get_ip_addr('eth0')
