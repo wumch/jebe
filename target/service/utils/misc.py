@@ -44,3 +44,20 @@ def export(var):
         return
     # if missed all of patterns specified above:
     print var
+
+m_pdwCrc32Table = [0] * 256
+dwPolynomial = 0xEDB88320
+for i in xrange(0,255):
+    dwCrc = i
+    for j in [8,7,6,5,4,3,2,1]:
+        if dwCrc & 1:
+            dwCrc = (dwCrc >> 1) ^ dwPolynomial
+        else:
+            dwCrc >>= 1
+    m_pdwCrc32Table[i] = dwCrc
+
+def crc32(szString):
+    dwCrc32 = 0xFFFFFFFFL
+    for i in szString:
+        dwCrc32 = (dwCrc32 >> 8) ^ m_pdwCrc32Table[ord(i) ^ (dwCrc32 & 0x000000FF)]
+    return dwCrc32 ^ 0xFFFFFFFFL

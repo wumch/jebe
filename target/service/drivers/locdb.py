@@ -9,7 +9,7 @@ if __name__ == '__main__':
 import struct
 import zmq, msgpack
 from config import config, sysconfig
-from utils.misc import md5
+from utils.misc import crc32
 
 class LocDB(object):
 
@@ -57,7 +57,7 @@ class LocDB(object):
         return self.socks[self.urlHash(url)]
 
     def urlHash(self, url):
-        return int(md5(url)[::2], 16) % len(self.socks)
+        return crc32(url) % len(self.socks)
 
     def __del__(self):
         for sock in self.socks:
