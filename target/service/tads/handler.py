@@ -28,14 +28,15 @@ class Handler(tornado.web.RequestHandler):
             logger.logException(e)
 
     def handle(self):
-        self.prepare()
+        self._prepare()
         self._fetchAds()
         self._filter()
         self._reply()
 
     def _prepare(self):
-        self.add_header('Pragma', 'no-cache')
-        self.add_header('Content-Type', 'application/x-javascript; charset=utf-8')
+        self._clear_headers_for_304()
+        self.set_header('Pragma', 'no-cache')
+        self.set_header('Content-Type', 'application/x-javascript; charset=utf-8')
         self.clear_header('Server')
 
     def _reply(self):
