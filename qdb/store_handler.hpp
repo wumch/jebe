@@ -35,7 +35,6 @@ private:
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		CS_SAY("<StoreHandler>.process");
 		unpacker.reset();
 		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
 		try

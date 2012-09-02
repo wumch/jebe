@@ -36,18 +36,19 @@ public:
 		initHandlers();
 	}
 
-	void route(zmq::message_t& req, zmq::message_t& rep)
+	bool route(zmq::message_t& req, zmq::message_t& rep)
 	{
 		CS_SAY("action: [" << static_cast<int>(getAction(req)) << "]");
 		if (CS_BLIKELY(handlers[getAction(req)] != NULL))
 		{
 			CS_SAY("action exists");
-			handlers[getAction(req)]->handle(req, rep);
+			return handlers[getAction(req)]->handle(req, rep);
 		}
 		else
 		{
 			CS_SAY("action non-exists");
 			handleError(req, rep);
+			return false;
 		}
 	}
 

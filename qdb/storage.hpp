@@ -86,10 +86,9 @@ protected:
 		}
 		catch (const std::exception& e)
 		{
-			CS_SAY("error occured while <leveldb::DB>.Get: " << e.what());
+			CS_ERR("error occured while <leveldb::DB>.Get: " << e.what());
 			return false;
 		}
-		CS_SAY("ok:" << ok);
 		if (ok)
 		{
 			msgpack::unpacker unpacker;

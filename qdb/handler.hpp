@@ -16,16 +16,16 @@ public:
 public:
 	virtual ~Handler() = 0;
 
-	void handle(zmq::message_t& req, zmq::message_t& rep)
+	bool handle(zmq::message_t& req, zmq::message_t& rep)
 	{
 		if (CS_BLIKELY(validate(req)))
 		{
-			if (CS_BUNLIKELY(process(req, rep) != success))
+			if (CS_BLIKELY(process(req, rep) == success))
 			{
-				// nothing to, maybe log sth.
-				CS_ERR("handle request failed");
+				return true;
 			}
 		}
+		return false;
 	}
 
 protected:

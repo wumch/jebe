@@ -4,6 +4,7 @@
 #	include <unistd.h>
 #endif
 #include <zmq.hpp>
+#include <msgpack.hpp>
 #include "config.hpp"
 #include "bus.hpp"
 
@@ -37,15 +38,27 @@ void Worker::run()
 		sock.setsockopt(ZMQ_NOBLOCK, &nonblock, sizeof(nonblock));
 	}
 
+	msgpack::sbuffer buffer_false;
+	{
+		typedef msgpack::packer<msgpack::sbuffer> Unpacker;
+		Unpacker(buffer_false).pack_false();
+	}
+	zmq::message_t msg_false(buffer_false.data(), buffer_false.size(), NULL, NULL);
+
 	while (true)
 	{
-		reset();
-		CS_SAY("waiting for incoming");
 		sock.recv(&recv_buf, 0);
 		CS_SAY("received bytes: " << recv_buf.size());
-		bus.route(recv_buf, send_buf);
-		CS_SAY("processed, res bytes: " << send_buf.size());
-		sock.send(send_buf);
+		if (CS_BLIKELY(bus.route(recv_buf, send_buf)))
+		{
+			CS_SAY("processed, res bytes: " << send_buf.size());
+			sock.send(send_buf);
+		}
+		else
+		{
+			CS_SAY("error occured, reply false");
+			sock.send(msg_false);
+		}
 		CS_SAY("sent");
 	}
 }
