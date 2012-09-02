@@ -46,11 +46,9 @@ zstart() {
         printf "\033[32;31;5m${PROGRAM_NAME} already started!\033[0m\n"
         return
     fi
-    local res=$(zstartup)
+    zstartup
     if [ "$?" -eq "0" ]; then
         printf "\033[32;49;5m${PROGRAM_NAME} started!\033[0m\n"
-    else
-        printf "\033[32;31;5mstart ${PROGRAM_NAME} faild!\033[0m\nerror:\n%s\n" "${res}"
     fi
 }
 
@@ -89,7 +87,7 @@ zgetpid () {
     if [ -r "${pidfile}" ]; then
         local pid=$(cat "${pidfile}")
         if [ -n "${pid}" ]; then
-            if [ -d "/proc/${pid}" ]; then
+            if [ -n "$(zpidalive ${pid})" ]; then
                 echo "${pid}"
             else
                 >"${pidfile}"
@@ -114,16 +112,31 @@ zsuexec () {
     local lastbpid="$!"
     if [ -n "${USER}" -a "${USER}" != "$(whoami)" ]; then
         su "${USER}" -c "nohup ${cmd} >>"${OUTLOG}" 2>>"${ERRLOG}" &"
+        local command="su ${USER} -c nohup ${cmd} >>${OUTLOG} 2>>${ERRLOG} &"
     else
         nohup ${cmd} >>"${OUTLOG}" 2>>"${ERRLOG}" &
+        local command="nohup ${cmd} >>${OUTLOG} 2>>${ERRLOG} &"
     fi
     local status="$?"
-    sleep 0.1
+    sleep 0.3
     if [ ! -n "$(zgetpid)" ] && [ -n "$!" ] && [ "x$!" != "x${lastbpid}" ] && [ -n "${pidfile}" ]; then
-        echo "$!" > "${pidfile}"
+        if [ -n "$(zpidalive $!)" ]; then
+            echo "$!" > "${pidfile}"
+        else
+            echo -e "\033[32;31;5mfailed on start ${PROGRAM_NAME}\033[0m\ncommand:\n${command}"
+            return 1
+        fi
     fi
-    echo ${res}
     return ${status}
+}
+
+zpidalive () {
+    local pid="$1"
+    if [ ! -n "${pid}" ] || [ ! -d "/proc/${pid}" ]; then
+        echo ""
+    else
+        echo "1"
+    fi
 }
 
 usage () {
