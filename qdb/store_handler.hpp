@@ -19,8 +19,6 @@ private:
 	msgpack::sbuffer msg_true;
 	msgpack::sbuffer msg_false;
 
-	msgpack::unpacker unpacker;
-
 public:
 	StoreHandler()
 	{
@@ -35,7 +33,7 @@ private:
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		unpacker.reset();
+		msgpack::unpacker unpacker;
 		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
 		try
 		{
