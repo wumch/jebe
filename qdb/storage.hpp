@@ -4,6 +4,7 @@
 #include "predef.hpp"
 #include <string>
 #include <utility>
+#include <iostream>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/bind.hpp>
 #include <leveldb/db.h>
