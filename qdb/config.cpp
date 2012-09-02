@@ -71,9 +71,9 @@ void Config::initDesc()
 				"leveldb path, defaults to etc/qdbdb")
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
 				"whether reuse-address on startup or not, default is on")
-		("receive-buffer-size", boost::program_options::value<typeof(receive_buffer_size)>()->default_value((4 << 10)),
+		("receive-buffer-size", boost::program_options::value<typeof(receive_buffer_size)>()->default_value((64)),
 				"siz eof receive buffer (in bytes), default is 4KB")
-		("send-buffer-size", boost::program_options::value<typeof(send_buffer_size)>()->default_value((4 << 10)),
+		("send-buffer-size", boost::program_options::value<typeof(send_buffer_size)>()->default_value((4)),
 				"size of send buffer (in bytes), default is 4KB")
 		("timeout", boost::program_options::value<typeof(timeout)>()->default_value(3000),
 				"timeout for incoming conections (in ms), 0 stands for never timeout, defaults to 3000")
@@ -110,8 +110,8 @@ void Config::load(const std::string& config_file)
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
 	dbpath = options["db-path"].as<typeof(dbpath)>();
 	reuse_address = options["reuse-address"].as<typeof(reuse_address)>();
-	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>();
-	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>();
+	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>() << 10;
+	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>() << 10;
 	timeout = options["timeout"].as<typeof(timeout)>();
 	tcp_nodelay = options["tcp-nodelay"].as<typeof(tcp_nodelay)>();
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
