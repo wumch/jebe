@@ -5,10 +5,11 @@
 #
 
 PROGRAM_NAME="qdb"
+TCMD_EXEC="bin/${PROGRAM_NAME}"
 USER="$(whoami)"
 OUTLOG=/var/log/${PROGRAM_NAME}.output.log
 ERRLOG=/var/log/${PROGRAM_NAME}.error.log
-pidfile=/var/run/${PROGRAM_NAME}.pid
+#pidfile=/var/run/${PROGRAM_NAME}.pid
 
 ROOT_PATH="$(dirname $(realpath ${0}))"
 ROOT_PATH=${ROOT_PATH%/bin}
@@ -18,20 +19,31 @@ if [ ! -n "${ROOT_PATH}" ]; then
 fi
 
 cd ${ROOT_PATH}
-TCMD_EXEC="bin/qdb"
+execfile=$(echo "${TCMD_EXEC}")
+execfile="${TCMD_EXEC%% *}"
+if [ ! -n "${execfile}" ]; then
+    echo "execute-able file is null"
+    exit 1
+elif [ "${execfile}" == "${TCMD_EXEC}" ] && [ ! -x "${execfile}" ] && [ ! -n "$(which ${execfile})" ]; then
+    echo "the ${exexfile} is not a execute-able"
+    exit 1
+fi
 
-if [ -n "${pidfile}" ]; then
-    pidfile=$(awk -F'\\s*=\\s*' '/pid-file *\=/ {pidf=$2; sub(/^[^\/]+/, "", pidf); sub(/[^\w\d]+$/, "", pidf); print pidf;}' "${ROOT_PATH}/etc/qdb.conf")
+if [ ! -n "${pidfile}" ]; then
+    pidfile=$(awk -F'\\s*=\\s*' '/pid-?file *\=/ {pidf=$2; sub(/^[^\/]+/, "", pidf); sub(/[^\w\d]+$/, "", pidf); print pidf;}' "${ROOT_PATH}/etc/${PROGRAM_NAME}.conf")
 fi
 
 if [ ! -n "${pidfile}" ]; then
     echo -e "\033[32;31;5mcannot resolve pidfile for ${PROGRAM_NAME}!\033[0m"
     exit 1
+elif [ ! -d "$(dirname ${pidfile})" ]; then
+    echo -e "\033[32;31;5mpath of pidfile [$(dirname ${pidfile})] for ${PROGRAM_NAME} non-exists!\033[0m"
+    exit 1
 fi
 
 zstart() {
     if [ -n "$(zgetpid)" ];then
-        printf "\033[32;31;5${PROGRAM_NAME} malready started!\033[0m\n"
+        printf "\033[32;31;5m${PROGRAM_NAME} already started!\033[0m\n"
         return
     fi
     local res=$(zstartup)
@@ -99,13 +111,19 @@ zsuexec () {
     if [ ! -n "${cmd}" ]; then
         return
     fi
+    local lastbpid="$!"
     if [ -n "${USER}" -a "${USER}" != "$(whoami)" ]; then
         su "${USER}" -c "nohup ${cmd} >>"${OUTLOG}" 2>>"${ERRLOG}" &"
     else
         nohup ${cmd} >>"${OUTLOG}" 2>>"${ERRLOG}" &
     fi
+    local status="$?"
+    sleep 0.1
+    if [ ! -n "$(zgetpid)" ] && [ -n "$!" ] && [ "x$!" != "x${lastbpid}" ] && [ -n "${pidfile}" ]; then
+        echo "$!" > "${pidfile}"
+    fi
     echo ${res}
-    return $?
+    return ${status}
 }
 
 usage () {
@@ -115,6 +133,7 @@ usage () {
 
 
 if [ "$#" -eq "0" ]; then
+    usage
     act="status"
 else
     act="$1"
