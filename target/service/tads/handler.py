@@ -73,10 +73,11 @@ class HAdsByLoc(Handler):
     def _fetchAds(self):
         url = self.params['url']
         if not isinstance(url, basestring):
-            return self._reply()
+            return
         words = self.locdb.marve(url)
         if words is False:      # page non-exists
-            return self._replyContent(self.jsCrawlPage)
+            self.out = self.jsCrawlPage
+            return
         if words is None:       # error occured (from locdb server)
             return
         adids = self.ftengine.match(words=words)
@@ -98,9 +99,6 @@ class HAdsByLoc(Handler):
                     'text' : ad['text']
                 }
         return self.cachedAds.get(adid)
-
-    def pageExists(self, url):
-        return self.locdb.marve(url)
 
     @classmethod
     def _initAds(cls):
