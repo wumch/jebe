@@ -40,7 +40,7 @@ class Handler(tornado.web.RequestHandler):
         self.clear_header('Server')
 
     def _reply(self):
-        if not len(self.out) and self.ads:     # bug... how to reply empty string?
+        if not len(self.out):
             self._genOut()
         self._replyContent(self.out)
 

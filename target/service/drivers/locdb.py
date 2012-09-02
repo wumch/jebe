@@ -21,7 +21,7 @@ class LocDB(object):
     def __init__(self):
         self.actionPacker = struct.Struct('B')
         self.packer = msgpack.Packer(encoding=config.CHARSET)
-        self.unpacker = msgpack.Unpacker(encoding=config.CHARSET)
+        self.unpacker = msgpack.Unpacker(encoding=config.CHARSET, use_list=True)
         self.createSocks()
 
     def createSocks(self):

@@ -2,7 +2,7 @@
 
 getppid() {
     local program="${1}"
-    echo $program
+    printf "%s\t" $program
     if [ -n "${program}" ]; then
         for pid in $(pidof ${program});
         do
