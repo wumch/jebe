@@ -41,6 +41,7 @@ class AdsImpor(object):
         self.adsDB = LevelDBStorer(dbId='ads')
 
     def put(self, id, data):
+        assert not self.adsDB.keyExists(id), "ad {id:%(id)d,text:%(text)s} already exists" % data
         self.ftindex.store(docId=id, words=data['words'], sync=True)
         self.adsDB.put(id, data, sync=True)
 
