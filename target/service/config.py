@@ -80,7 +80,7 @@ class Config(object):
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
     dbs['fti'] = dbs['idx']
 
-    ftengines = ('tcp://192.168.88.3:10050', )
+    ftengines = ('tcp://192.168.88.3:10050', 'tcp://192.168.88.4:10050', )
     locdbs = (
         #'tcp://192.168.88.1:10051',
         'tcp://192.168.88.2:10051',
