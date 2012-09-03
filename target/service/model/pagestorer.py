@@ -39,4 +39,4 @@ class PageStorer(object):
         try:
             return config.jsoner.decode(urlopen(config.getTokenizer('marve'), content, timeout=3).read())
         except Exception, e:
-            logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
+            logger.error(('kid, request to tokenizer/marve with len(content)=%d failed: ' % len(content)) + str(e.args))
