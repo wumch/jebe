@@ -12,6 +12,7 @@ start_portal_on () {
     port="$1"
     sed -i "/app.listen(port=/ s/\(port=\)[0-9]*/\1${port}/" portal.py
     nohup python portal.py >/dev/null 2>&1 &
+    sleep 2
 }
 
 for i in ${ports[@]}; do
