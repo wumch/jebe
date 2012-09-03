@@ -23,6 +23,8 @@ public:
 	{
 		falsePacker.pack_false();
 		nullPacker.pack_nil();
+		wws.reserve(50);
+		storer = Storage::getInstance();
 	}
 
 private:
@@ -38,28 +40,38 @@ private:
 	msgpack::sbuffer packerBuffer;
 	msgpack::packer<msgpack::sbuffer> packer;
 
+	std::string curkey;
+
+	Storage* storer;
+
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		msgpack::unpacker unpacker;
-		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
-		unpacker.buffer_consumed(req.size() - 1);
-		msgpack::unpacked result;
-		unpacker.next(&result);
+		{
+			msgpack::unpacked result;
+			// I'd rather die if client do harm to me.
+			int reqsize = req.size() - 1;
+			msgpack::unpacker unpacker(reqsize + 16);	// 16 bytes for filling the fucking "4 bytes gap".
+			unpacker.reserve_buffer(reqsize);
+			memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, reqsize);
+			unpacker.buffer_consumed(reqsize);
+			try
+			{
+				unpacker.next(&result);
+				curkey = result.get().as<std::string>();
+			}
+			catch (const std::exception& e)
+			{
+				CS_ERR("error occured while unpacking `key` inside <MarveHandler>.process: "
+						<< e.what() << ", request-message.size(): " << req.size());
+				return failed;
+			}
+		}
 
-		try
-		{
-			wws.clear();		// SGI-STL only
-			std::string key(result.get().as<std::string>());
-			bool exists = Storage::getInstance()->marve(key, wws, 20);
-			makeResponse(rep, exists);
-			return success;
-		}
-		catch (const std::exception& e)
-		{
-			CS_ERR("error occured while unpacking `key` inside <MarveHandler>.process: " << e.what() << ", request-message.size(): " << req.size());
-		}
-		return failed;
+		wws.clear();
+		bool exists = storer->marve(curkey, wws, 20);
+		makeResponse(rep, exists);
+		return success;
 	}
 
 private:

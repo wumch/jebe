@@ -42,6 +42,7 @@ public:
 
 	static void stop()
 	{
+		CS_SAY("stopping master");
 		delete Storage::getInstance();
 	}
 
@@ -111,10 +112,12 @@ protected:
 		std::set_terminate(stop);
 		signal(SIGTERM, onexit);
 		signal(SIGHUP, onexit);
+		signal(SIGINT, onexit);
 	}
 
 	static void onexit(int sig)
 	{
+		CS_SAY("master exiting");
 		stop();
 		std::exit(0);
 	}
