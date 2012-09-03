@@ -48,7 +48,7 @@ class MsgPacker(Packer):
 class Config(object):
 
     CHARSET = _DEFAULT_CHARSET
-    LOG_FILE = r'/var/log/crawler-server.log'
+    LOG_FILE = r'/var/log/adsys.log'
     TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
     router_port = 10010
@@ -161,9 +161,11 @@ class SysConfig(object):
     RPC_FUNC_NAME = {
         'showAds'      : 'i8vars.showAds',
         'crawlPage'    : 'i8vars.crawlPage',
+        'kwOfLoc'      : 'i8vars.kwofloc',
     }
 
     MAX_ADS = 3
+    MAX_KW_OF_LOC = 3
 
     zmq_context = zmq.Context(Config.iothreads)
 
