@@ -77,14 +77,26 @@ if __name__ == '__main__':
     words = [['游戏d', 10.0], [u'充值d', 100.001], ['软件d',1009.0], ['手机', 10089]]
     words = locdb.decorateWords(words)
 
+    def testWrite():
+        begin = clock()
+        for i in xrange(0, times):
+            locdb.store(url + str(i), words=words)
+        consumed = clock() - begin
+        print "write %d entries in %d seconds" % (times, consumed)
+        print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
+
     print locdb.store(url, words)
     correct = locdb.marve(url)
     export(correct)
 
-    begin = clock()
-    for i in xrange(0, times):
-        res = locdb.marve(url)
-        assert res == correct, "got different results by same arguments."
-    consumed = clock() - begin
-    print "time: ", consumed
-    print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
+    def testRead():
+        begin = clock()
+        for i in xrange(0, times):
+            res = locdb.marve(url)
+            assert res == correct, "got different results by same arguments."
+        consumed = clock() - begin
+        print "read %d entries in %f seconds" % (times, consumed)
+        print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
+
+    testWrite()
+    testRead()
