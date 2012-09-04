@@ -161,7 +161,7 @@ class SysConfig(object):
     RPC_FUNC_NAME = {
         'showAds'      : 'i8vars.showAds',
         'crawlPage'    : 'i8vars.crawlPage',
-        'kwOfLoc'      : 'i8vars.kwofloc',
+        'kwOfLoc'      : 'i8vars.baidu_words',
     }
 
     MAX_ADS = 3

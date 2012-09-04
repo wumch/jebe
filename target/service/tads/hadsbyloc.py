@@ -10,7 +10,6 @@ class HAdsByLoc(Handler):
 
     locdb = LocDB()
     ftengine = FTEngine()
-    adsdb = LevelDBStorer(dbId='ads')
     cachedAds = {}
     jsCrawlPage = sysconfig.RPC_FUNC_NAME['crawlPage'] + '();'
 
@@ -36,7 +35,7 @@ class HAdsByLoc(Handler):
         if words is None:       # error occured (from locdb server)
             return
         adids = self.ftengine.match(words=words)
-        self.ads = [self.getAd(adid[0]) for adid in adids]
+        self.ads = filter(None, [self.getAd(adid) for adid in adids])
         self._logShownAds(url)
 
     def _logShownAds(self, pageUrl):
@@ -46,7 +45,9 @@ class HAdsByLoc(Handler):
 
     def getAd(self, adid):
         if adid not in self.cachedAds:
-            ad = self.adsdb.getAuto(adid)
+            adsdb = self._getAdsDB()
+            ad = adsdb.getAuto(adid)
+            del adsdb
             if ad:
                 self.cachedAds[adid] = {
                     'id' : ad['id'],
@@ -60,16 +61,21 @@ class HAdsByLoc(Handler):
             self.ads = self.ads[:sysconfig.MAX_ADS]
 
     @classmethod
+    def _getAdsDB(cls):
+        return LevelDBStorer(dbId='ads')
+
+    @classmethod
     def _initAds(cls):
+        adsdb = cls._getAdsDB()
         for aid in xrange(1, 150):
-            ad = cls.adsdb.getAuto(aid)
+            ad = adsdb.getAuto(aid)
             if ad is not None:
                 cls.cachedAds[aid] = {
                     'id' : ad['id'],
                     'link' : ad['link'],
                     'text' : ad['text']
                 }
-        del cls.adsdb.db
+        del adsdb
 
 if not HAdsByLoc.cachedAds:
     HAdsByLoc._initAds()

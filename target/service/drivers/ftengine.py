@@ -40,7 +40,7 @@ class FTEngine(object):
         self.sock.send(data)
         msg = self.sock.recv()
         self.unpacker.feed(msg)
-        return [doc for doc in self.unpacker]
+        return [doc[0] for doc in self.unpacker]
 
     def packWordWeightList(self, words):
         return self.packer.pack(words)

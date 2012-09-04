@@ -8,7 +8,7 @@ from handler import Handler
 class HKWByLoc(Handler):
 
     locdb = LocDB()
-    jsNoKw = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '();'
+    jsNoKw = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=[];'
 
     def __init__(self, application, request, **kw):
         super(HKWByLoc, self).__init__(application, request, **kw)
@@ -19,7 +19,7 @@ class HKWByLoc(Handler):
         self._filter()
 
     def _genOut(self):
-        self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '(' + config.jsoner.encode(self.words or []) + ');'
+        self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=' + config.jsoner.encode(self.words or []) + ';'
 
     def _fetchWords(self):
         url = self.get_argument('url', None)
