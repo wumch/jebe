@@ -7,6 +7,7 @@ else
 fi
 
 kill `ps aux|grep 'python portal.py'|grep -v grep|awk '{print $2}'|xargs`
+sleep 1
 
 cd $(dirname $(realpath $0))
 
