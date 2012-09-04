@@ -44,16 +44,16 @@ class HAdsByLoc(Handler):
             logger.info('ad shown: ' + shown + ' on ' + pageUrl)
 
     def getAd(self, adid):
-        if adid not in self.cachedAds:
-            adsdb = self._getAdsDB()
-            ad = adsdb.getAuto(adid)
-            del adsdb
-            if ad:
-                self.cachedAds[adid] = {
-                    'id' : ad['id'],
-                    'link' : ad['link'],
-                    'text' : ad['text']
-                }
+#        if adid not in self.cachedAds:
+#            adsdb = self._getAdsDB()
+#            ad = adsdb.getAuto(adid)
+#            del adsdb
+#            if ad:
+#                self.cachedAds[adid] = {
+#                    'id' : ad['id'],
+#                    'link' : ad['link'],
+#                    'text' : ad['text']
+#                }
         return self.cachedAds.get(adid)
 
     def _filter(self):
