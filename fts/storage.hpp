@@ -21,7 +21,7 @@ public:
 	void walk(CallBack& callback)
 	{
 		leveldb::Options options;
-		options.block_cache = 1 << 20;
+		options.block_size = 1 << 20;
 		options.create_if_missing = false;
 		leveldb::DB* db;
 		leveldb::Status status = leveldb::DB::Open(options, Config::getInstance()->dbpath, &db);
