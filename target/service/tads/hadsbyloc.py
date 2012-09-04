@@ -75,6 +75,9 @@ class HAdsByLoc(Handler):
 
     @classmethod
     def _initAds(cls):
+        from ads import ads
+        cls.cachedAds = ads
+        return
         adsdb = cls._getAdsDB()
         for aid in xrange(1, 150):
             ad = adsdb.getAuto(aid)
