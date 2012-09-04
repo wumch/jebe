@@ -39,12 +39,12 @@ class HAdsByLoc(Handler):
         self.ads = filter(None, [self.getAd(adid) for adid in adids])
         if not self.ads:
             self._fallback()
-        self._logShownAds(url)
+        self._logShownAds(adids, url)
 
-    def _logShownAds(self, pageUrl):
+    def _logShownAds(self, adids, pageUrl):
         if self.ads:
-            shown = ','.join([(a if isinstance(a, basestring) else ('%(text)s [id:%(id)d] [%(link)s]' % a)) for a in self.ads])
-            logger.info('ad shown: ' + shown + ' on ' + pageUrl)
+            shown = ','.join(map(str, adids))
+            logger.info('ad shown: [' + shown + '] on ' + pageUrl)
 
     def getAd(self, adid):
 #        if adid not in self.cachedAds:
