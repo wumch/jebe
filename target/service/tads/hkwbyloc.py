@@ -23,11 +23,9 @@ class HKWByLoc(Handler):
 
     def _fetchWords(self):
         url = self.get_argument('url', None)
-        print url
         if not isinstance(url, basestring):
             return
         words = self.locdb.marve(url)
-        print words
         self.words = [w[0] for w in (words or [])]
 
     def _filter(self):

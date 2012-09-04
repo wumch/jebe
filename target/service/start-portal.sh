@@ -20,3 +20,4 @@ for i in ${ports[@]}; do
     start_portal_on "${i}"
 done
 
+#kill `ps aux|grep 'python portal.py'|grep -v grep|awk '{print $2}'|xargs`
