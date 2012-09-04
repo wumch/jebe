@@ -6,6 +6,8 @@ else
     ports=(10020 10021 10022)
 fi
 
+kill `ps aux|grep 'python portal.py'|grep -v grep|awk '{print $2}'|xargs`
+
 cd $(dirname $(realpath $0))
 
 start_portal_on () {
@@ -20,4 +22,3 @@ for i in ${ports[@]}; do
     start_portal_on "${i}"
 done
 
-#kill `ps aux|grep 'python portal.py'|grep -v grep|awk '{print $2}'|xargs`
