@@ -62,7 +62,7 @@ class HAdsByLoc(Handler):
     def _filter(self):
         if len(self.ads) > sysconfig.MAX_ADS:
             self.ads = self.ads[:sysconfig.MAX_ADS]
-        if len(self.ads) == 1 and self.ads[0]['id'] == 119:
+        if len(self.ads) == 1 and '119,' in self.ads[0]:
             self.ads[0] = FallbackAd().getAd()
 
     def _fallback(self):
