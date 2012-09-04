@@ -8,6 +8,7 @@
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/bind.hpp>
 #include <leveldb/db.h>
+#include <leveldb/cache.h>
 #include "hash.hpp"
 #include "config.hpp"
 

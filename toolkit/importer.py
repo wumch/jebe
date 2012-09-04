@@ -69,16 +69,17 @@ def getImporter():
         _ads_importer = AdsImpor()
     return _ads_importer
 
-def importSingle(id=0, link='', text='', words=None):
+def importSingle(id=0, link='', text='', words=None, outfile=None, intodb=False):
     ad = {
         'id' : id,
         'link' : link,
         'text' : text,
         'words' : words
     }
-    db = getImporter()
-    db.check(ad)
-    db.put(id=ad['id'], data=ad)
+    if intodb:
+        db = getImporter()
+        db.check(ad)
+        db.put(id=ad['id'], data=ad)
 
 if __name__ == '__main__':
     adsImport(sys.argv[1:])

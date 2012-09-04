@@ -5,6 +5,7 @@ from model.leveldbstorer import LevelDBStorer
 from drivers.locdb import LocDB
 from drivers.ftengine import FTEngine
 from handler import Handler
+from tads.fallbackads import FallbackAd
 
 class HAdsByLoc(Handler):
 
@@ -36,11 +37,13 @@ class HAdsByLoc(Handler):
             return
         adids = self.ftengine.match(words=words)
         self.ads = filter(None, [self.getAd(adid) for adid in adids])
+        if not self.ads:
+            self._fallback()
         self._logShownAds(url)
 
     def _logShownAds(self, pageUrl):
         if self.ads:
-            shown = ','.join([('%(text)s [%(link)s]' % ad) for ad in self.ads])
+            shown = ','.join([('%(text)s [id:%(id)d] [%(link)s]' % ad) for ad in self.ads])
             logger.info('ad shown: ' + shown + ' on ' + pageUrl)
 
     def getAd(self, adid):
@@ -59,6 +62,12 @@ class HAdsByLoc(Handler):
     def _filter(self):
         if len(self.ads) > sysconfig.MAX_ADS:
             self.ads = self.ads[:sysconfig.MAX_ADS]
+        if len(self.ads) == 1 and self.ads[0]['id'] == 119:
+            self.ads[0] = FallbackAd().getAd()
+
+    def _fallback(self):
+        if not self.ads:
+            self.ads = [FallbackAd().getAd()]
 
     @classmethod
     def _getAdsDB(cls):

@@ -89,6 +89,7 @@ void Config::initDesc()
 
 		("max-open-files", boost::program_options::value<typeof(max_open_files)>()->default_value(staging::getRlimitCur(RLIMIT_NOFILE)))
 		("block-size", boost::program_options::value<typeof(block_size)>()->default_value(32))
+		("block-cache", boost::program_options::value<typeof(block_cache)>()->default_value(256))
 		("write-buffer-size", boost::program_options::value<typeof(write_buffer_size)>()->default_value(256))
 		("max-retrieve-elements", boost::program_options::value<typeof(max_retrieve_elements)>()->default_value(50))
 		;
@@ -121,6 +122,7 @@ void Config::load(const std::string& config_file)
 
 	max_open_files = options["max-open-files"].as<typeof(max_open_files)>();
 	block_size = options["block-size"].as<typeof(block_size)>() << 10;
+	block_cache = options["block-cache"].as<typeof(block_cache)>() << 20;
 	write_buffer_size = options["write-buffer-size"].as<typeof(write_buffer_size)>() << 20;
 	max_retrieve_elements = options["max-retrieve-elements"].as<typeof(max_retrieve_elements)>();
 
@@ -171,6 +173,7 @@ void Config::load(const std::string& config_file)
 
 		_JEBE_OUT_CONFIG_PROPERTY(max_open_files)
 		_JEBE_OUT_CONFIG_PROPERTY(block_size)
+		_JEBE_OUT_CONFIG_PROPERTY(block_cache)
 		_JEBE_OUT_CONFIG_PROPERTY(write_buffer_size)
 		_JEBE_OUT_CONFIG_PROPERTY(max_retrieve_elements)
 	);

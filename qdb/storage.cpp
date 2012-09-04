@@ -11,6 +11,7 @@ void Storage::build()
 	options.create_if_missing = true;
 	options.max_open_files = config->max_open_files;
 	options.block_size = config->block_size;
+	options.block_cache = leveldb::NewLRUCache(config->block_cache);
 	options.write_buffer_size = config->write_buffer_size;
 
 	leveldb::Status status = leveldb::DB::Open(options, config->dbpath, &db);
