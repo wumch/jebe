@@ -43,7 +43,7 @@ class HAdsByLoc(Handler):
 
     def _logShownAds(self, pageUrl):
         if self.ads:
-            shown = ','.join([('%(text)s [id:%(id)d] [%(link)s]' % ad) for ad in self.ads])
+            shown = ','.join([(a if isinstance(a, basestring) else ('%(text)s [id:%(id)d] [%(link)s]' % a)) for a in self.ads])
             logger.info('ad shown: ' + shown + ' on ' + pageUrl)
 
     def getAd(self, adid):
