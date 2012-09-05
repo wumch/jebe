@@ -54,10 +54,8 @@ class ExcelImporter(object):
     def writeFile(self):
         def formatAd(aid):
             adstr = config.jsoner.encode(self.ads[aid])
-            assert "'" not in adstr
-            #adstr = adstr.replace("'", "\'")
-            assert config.jsoner.decode(adstr)
-            return str(self.ads[aid]['id']) + ":'" + adstr + "',"
+            assert config.jsoner.decode(adstr) and "'''" not in adstr
+            return str(self.ads[aid]['id']) + ":'''" + adstr + "''',"
         content = 'ads = {' + os.linesep
         content += os.linesep.join(map(formatAd, self.ads))
         content += os.linesep + '}'
