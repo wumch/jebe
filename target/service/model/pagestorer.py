@@ -23,6 +23,7 @@ class PageStorer(object):
         data = self._getData(meta, content)
         if data is None: return
         self.locdb.store(meta['url'], data)
+        return data
 
     def _getData(self, meta, content):
         if 'url' not in meta:

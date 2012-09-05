@@ -15,6 +15,14 @@ class FTEngine(object):
         'match' : 10
     }
 
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __init__(self):
         self.actionPacker = struct.Struct('B')
         self.packer = msgpack.Packer(encoding=config.CHARSET)

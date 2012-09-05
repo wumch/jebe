@@ -5,11 +5,13 @@ import zlib
 from urllib2 import urlopen
 from config import config, sysconfig, logger, DEBUG
 from utils.MarveWords import MarveWords
+from drivers.adsupplier import Adsupplier
 
 class Handler(object):
 
     OK  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_OK}
     ERR  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_ERR}
+    adsupplier = Adsupplier.instance()
 
     def __init__(self, sock):
         self.sock = sock
@@ -39,11 +41,13 @@ class Handler(object):
         self.response(self._getAds(**kwargs_for_get_ads))
 
     def _getAds(self, content=None, words=None, loc=None):
+        if words:
+            ads = self.adsupplier.byMarvedWords(words=words)
+            if ads:
+                res = '[' + ','.join(ads) + ']'
+                logger.info('ad shown by dealer: ' + res)
+                return res
         return []
-        ads = self.ader.match(content=content, words=words, loc=loc)
-        res = [{'link':a['link'], 'text':a['text'], 'id':a['id']} for a in ads[:20]] if ads else []
-        if res: logger.info('ad shown: %(text)s [%(link)s]' % res[0])
-        return res
 
 class HMarve(Handler):
 

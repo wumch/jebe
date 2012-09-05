@@ -164,8 +164,8 @@ class SysConfig(object):
         'kwOfLoc'      : 'i8vars.baidu_words',
     }
 
-    MAX_ADS = 3
-    MAX_KW_OF_LOC = 3
+    MAX_ADS = 1
+    MAX_KW_OF_LOC = 10
 
     zmq_context = zmq.Context(Config.iothreads)
 
