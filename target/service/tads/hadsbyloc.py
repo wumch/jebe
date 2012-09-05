@@ -1,6 +1,6 @@
 #coding:utf-8
 
-from config import config, sysconfig, logger, NotImplementedException
+from config import config, sysconfig, logger
 from model.leveldbstorer import LevelDBStorer
 from drivers.locdb import LocDB
 from drivers.ftengine import FTEngine

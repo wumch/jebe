@@ -8,7 +8,6 @@ if src_path not in sys.path:
 import codecs
 import xlrd
 from drivers.tokenizer import Tokenizer
-from utils.misc import export
 from config import config
 
 class ExcelImporter(object):
@@ -29,6 +28,17 @@ class ExcelImporter(object):
             self.handleRow(row)
         self.writeFile()
 
+    def reformat(self):
+        from tads.ads import ads
+        def refmt(adstr):
+            print adstr
+            ad = config.jsoner.decode(adstr)
+            del ad['words']
+            return ad
+        self.ads = dict(map(lambda k: (k, refmt(ads[k])), ads))
+        print self.ads
+        self.writeFile()
+
     def handleRow(self, row):
         text = row[1].value
         content = text + ''.join(filter(None, [c.value for c in row[3:]]))
@@ -45,7 +55,8 @@ class ExcelImporter(object):
         def formatAd(aid):
             adstr = config.jsoner.encode(self.ads[aid])
             assert "'" not in adstr
-            adstr = adstr.replace("'", "\'")
+            #adstr = adstr.replace("'", "\'")
+            assert config.jsoner.decode(adstr)
             return str(self.ads[aid]['id']) + ":'" + adstr + "',"
         content = 'ads = {' + os.linesep
         content += os.linesep.join(map(formatAd, self.ads))
@@ -58,7 +69,7 @@ class ExcelImporter(object):
 if __name__ == '__main__':
     argc = len(sys.argv)
     if len(sys.argv) < 2:
-        print 'usage: %s <xlsx-file> [output-file] [ad-id-offset] [sheet-index]' % sys.argv[0]
+        print>>sys.stderr, 'usage: %s <xlsx-file> [output-file] [ad-id-offset] [sheet-index]' % sys.argv[0]
         sys.exit(0)
     xls = sys.argv[1]
     outfile = '/tmp/ads' if argc < 3 else sys.argv[2]
