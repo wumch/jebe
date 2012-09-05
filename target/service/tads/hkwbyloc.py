@@ -22,7 +22,7 @@ class HKWByLoc(Handler):
         self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=' + config.jsoner.encode(self.words or []) + ';'
 
     def _fetchWords(self):
-        url = self.get_argument('url', None)
+        url = self.request.headers.get('Referer', None)
         if not isinstance(url, basestring):
             return
         words = self.locdb.marve(url)
