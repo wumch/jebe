@@ -2,6 +2,10 @@
 
 from urlparse import urlparse
 
+
+def unique(url):
+    info = urlparse(url)
+
 class UrlParser(object):
 
     _type = ('com', 'mobi', 'gov', 'edu', 'so', 'net', 'org', 'name', 'me', 'co', 'com', 'net', 'tel', 'info', 'biz', 'cc', 'tv')
