@@ -81,7 +81,7 @@ void Index::build()
 		CS_DUMP(map[word][0].docid);
 		CS_DUMP(map[word][0].weight);
 	}
-
+	delete it;
 	delete db;
 }
 

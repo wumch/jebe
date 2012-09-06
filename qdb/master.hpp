@@ -43,7 +43,7 @@ public:
 	static void stop()
 	{
 		CS_SAY("stopping master");
-		delete Storage::getInstance();
+		Storage::getInstance()->release();
 	}
 
 protected:

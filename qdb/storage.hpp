@@ -39,6 +39,11 @@ public:
 		return db;
 	}
 
+	void release()
+	{
+		getInstance()->~Storage();
+	}
+
 	virtual ~Storage()
 	{
 		delete db;
