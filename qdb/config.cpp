@@ -5,6 +5,7 @@
 
 #include "config.hpp"
 #include <iostream>
+#include <string>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -14,6 +15,7 @@ extern "C" {
 #include <sched.h>
 }
 #include "sys.hpp"
+#include "net.hpp"
 
 #define _JEBE_OUT_CONFIG_PROPERTY(property)		<< #property << ":\t\t" << property << std::endl
 
@@ -60,9 +62,9 @@ void Config::init(int argc, char* argv[])
 
 void Config::initDesc()
 {
+	std::string default_listen(std::string("tcp://") + staging::getNatIP() + ":10050");
 	desc.add_options()
-		("listen", boost::program_options::value<typeof(listen)>()->default_value("tcp://*:10050"),
-				"listen address (in zmq format), defaults to `tcp://*:10050`")
+		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
 		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://qdb"),
 				"internal communicate address, defaults to `inproc://qdb`")
 		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
