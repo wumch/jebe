@@ -33,11 +33,13 @@ private:
 protected:
 	virtual HandleRes process(zmq::message_t& req, zmq::message_t& rep)
 	{
-		msgpack::unpacker unpacker;
-		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, req.size() - 1);
+		int reqsize = req.size() - 1;
+		msgpack::unpacker unpacker(reqsize + 16);
+		unpacker.reserve_buffer(reqsize);
+		memcpy(unpacker.buffer(), reinterpret_cast<char*>(req.data()) + 1, reqsize);
 		try
 		{
-			unpacker.buffer_consumed(req.size() - 1);
+			unpacker.buffer_consumed(reqsize);
 			msgpack::unpacked result;
 			unpacker.next(&result);
 			std::string key(result.get().as<std::string>());
