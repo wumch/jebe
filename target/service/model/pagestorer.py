@@ -2,7 +2,7 @@
 
 from urllib2 import urlopen
 from config import config, DEBUG, logger
-from utils.UrlParser import UrlParser
+from utils.urlparser import UrlParser
 from drivers.locdb import LocDB
 
 class PageStorer(object):

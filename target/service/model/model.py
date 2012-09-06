@@ -4,7 +4,7 @@ import os
 from urllib2 import urlopen
 import riak
 from config import config, logger, DEBUG
-from utils.UrlParser import UrlParser
+from utils.urlparser import UrlParser
 from utils.misc import *
 
 class FileStorer(object):

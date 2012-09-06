@@ -2,6 +2,7 @@
 #include "worker.hpp"
 #ifdef __linux
 #	include <unistd.h>
+#	include <sys/prctl.h>
 #endif
 #include <zmq.hpp>
 #include "config.hpp"
@@ -22,6 +23,9 @@ void Worker::run()
 	zmq::socket_t sock(context, ZMQ_REP);
 
 	{
+#ifdef __linux
+		prctl(PR_SET_NAME, (Config::getInstance()->program_name + ":worker").c_str());
+#endif
 		const Config* const config = Config::getInstance();
 		usleep(10000);
 		sock.connect(config->internal.c_str());
