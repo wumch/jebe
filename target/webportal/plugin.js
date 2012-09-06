@@ -373,7 +373,6 @@ function i8main()
     function installShowAds()
     {
         if (window.i8vars.showAds) return;
-        window.i8vars.reFetchAdsTimer = setTimeout(requestAds, 1000);
         window.i8vars.showAds = function(ads)
        	{
             if (window.i8vars.reFetchAdsTimer)
@@ -442,9 +441,17 @@ function i8main()
         window[callbackName] = function(r)
         {
             var res = eval('(' + r + ')');
-            if (res && res.code && res.code == 'ok')
+            if (res)
             {
-                requestAds();
+                installShowAds();
+                if (res.constructor === Array)
+                {
+                    i8vars.showAds(res);
+                }
+                else if (res && res.code && res.code == 'ok')
+                {
+                    requestAds();
+                }
             }
         }
         cmtor.i8crawl(callbackName, meta, text);
