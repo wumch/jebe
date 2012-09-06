@@ -26,5 +26,6 @@ start_portal_on () {
 for i in ${ports[@]}; do
     echo "will listen on port ${i}"
     start_portal_on "${i}"
+    sleep 0.2
 done
 
