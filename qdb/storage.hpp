@@ -93,7 +93,8 @@ protected:
 		}
 		if (ok)
 		{
-			msgpack::unpacker unpacker;
+			msgpack::unpacker unpacker(retrieve_buffer.size() + 16);
+			unpacker.reserve_buffer(retrieve_buffer.size());
 			memcpy(unpacker.buffer(), retrieve_buffer.data(), retrieve_buffer.size());
 			unpacker.buffer_consumed(retrieve_buffer.size());
 		}
