@@ -29,16 +29,6 @@ extern "C" {
 
 #define _JEBE_WORD_MAX_LEN			(8U*3)
 
-#define _JEBE_BUFF_UNIT				1024
-#define _JEBE_SESS_RBUF_UNIT		_JEBE_BUFF_UNIT
-#define _JEBE_SESS_SBUF_UNIT		_JEBE_SESS_RBUF_UNIT
-
-#define _JEBE_SESS_POOL_INC_STEP	128
-#define _JEBE_SESS_POOL_MAX_SIZE	1024
-
-#define _JEBE_HTTP_LINE_SEP 		"\r\n"
-#define _JEBE_HTTP_SEP 				_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
-
 namespace jebe {
 namespace cws {
 
