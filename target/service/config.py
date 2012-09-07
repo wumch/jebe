@@ -91,7 +91,7 @@ class Config(object):
     tokenizers = ('tcp://192.168.88.2:10012',
         'tcp://192.168.88.4:10012',)
 
-    iothreads = 4
+    iothreads = 1
 
     if DEBUG:       # for test on frank's asus laptop box.
         routers = ({'host':natip, 'port':dealer_port}, )
