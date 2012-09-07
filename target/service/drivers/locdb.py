@@ -90,13 +90,12 @@ if __name__ == '__main__':
     export(correct)
 
     def testRead():
-        begin = clock()
+        begin = time()
         for i in xrange(0, times):
             res = locdb.marve(url)
             assert res == correct, "got different results by same arguments."
-        consumed = clock() - begin
+        consumed = time() - begin
         print "read %d entries in %f seconds" % (times, consumed)
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
-    testWrite()
     testRead()
