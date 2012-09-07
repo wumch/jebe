@@ -87,7 +87,7 @@ class PageStorer(RiakStorer):
 
     def _split(self, content):
         try:
-            return urlopen(config.getTokenizer('split'), content, timeout=3).read()
+            return urlopen(config.getTokenizer(), content, timeout=3).read()
         except Exception: pass
 
 class MoveStorer(RiakStorer):

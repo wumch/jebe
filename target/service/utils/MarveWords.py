@@ -34,4 +34,4 @@ class MarveWords(object):
 
     def _genWordsFromContent(self):
         data = self.content.encode('utf-8') if isinstance(self.content, unicode) else self.content
-        return config.jsoner.decode(urlopen(url=config.getTokenizer('marve'), data=data, timeout=3).read())
+        return config.jsoner.decode(urlopen(url=config.getTokenizer(), data=data, timeout=3).read())

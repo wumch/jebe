@@ -88,8 +88,8 @@ class Config(object):
         'tcp://192.168.88.4:10051',
     )
 
-    tokenizers = ('http://192.168.88.2:10086/',
-        'http://192.168.88.4:10086/',)
+    tokenizers = ('tcp://192.168.88.2:10012',
+        'tcp://192.168.88.4:10012',)
 
     iothreads = 4
 
@@ -98,7 +98,7 @@ class Config(object):
         riaks = ({'host':natip, 'port':riak_port}, )
         for k in dbs:
             dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
-        tokenizers = ('http://127.0.0.1:10086/', )
+        tokenizers = ('tcp://127.0.0.1:10012', )
         ftengines = ('tcp://127.0.0.1:10050', )
         locdbs = ('tcp://127.0.0.1:10051', )
         iothreads = 1
@@ -120,13 +120,13 @@ class Config(object):
         return self.riaks[randint(0, len(self.riaks) - 1)]
 
     # NOTE: random is not fast enough (about 2000,000 times per second)
-    def getTokenizer(self, action):
+    def getTokenizer(self):
         if isinstance(self.ftengines, basestring):
-            return self.tokenizers + action
+            return self.tokenizers
         elif len(self.ftengines) == 1:
-            return self.tokenizers[0] + action
+            return self.tokenizers[0]
         else:
-            return self.tokenizers[randint(0, len(self.tokenizers) - 1)] + action
+            return self.tokenizers[randint(0, len(self.tokenizers) - 1)]
 
     def getFTEngine(self):
         if isinstance(self.ftengines, basestring):

@@ -65,7 +65,7 @@ class HMarve(Handler):
 
     def marve(self, content):
         try:
-            json = urlopen(config.getTokenizer('marve'), data=content, timeout=3).read()
+            json = urlopen(config.getTokenizer(), data=content, timeout=3).read()
             res = MarveWords(config.jsoner.decode(json)).top()
             if DEBUG: print res
             return res

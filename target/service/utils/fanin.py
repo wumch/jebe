@@ -45,7 +45,7 @@ class Fanin(RiakStorer):
 
     def _fromContent(self, action=default_action):
         data = self.content.encode('utf-8') if isinstance(self.content, unicode) else self.content
-        return config.jsoner.decode(urlopen(url=config.getTokenizer(action), data=data, timeout=3).read())
+        return config.jsoner.decode(urlopen(url=config.getTokenizer(), data=data, timeout=3).read())
 
     def _fetchSplitedContent(self):
         try:

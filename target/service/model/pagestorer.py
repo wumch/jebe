@@ -4,6 +4,7 @@ from urllib2 import urlopen
 from config import config, DEBUG, logger
 from utils.urlparser import UrlParser
 from drivers.locdb import LocDB
+from drivers.tokenizer import Tokenizer
 
 class PageStorer(object):
 
@@ -26,18 +27,13 @@ class PageStorer(object):
         return data
 
     def _getData(self, meta, content):
+        # TODO: url unique...
         if 'url' not in meta:
             return None
         urlinfo = self.urlparser.parse(meta['url'])
         if urlinfo is None:
             return None
-        words = self.marve(content)
-        if words is None:
-            return None
-        return words
+        return self.marve(content)
 
     def marve(self, content):
-        try:
-            return config.jsoner.decode(urlopen(config.getTokenizer('marve'), content, timeout=3).read())
-        except Exception, e:
-            logger.error(('kid, request to tokenizer/marve with len(content)=%d failed: ' % len(content)) + str(e.args))
+        return Tokenizer.instance().marve(content=content)

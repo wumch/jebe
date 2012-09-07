@@ -29,21 +29,24 @@ def intenc(num, base = default_base):
 def strenc(string):
     return intenc(int(md5(string)[::2], 16))
 
-def export(var):
+def export(var, endl=True):
     if isinstance(var, basestring):
-        print(var)
+        if endl:
+            print(var)
+        else:
+            print var,
         return
     if isinstance(var, dict):
         for k, v in var.iteritems():
             print k, ':',
-            export(v)
+            export(v, endl=False)
         return
     if isinstance(var, (list, tuple, set)):
         for v in var:
-            export(v)
+            export(v, endl=False)
         return
     # if missed all of patterns specified above:
-    print var
+    print(var)
 
 m_pdwCrc32Table = [0] * 256
 dwPolynomial = 0xEDB88320
