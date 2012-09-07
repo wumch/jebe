@@ -69,19 +69,19 @@ class LocDB(object):
 
 if __name__ == '__main__':
     from utils.misc import *
-    from time import clock
-    times = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
+    from time import time
+    url = 'http://www.jebe.com/page.utf8.html' if len(sys.argv) > 1 else sys.argv[1]
+    times = int(sys.argv[2]) if len(sys.argv) > 2 else 1000
     locdb = LocDB()
 
-    url = 'http://www.jebe.com/page.utf8.html'
     words = [['游戏d', 10.0], [u'充值d', 100.001], ['软件d',1009.0], ['手机', 10089]]
     words = locdb.decorateWords(words)
 
     def testWrite():
-        begin = clock()
+        begin = time()
         for i in xrange(0, times):
             locdb.store(url + str(i), words=words)
-        consumed = clock() - begin
+        consumed = time() - begin
         print "write %d entries in %d seconds" % (times, consumed)
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
