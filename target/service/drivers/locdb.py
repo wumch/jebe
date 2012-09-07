@@ -85,10 +85,6 @@ if __name__ == '__main__':
         print "write %d entries in %d seconds" % (times, consumed)
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
-    print locdb.store(url, words)
-    correct = locdb.marve(url)
-    export(correct)
-
     def testRead():
         begin = time()
         for i in xrange(0, times):
@@ -98,4 +94,5 @@ if __name__ == '__main__':
         print "read %d entries in %f seconds" % (times, consumed)
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
-    testRead()
+    correct = locdb.marve(url)
+    export(correct)
