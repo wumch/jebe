@@ -127,7 +127,7 @@ public:
 
 	operator uint16_t() const
 	{
-		return reinterpret_cast<const uint64_t*>(str)[BOOST_PP_IF(CS_IS_LITTLE_ENDIAN, 0, 1)];
+		return reinterpret_cast<const uint16_t*>(str)[BOOST_PP_IF(CS_IS_LITTLE_ENDIAN, 0, 1)];
 	}
 
 #if CS_DEBUG || CS_LOG_ON

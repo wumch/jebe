@@ -286,7 +286,7 @@ void Extractor::scan(CharType* const str, String::size_type len)
 		{
 			if (CS_BLIKELY(hasChs))
 			{
-				CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
+				CS_SAY("i: " << i << ", chkPoint: " << chkPoint);
 				addSentence(str + chkPoint, i - chkPoint);
 				hasChs = false;
 			}
@@ -296,7 +296,7 @@ void Extractor::scan(CharType* const str, String::size_type len)
 
 	if (hasChs)
 	{
-		CS_SAY("i: " << i  << ", chkPoint: " << chkPoint);
+		CS_SAY("i: " << i << ", chkPoint: " << chkPoint);
 		addSentence(str + chkPoint, i - chkPoint);
 		hasChs = false;
 	}
@@ -390,13 +390,9 @@ void Extractor::fetchContent(const PathList& contentfiles)
 	for (PathList::const_iterator it = contentfiles.begin(); it != contentfiles.end(); ++it)
 	{
 		std::wfstream file(it->string().c_str(), std::ios_base::in);
-		CS_SAY("imbue");
 		file.imbue(std::locale(""));
-		CS_SAY("read");
 
-//		uint32_t processed = 0;
 		ssize_t readed = 0;
-
 		while (true)
 		{
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
@@ -405,14 +401,6 @@ void Extractor::fetchContent(const PathList& contentfiles)
 			{
 				break;
 			}
-//			if (CS_BUNLIKELY(maxchars != 0))
-//			{
-//				processed += readed;
-//				if (CS_BUNLIKELY(processed > maxchars))
-//				{
-//					break;
-//				}
-//			}
 			scan(content, readed);
 		}
 		file.close();
@@ -420,6 +408,7 @@ void Extractor::fetchContent(const PathList& contentfiles)
 	}
 	delete[] content;
 }
+
 
 } /* namespace cws */
 } /* namespace jebe */

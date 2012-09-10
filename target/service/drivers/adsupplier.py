@@ -10,6 +10,8 @@ class Adsupplier(object):
     cachedJsonEncoded = ads
     cached = {}
 
+    # TODO: maybe a bug in multi threads?
+    # thread 1 maybe get the response for thread 2 instead.
     _instance = None
 
     @classmethod
