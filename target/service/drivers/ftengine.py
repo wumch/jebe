@@ -6,8 +6,10 @@ if __name__ == '__main__':
     if src_path not in sys.path:
         sys.path.append(src_path)
 import struct
-import zmq, msgpack
+from gevent_zeromq import zmq
+import msgpack
 from config import config, sysconfig
+from drivers.zmqclient import QueuedSock, recurveCallbackBounded
 
 class FTEngine(object):
 
@@ -27,11 +29,13 @@ class FTEngine(object):
         self.actionPacker = struct.Struct('B')
         self.packer = msgpack.Packer(encoding=config.CHARSET)
         self.unpacker = msgpack.Unpacker(encoding=config.CHARSET)
-        self.sock = sysconfig.zmq_context.socket(zmq.REQ)
-        self.sock.connect(config.getFTEngine())
+        self.rawsock = sysconfig.zmq_context.socket(zmq.REQ)
+        self.rawsock.connect(config.getFTEngine())
+        self.sock = QueuedSock(self.rawsock)
+        self.sock.serve()
 
-    def match(self, words):
-        return self.request(words=self.decorateWords(words), action='match')
+    def match(self, words, callback):
+        return self.request(words=self.decorateWords(words), action='match', callback=callback)
 
     def matchDecorated(self, decoratedWords):
         return self.request(words=decoratedWords, action='match')
@@ -43,10 +47,12 @@ class FTEngine(object):
             return [[w.encode(config.CHARSET) if isinstance(w, unicode) else str(w), float(m)] for w,m in words]
         return words
 
-    def request(self, words, action='match'):
+    def request(self, words, action='match', callback=None):
         data = self.actionPacker.pack(self.actions[action]) + self.packWordWeightList(words=words)
-        self.sock.send(data)
-        msg = self.sock.recv()
+        self.sock.send(data, self._onResponse(callback))
+
+    @recurveCallbackBounded
+    def _onResponse(self, msg):
         self.unpacker.feed(msg)
         return [doc[0] for doc in self.unpacker]
 
@@ -55,9 +61,6 @@ class FTEngine(object):
 
     def packWordWeight(self, word, weight):
         return self.packer.pack(word) + self.packer.pack(weight)
-
-    def __del__(self):
-        self.sock.close()
 
 if __name__ == '__main__':
     from utils.misc import *

@@ -1,7 +1,6 @@
 #coding:utf-8
 
-from config import config, sysconfig, logger, NotImplementedException
-from model.leveldbstorer import LevelDBStorer
+from config import config, sysconfig
 from drivers.locdb import LocDB
 from handler import Handler
 
@@ -10,23 +9,36 @@ class HKWByLoc(Handler):
     locdb = LocDB()
     jsNoKw = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=[];'
 
-    def __init__(self, application, request, **kw):
-        super(HKWByLoc, self).__init__(application, request, **kw)
+    def __init__(self, request, params):
+        super(HKWByLoc, self).__init__(request, params)
         self.words = []
 
     def _handle(self):
         self._fetchWords()
-        self._filter()
 
     def _genOut(self):
-        self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=' + config.jsoner.encode(self.words or []) + ';'
+        self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=' + config.jsoner.encode(self.words) + ';'
 
     def _fetchWords(self):
-        url = self.request.headers.get('Referer', None)
+        url = self._getPageUrl()
         if not isinstance(url, basestring):
-            return
-        words = self.locdb.marve(url)
+            return self._processResult(self.words)
+        self.locdb.marve(url, callback=self._processResult)
+
+    def _getPageUrl(self):
+        if 'url' in self.params:
+           return self.params['url']
+        else:
+            headers = self.request.get_input_headers()
+            for name, value in headers:
+                if name == 'Referer':
+                    return value
+
+    def _processResult(self, words):
         self.words = [w[0] for w in (words or [])]
+        self._filter()
+        self._genOut()
+        self._reply()
 
     def _filter(self):
         if len(self.words) > sysconfig.MAX_KW_OF_LOC:

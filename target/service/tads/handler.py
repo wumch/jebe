@@ -3,48 +3,47 @@
 import tornado.web
 from config import sysconfig, logger, NotImplementedException
 
-class Handler(tornado.web.RequestHandler):
+class Handler(object):
 
     OK  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_OK}
     ERR  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_ERR}
 
-    def __init__(self, application, request, **kw):
-        super(Handler, self).__init__(application, request, **kw)
-        self.out = ""
+    statusMap = {
+        200 : 'OK',
+        404 : 'Not Found',
+        500 : 'Internal Error',
+    }
+    headers = (
+        ('Pragma', 'no-cache'),
+        ('Content-Type', 'application/x-javascript; charset=utf-8'),
+    )
+
+    def __init__(self, request, params):
+        self.request = request
+        self.params = params
+        self.status = 200
+        self.out = ''
+
+    def handle(self):
+        self._handle()
+
+    def _handleResult(self, data):
+        self._processResult(data)
+
+    def _processResult(self, data):
+        pass
 
     def initialize(self, **kw):
         pass
 
-    def get(self, *args, **kw):
-        try:
-            return self.handle()
-        except Exception, e:
-            logger.logException(e)
-
-    def handle(self):
-        self._prepare()
-        self._handle()
-        self._reply()
-
     def _prepare(self):
-        self._clear_headers_for_304()
-        self.set_header('Pragma', 'no-cache')
-        self.set_header('Content-Type', 'application/x-javascript; charset=utf-8')
-        self.clear_header('Server')
-
-    def _reply(self):
-        if not len(self.out):
-            self._genOut()
-        self._replyContent(self.out)
-
-    def _replyContent(self, content):
-        self.write(content)
-
-    def compute_etag(self):
-        return None
-
-    def _genOut(self):
-        raise NotImplementedException(this=self)
+        pass
 
     def _handle(self):
         raise NotImplementedException(this=self)
+
+    def _reply(self):
+        for name, value in self.headers:
+            self.request.add_output_header(name, value)
+        self.request.send_reply(self.status, self.statusMap[self.status], self.out)
+        self.request.send_reply_end()

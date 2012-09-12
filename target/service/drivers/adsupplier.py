@@ -4,6 +4,7 @@ from tads.ads import ads
 from drivers.ftengine import FTEngine
 from config import config
 from tads.fallbackads import FallbackAd
+from drivers.zmqclient import recurveCallbackBounded
 
 class Adsupplier(object):
 
@@ -23,8 +24,12 @@ class Adsupplier(object):
     def __init__(self):
         self.ftengine = FTEngine.instance()
 
-    def byMarvedWords(self, words, jsonEncoded=True, fallback=True):
-        return self.byIds(self.ftengine.match(words=words), jsonEncoded=jsonEncoded, fallback=fallback)
+    def byMarvedWords(self, words, jsonEncoded=True, callback=None):
+        self.ftengine.match(words=words, callback=self._handleAdIds(callback))
+
+    @recurveCallbackBounded
+    def _handleAdIds(self, adids, jsonEncoded=True, fallback=True):
+        return self.byIds(adids, jsonEncoded=jsonEncoded, fallback=fallback)
 
     def byIds(self, adids, jsonEncoded=True, fallback=True):
         ads = filter(None, [self.byId(adid=adid, jsonEncoded=jsonEncoded) for adid in adids])

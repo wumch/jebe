@@ -1,8 +1,7 @@
-#coding:utf-8
-#def application(environ, start_response):
-#    start_response('200 OK', [('Content-Type', 'text/plain')])
-#    yield 'Hello World\n'
-#    yield 'This is uWsgi application.\n'
+#!/usr/bin/env python
+
+import gevent
+from gevent.http import HTTPServer
 
 try:
     import psyco
@@ -11,18 +10,9 @@ try:
 except ImportError:
     pass
 
-import tornado.ioloop
-import tornado.web
-from tads.hadsbyloc import HAdsByLoc
-from tads.hkwbyloc import HKWByLoc
 from utils.natip import natip
-from config import DEBUG
-
-app = tornado.web.Application([
-    (r"/target/", HAdsByLoc),
-    (r"/kwofloc/", HKWByLoc),
-], debug=DEBUG)
+from controler.wsgiwrap import WsgiApp
 
 if __name__ == '__main__':
-    app.listen(port=10020, address=natip)
-    tornado.ioloop.IOLoop.instance().start()
+    greenlets = [gevent.spawn(HTTPServer((natip, 8001), handle=WsgiApp()).serve_forever)]
+    gevent.joinall(greenlets=greenlets)

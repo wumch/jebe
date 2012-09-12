@@ -11,11 +11,13 @@ sleep 1
 
 cd $(dirname $(realpath $0))
 
-for ((i=0;i<3;++i)); do
-    echo "starting dealer ${i}"
-    nohup python dealer.py >/dev/null 2>&1 &
-    sleep 0.2
-done
+restart_dealer () {
+    for ((i=0;i<3;++i)); do
+        echo "starting dealer ${i}"
+        nohup python dealer.py >/dev/null 2>&1 &
+        sleep 0.2
+    done
+}
 
 start_portal_on () {
     port="$1"
