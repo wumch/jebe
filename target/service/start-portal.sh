@@ -21,7 +21,7 @@ restart_dealer () {
 
 start_portal_on () {
     port="$1"
-    sed -i "/app.listen(port=/ s/\(port=\)[0-9]*/\1${port}/" portal.py
+    sed -i "/addr \= (natip/ s/\(natip\,\s*\)[0-9]*/\1${port}/" portal.py
     nohup python portal.py >/dev/null 2>&1 &
 }
 
