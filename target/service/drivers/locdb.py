@@ -7,7 +7,8 @@ if __name__ == '__main__':
         sys.path.append(src_path)
 
 import struct
-import zmq, msgpack
+from gevent_zeromq import zmq
+import msgpack
 from config import config, sysconfig, logger
 from utils.misc import crc32
 from zmqclient import *

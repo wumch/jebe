@@ -165,7 +165,7 @@ class SysConfig(object):
     }
 
     MAX_ADS = 1
-    MAX_KW_OF_LOC = 10
+    MAX_KW_OF_LOC = 20
 
     zmq_context = zmq.Context(Config.iothreads)
 
