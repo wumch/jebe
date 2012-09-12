@@ -17,10 +17,10 @@ def run():
     addr = (natip, 8001)
     backlog = 512
     app = WsgiApp()
-    if gevent.version_info < (0, 13, 8):
-        HTTPServer(listener=addr, handle=app, backlog=backlog).serve_forever()
-    else:
+    if gevent.version_info < (0, 13, 7):
         HTTPServer(app).serve_forever(socket_or_address=addr, backlog=512)
+    else:
+        HTTPServer(listener=addr, handle=app, backlog=backlog).serve_forever()
 
 if __name__ == '__main__':
     greenlets = [gevent.spawn(run)]
