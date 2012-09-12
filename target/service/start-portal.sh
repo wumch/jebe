@@ -3,7 +3,7 @@
 if [ "$#" -gt "0" ]; then
     ports="$*"
 else
-    ports=(10020 10021 10022)
+    ports=(10020 10021 10022 10023 10024 10025 10026)
 fi
 
 kill `ps aux|grep '\(python portal.py\|python dealer.py\)'|grep -v grep|awk '{print $2}'|xargs`
