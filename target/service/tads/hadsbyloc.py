@@ -14,6 +14,7 @@ class HAdsByLoc(Handler):
     def __init__(self, request, params):
         super(HAdsByLoc, self).__init__(request=request, params=params)
         self.pageUrl = self._getPageUrl()
+        self.ads = []
 
     def _handle(self):
         self._fetchAds()
@@ -23,7 +24,7 @@ class HAdsByLoc(Handler):
 
     def _fetchAds(self):
         if not isinstance(self.pageUrl, basestring):
-            return []
+            return self._finish()
         self.locdb.marve(self.pageUrl, callback=self._handleResult)
 
     def _getPageUrl(self):
@@ -33,7 +34,7 @@ class HAdsByLoc(Handler):
             headers = self.request.get_input_headers()
             for name, value in headers:
                 if name == 'Referer':
-                    return value
+                    return value.strip()
 
     def _processResult(self, words):
         if words is False:      # page non-exists
@@ -44,6 +45,9 @@ class HAdsByLoc(Handler):
         self.ads = ads
         self._logShownAds()
         self._filter()
+        self._finish()
+
+    def _finish(self):
         self._genOut()
         self._reply()
 
