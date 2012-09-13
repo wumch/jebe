@@ -42,8 +42,8 @@ class Handler(object):
     def _handle(self):
         raise NotImplementedException(this=self)
 
-    def _reply(self):
+    def _reply(self, content=None):
         for name, value in self.headers:
             self.request.add_output_header(name, value)
-        self.request.send_reply(self.status, self.statusMap[self.status], self.out)
+        self.request.send_reply(self.status, self.statusMap[self.status], content or self.out)
         self.request.send_reply_end()

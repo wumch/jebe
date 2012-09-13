@@ -1,28 +1,19 @@
 #coding:utf-8
 
 import gevent, gevent.queue
-from config import NotImplementedException
+from gevent_zeromq import zmq
+from config import sysconfig, NotImplementedException
 
-def bind(maybe_self, maybe_bounded, maybe_callback=None):
-    if maybe_callback is None:
-        return maybe_bounded, maybe_self
-    else:
-        def func(*args, **kwargs):
-            return maybe_bounded(*args, **kwargs)
-        return maybe_callback, func
+def bind(func, *args, **kwargs):
+    def __callee(*a, **kw):
+        kw.update(kwargs)
+        func(*(args + a), **kw)
+    return __callee
 
 def recurveCallbackBounded(excute_func):
     def __caller(self_, return_address):
         def __work(*args, **kwargs):
             return return_address(excute_func(self_, *args, **kwargs))
-        return __work
-    return __caller
-
-def recurveCallback(func):
-    def __caller(maybe_self, maybe_back=None):
-        back, call = bind(maybe_self, func, maybe_back)
-        def __work(*args, **kwargs):
-            return back(call(*args, **kwargs))
         return __work
     return __caller
 
@@ -38,10 +29,22 @@ class QueueItem(object):
 class QueuedSock(object):
 
     failflag = QUEUE_FAILED
+    MAX_SERVE = 50000
+    QUEUE_SIZE = 2048
 
-    def __init__(self, sock):
-        self.queue = gevent.queue.Queue(1024)
-        self.sock = sock
+    def __init__(self, uri, context=sysconfig.zmq_context, socktype=zmq.REQ):
+        self.uri = uri
+        self.context = context
+        self.socktype = socktype
+        self.served = 0
+        self._createSock()
+
+    def _createSock(self):
+        if hasattr(self, 'sock'):
+            self.sock.close()
+        self.sock = self.context.socket(self.socktype)
+        self.sock.connect(self.uri)
+        self.queue = gevent.queue.Queue(self.QUEUE_SIZE)
 
     def emptyCallback(self, *args, **kwargs):
         pass

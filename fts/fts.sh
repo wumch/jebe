@@ -25,7 +25,7 @@ if [ ! -n "${execfile}" ]; then
     echo "execute-able file is null"
     exit 1
 elif [ "${execfile}" == "${TCMD_EXEC}" ] && [ ! -x "${execfile}" ] && [ ! -n "$(which ${execfile})" ]; then
-    echo "the ${exexfile} is not a execute-able"
+    echo "the ${execfile} is not a execute-able"
     exit 1
 fi
 

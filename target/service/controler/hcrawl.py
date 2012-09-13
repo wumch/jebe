@@ -19,12 +19,14 @@ class HCrawl(Handler):
         try:
             meta = config.jsoner.decode(data[0])
             content = zlib.decompress(data[1]) if meta['compressed'] else data[1]
-            words = self.store(meta, content)
-            self.mrads(words=words)
+            self.store(meta, content)
         except Exception, e:
             self.replyError()
             logger.error("crawl failed: " + str(e.args))
 
+    def _onWords(self, words):
+        self.mrads(words=words)
+
     def store(self, meta, content):
         self.fileStorer.store(content)
-        return self.pageStorer.store(meta, content)
+        return self.pageStorer.store(meta, content, callback=self._onWords)

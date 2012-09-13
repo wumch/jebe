@@ -29,9 +29,7 @@ class FTEngine(object):
         self.actionPacker = struct.Struct('B')
         self.packer = msgpack.Packer(encoding=config.CHARSET)
         self.unpacker = msgpack.Unpacker(encoding=config.CHARSET)
-        self.rawsock = sysconfig.zmq_context.socket(zmq.REQ)
-        self.rawsock.connect(config.getFTEngine())
-        self.sock = QueuedSock(self.rawsock)
+        self.sock = QueuedSock(config.getFTEngine())
         self.sock.serve()
 
     def match(self, words, callback):

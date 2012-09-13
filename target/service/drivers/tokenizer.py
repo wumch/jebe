@@ -5,8 +5,10 @@ if __name__ == '__main__':
     src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     if src_path not in sys.path:
         sys.path.append(src_path)
-import zmq, struct
-from config import sysconfig, config, logger
+
+import struct
+from config import config, logger
+from zmqclient import QueuedSock
 
 class Tokenizer(object):
 
@@ -31,30 +33,28 @@ class Tokenizer(object):
         return cls._instance
 
     def __init__(self):
-        self.sock = sysconfig.zmq_context.socket(zmq.REQ)
-        self.sock.connect(config.getTokenizer())
+        self.sock = QueuedSock(config.getTokenizer())
         self.actionPacker = struct.Struct('B')
 
-    def marve(self, content):
-        return self.request(content=content, action='marve')
+    def marve(self, content, callback=None):
+        return self.request(content=content, action='marve', callback=callback)
 
-    def count(self, content):
-        return config.jsoner.decode(self.request(content=content, action='count'))
+    def count(self, content, callback=None):
+        return config.jsoner.decode(self.request(content=content, action='count', callback=callback))
 
-    def split(self, content):
-        return self.request(content=content, action='split')
+    def split(self, content, callback=None):
+        return self.request(content=content, action='split', callback=callback)
 
-    def request(self, content, action):
+    def request(self, content, action, callback=None):
         try:
             data = self.actionPacker.pack(self.actions[action]) + (content.encode(self._SERVER_CHARSET) if isinstance(content, unicode) else content)
-            res = self._request(data=data)
+            res = self._request(data=data, callback=callback)
             return config.msgpack.decode(res)
         except Exception, e:
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
 
-    def _request(self, data):
-        self.sock.send(data)
-        return self.sock.recv()
+    def _request(self, data, callback):
+        self.sock.send(data, callback=callback)
 
 if __name__ == '__main__':
     from time import time

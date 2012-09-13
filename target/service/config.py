@@ -80,7 +80,7 @@ class Config(object):
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
     dbs['fti'] = dbs['idx']
 
-    ftengines = ('tcp://192.168.88.3:10050', 'tcp://192.168.88.4:10050', )
+    ftengines = ('tcp://192.168.88.3:10050', 'tcp://192.168.88.3:10050', 'tcp://192.168.88.4:10050', )
     locdbs = (
         #'tcp://192.168.88.1:10051',
         'tcp://192.168.88.2:10051',
@@ -90,6 +90,8 @@ class Config(object):
 
     tokenizers = ('tcp://192.168.88.2:10012',
         'tcp://192.168.88.4:10012',)
+
+    adcollectors = ('tcp://192.168.88.2:10013', )
 
     iothreads = 1
 
@@ -101,6 +103,7 @@ class Config(object):
         tokenizers = ('tcp://127.0.0.1:10012', )
         ftengines = ('tcp://127.0.0.1:10050', )
         locdbs = ('tcp://127.0.0.1:10051', )
+        adcollectors = ('tcp://127.0.0.1:10013', )
         iothreads = 1
 
     __instance = None
@@ -144,6 +147,14 @@ class Config(object):
         else:
             return self.locdbs[randint(0, len(self.locdbs) - 1)]
 
+    def getAdCollector(self):
+        if isinstance(self.adcollectors, basestring):
+            return self.adcollectors
+        elif len(self.adcollectors) == 1:
+            return self.adcollectors[0]
+        else:
+            return self.adcollectors[randint(0, len(self.adcollectors) - 1)]
+
     jsoner = JSONEr()
     msgpack = MsgPacker()
     packer = msgpack
@@ -167,7 +178,13 @@ class SysConfig(object):
     MAX_ADS = 1
     MAX_KW_OF_LOC = 20
 
-    zmq_context = zmq.Context(Config.iothreads)
+    _zmq_context = None
+    def __getattr__(self, item):
+        if item == 'zmq_context':
+            if self.__class__._zmq_context is None and self._zmq_context is None:
+                self.__class__._zmq_context = zmq.Context(Config.iothreads)
+            return self._zmq_context
+        raise KeyError("<%s> doesn't has attribute '%s'" % (self.__class__.__name__, item))
 
 config = Config.instance()
 sysconfig = SysConfig()

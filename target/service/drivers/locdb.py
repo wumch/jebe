@@ -29,9 +29,7 @@ class LocDB(object):
     def createSocks(self):
         self.socks = []
         for uri in config.locdbs:
-            sock = sysconfig.zmq_context.socket(zmq.REQ)
-            sock.connect(uri)
-            qsock = QueuedSock(sock)
+            qsock = QueuedSock(uri=uri)
             qsock.serve()
             self.socks.append(qsock)
 

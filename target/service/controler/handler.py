@@ -32,17 +32,20 @@ class Handler(object):
     def response(self, data):
         self.sock.send(data if isinstance(data, basestring) else config.jsoner.encode(data))
 
+    def replyAds(self, ads):
+        self.response(ads)
+
     def mrads(self, **kwargs_for_get_ads):
         """
         match and reply ads.
         @param kwargs_for_get_ads
             some arguments for get ads.
         """
-        self.response(self._getAds(**kwargs_for_get_ads))
+        self._getAds(callback=self.replyAds, **kwargs_for_get_ads)
 
-    def _getAds(self, content=None, words=None, loc=None):
+    def _getAds(self, content=None, words=None, loc=None, callback=None):
         if words:
-            ads = self.adsupplier.byMarvedWords(words=words)
+            ads = self.adsupplier.byMarvedWords(words=words, callback=callback)
             if ads:
                 res = '[' + ','.join(ads) + ']'
                 logger.info('ad shown by dealer: ' + res)

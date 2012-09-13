@@ -13,7 +13,7 @@ class HAdsByLoc(Handler):
 
     def __init__(self, request, params):
         super(HAdsByLoc, self).__init__(request=request, params=params)
-        self.pageUrl = self.params['url'] if 'url' in self.params else None
+        self.pageUrl = self._getPageUrl()
 
     def _handle(self):
         self._fetchAds()
@@ -26,12 +26,19 @@ class HAdsByLoc(Handler):
             return []
         self.locdb.marve(self.pageUrl, callback=self._handleResult)
 
+    def _getPageUrl(self):
+        if 'url' in self.params:
+           return self.params['url']
+        else:
+            headers = self.request.get_input_headers()
+            for name, value in headers:
+                if name == 'Referer':
+                    return value
+
     def _processResult(self, words):
         if words is False:      # page non-exists
-            return self.jsCrawlPage
-        if words is None:       # error occured (from locdb server)
-            return []
-        self.adsupplier.byMarvedWords(words=words, callback=self._onAds)
+            return self._reply(content=self.jsCrawlPage)
+        self.adsupplier.byMarvedWords(words=words or [], callback=self._onAds)
 
     def _onAds(self, ads):
         self.ads = ads

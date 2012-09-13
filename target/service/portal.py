@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import gevent
-from gevent.http import HTTPServer
-
 try:
     import psyco
     psyco.jit()
@@ -10,11 +7,14 @@ try:
 except ImportError:
     pass
 
+import sys
+import gevent
+from gevent.http import HTTPServer
 from utils.natip import natip
 from controler.wsgiwrap import WsgiApp
 
 def run():
-    addr = (natip, 10020)
+    addr = (natip, int(sys.argv[1]) if len(sys.argv) > 1 else 10020)
     backlog = 512
     app = WsgiApp()
     if gevent.version_info < (0, 13, 7):

@@ -11,7 +11,7 @@ class FileStorer(object):
     suffix = '.txt'
 
     def __init__(self):
-        self.fp = open(self.genFileName(), 'a')
+        self.fp = open(self.genFileName(), 'a+')
 
     def store(self, content):
         self.fp.write(content)
@@ -22,6 +22,7 @@ class FileStorer(object):
             os.mkdir(self.prefix)
         basename = 1
         filename = self.prefix + str(basename) + self.suffix
+        return filename
         while os.path.exists(filename):
             basename += 1
             filename = self.prefix + str(basename) + self.suffix

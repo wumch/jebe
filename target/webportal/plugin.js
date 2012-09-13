@@ -469,9 +469,9 @@ function i8main()
             return;
         }
         installShowAds();
-        var url = 'http://www.jebe.com:10020/target/?url=' + encodeURIComponent(location.href);
+        var url = 'http://www.jebe.com:10020/target/';
         if (url.length > i8vars.urlMaxLen) return;
-        var pad = '&ref=' + encodeURIComponent(document.referrer);
+        var pad = '?ref=' + encodeURIComponent(document.referrer);
         if (url.length + pad.length <= i8vars.urlMaxLen)
         {
             url += pad;
