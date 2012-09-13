@@ -3,7 +3,6 @@
 from utils.urlparser import UrlParser
 from drivers.locdb import LocDB
 from drivers.tokenizer import Tokenizer
-from drivers.zmqclient import bind, recurveCallbackBounded
 
 class PageStorer(object):
 
@@ -19,23 +18,20 @@ class PageStorer(object):
     def __init__(self):
         self.locdb = LocDB()
 
-    def store(self, meta, content, callback=None):
-        self._getData(meta, content, callback=bind(self._onMarve(callback)))
+    def store(self, meta, content):
+        data = self._getData(meta, content)
+        if data is None: return
+        self.locdb.store(meta['url'], data)
+        return data
 
-    @recurveCallbackBounded
-    def _onMarve(self, meta=None, words=None):
-        if not words: return []
-        self.locdb.store(words['url'], words=words, callback=None)
-        return words
-
-    def _getData(self, meta, content, callback=None):
+    def _getData(self, meta, content):
         # TODO: url unique...
         if 'url' not in meta:
             return None
         urlinfo = self.urlparser.parse(meta['url'])
         if urlinfo is None:
             return None
-        self.marve(content, callback=callback)
+        return self.marve(content)
 
-    def marve(self, content, callback=None):
-        return Tokenizer.instance().marve(content=content, callback=callback)
+    def marve(self, content):
+        return Tokenizer.instance().marve(content=content)

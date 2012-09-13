@@ -23,7 +23,3 @@ class FileStorer(object):
         basename = 1
         filename = self.prefix + str(basename) + self.suffix
         return filename
-        while os.path.exists(filename):
-            basename += 1
-            filename = self.prefix + str(basename) + self.suffix
-        return filename
