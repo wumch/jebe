@@ -53,8 +53,10 @@ class WsgiApp(object):
         if qs:
             params = dict(parse_qs(qs=qs))
             for k, v in params.iteritems():
-                if isinstance(v, list):
-                    params[k] = v[-1] if len(v) else ''
+                if isinstance(v, basestring):
+                    params[k] = v.strip()
+                elif isinstance(v, list):
+                    params[k] = v[-1].strip() if len(v) else ''
         else:
             params = {}
         return self._pickHandler(action), params
