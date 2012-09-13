@@ -31,7 +31,7 @@ class HKWByLoc(Handler):
         else:
             headers = self.request.get_input_headers()
             for name, value in headers:
-                if name == 'Referer':
+                if name.lower() == 'referer':
                     return value
 
     def _processResult(self, words):

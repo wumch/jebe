@@ -45,6 +45,7 @@ class QueuedSock(object):
         self.sock = self.context.socket(self.socktype)
         self.sock.connect(self.uri)
         self.queue = gevent.queue.Queue(self.QUEUE_SIZE)
+        self.serve()
 
     def emptyCallback(self, *args, **kwargs):
         pass

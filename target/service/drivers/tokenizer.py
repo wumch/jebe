@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
 import struct
 from config import config, logger
-from zmqclient import QueuedSock
+from zmqclient import QueuedSock, recurveCallbackBounded
 
 class Tokenizer(object):
 
@@ -48,10 +48,15 @@ class Tokenizer(object):
     def request(self, content, action, callback=None):
         try:
             data = self.actionPacker.pack(self.actions[action]) + (content.encode(self._SERVER_CHARSET) if isinstance(content, unicode) else content)
-            res = self._request(data=data, callback=callback)
-            return config.msgpack.decode(res)
+            self._request(data=data, callback=self._onResponse(callback))
+#            self._request(data=data, callback=self._onResponse)
         except Exception, e:
             logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
+
+    @recurveCallbackBounded
+    def _onResponse(self, response):
+        print response
+        return config.msgpack.decode(response)
 
     def _request(self, data, callback):
         self.sock.send(data, callback=callback)

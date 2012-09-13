@@ -51,6 +51,8 @@ class Config(object):
     LOG_FILE = r'/var/log/adsys.log'
     TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
+    interal_api_host = '192.168.88.2'
+
     router_port = 10010
     dealer_port = 10011
     routers = ({'host':'192.168.88.1', 'port':dealer_port},)
@@ -91,7 +93,7 @@ class Config(object):
     tokenizers = ('tcp://192.168.88.2:10012',
         'tcp://192.168.88.4:10012',)
 
-    adcollectors = ('tcp://192.168.88.2:10013', )
+    adcollectors = ('tcp://%s:10013' % interal_api_host, )
 
     iothreads = 1
 
@@ -100,10 +102,10 @@ class Config(object):
         riaks = ({'host':natip, 'port':riak_port}, )
         for k in dbs:
             dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
-        tokenizers = ('tcp://127.0.0.1:10012', )
-        ftengines = ('tcp://127.0.0.1:10050', )
-        locdbs = ('tcp://127.0.0.1:10051', )
-        adcollectors = ('tcp://127.0.0.1:10013', )
+        tokenizers = ('tcp://%s:10012' % natip, )
+        ftengines = ('tcp://%s:10050' % natip, )
+        locdbs = ('tcp://%s:10051' % natip, )
+        adcollectors = ('tcp://%s:10013' % natip, )
         iothreads = 1
 
     __instance = None

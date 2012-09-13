@@ -30,7 +30,6 @@ class FTEngine(object):
         self.packer = msgpack.Packer(encoding=config.CHARSET)
         self.unpacker = msgpack.Unpacker(encoding=config.CHARSET)
         self.sock = QueuedSock(config.getFTEngine())
-        self.sock.serve()
 
     def match(self, words, callback):
         return self.request(words=self.decorateWords(words), action='match', callback=callback)

@@ -7,13 +7,15 @@ try:
 except ImportError:
     pass
 
-import zmq, struct
+import gevent
+from gevent_zeromq import zmq
+import struct
 from config import config, DEBUG
 from controler.handler import Handler
 from controler.hcrawl import HCrawl
 
 context = zmq.Context(1)
-sock = context.socket(zmq.REP)
+sock = context.socket(zmq.XREP)
 sock.connect("tcp://%(host)s:%(port)d" % config.getRouter())
 
 class Dealer(object):
@@ -39,16 +41,19 @@ class Dealer(object):
         else:
             handler.handle(payload)
 
-if __name__ == '__main__':
-    if DEBUG: print 'running in DEBUG mode'
+def run():
     dealer = Dealer()
     while True:
         data = sock.recv_multipart()
-        if DEBUG: print "received", len(data)
+        if DEBUG: print "received %d parts" % len(data)
         if len(data) > 1:
             try:
-                dealer.handle(data[0], data[1:])
+                dealer.handle(data[3], data[4:])
             except Exception:
                 Handler.replyErr(sock)
         else:
             Handler.replyErr(sock)
+
+if __name__ == '__main__':
+    if DEBUG: print 'running in DEBUG mode'
+    gevent.joinall([gevent.spawn(run)])

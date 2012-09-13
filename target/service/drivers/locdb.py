@@ -29,9 +29,7 @@ class LocDB(object):
     def createSocks(self):
         self.socks = []
         for uri in config.locdbs:
-            qsock = QueuedSock(uri=uri)
-            qsock.serve()
-            self.socks.append(qsock)
+            self.socks.append(QueuedSock(uri=uri))
 
     def marve(self, url, callback):
         return self.request(self.getSock(url), self.packer.pack(url), action='marve', callback=self._processMarve(callback))

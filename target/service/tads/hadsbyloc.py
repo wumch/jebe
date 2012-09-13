@@ -13,14 +13,15 @@ class HAdsByLoc(Handler):
 
     def __init__(self, request, params):
         super(HAdsByLoc, self).__init__(request=request, params=params)
-        self.pageUrl = self._getPageUrl()
         self.ads = []
+        self.pageUrl = self._getPageUrl()
 
     def _handle(self):
         self._fetchAds()
 
     def _genOut(self):
-        self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '([' + ','.join(self.ads) + ']);'
+        if not self.out:
+            self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '([' + ','.join(self.ads) + ']);'
 
     def _fetchAds(self):
         if not isinstance(self.pageUrl, basestring):
@@ -33,7 +34,7 @@ class HAdsByLoc(Handler):
         else:
             headers = self.request.get_input_headers()
             for name, value in headers:
-                if name == 'Referer':
+                if name.lower() == 'referer':
                     return value.strip()
 
     def _processResult(self, words):

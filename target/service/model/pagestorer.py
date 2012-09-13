@@ -20,10 +20,10 @@ class PageStorer(object):
         self.locdb = LocDB()
 
     def store(self, meta, content, callback=None):
-        self._getData(meta, content, callback=bind(self._onMarve(callback), meta=meta))
+        self._getData(meta, content, callback=bind(self._onMarve(callback)))
 
     @recurveCallbackBounded
-    def _onMarve(self, meta, words):
+    def _onMarve(self, meta=None, words=None):
         if not words: return []
         self.locdb.store(words['url'], words=words, callback=None)
         return words
