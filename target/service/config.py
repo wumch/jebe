@@ -52,6 +52,8 @@ class Config(object):
     TIME_ZONE = 'Asia/Shanghai'     # currently useless.
 
     interal_api_host = '192.168.88.2'
+    if DEBUG:
+        interal_api_host = natip
 
     router_port = 10010
     dealer_port = 10011

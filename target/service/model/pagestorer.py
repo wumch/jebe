@@ -1,8 +1,8 @@
 #coding:utf-8
 
 from utils.urlparser import UrlParser
-from drivers.locdb import LocDB
-from drivers.tokenizer import Tokenizer
+from driversync.locdb import LocDB
+from driversync.tokenizer import Tokenizer
 
 class PageStorer(object):
 
