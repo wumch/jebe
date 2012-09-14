@@ -2,7 +2,7 @@
 
 import sys
 import zmq, struct
-from config import config, sysconfig
+from config import config
 from controler.handler import Handler as BaseHandler
 
 class Handler(BaseHandler):
@@ -18,9 +18,12 @@ class Handler(BaseHandler):
 
     def serve(self):
         while True:
-            self.handle(self.sock.recv())
+            data = self.sock.recv()
+            print data
+            self.handle(data)
 
     def handle(self, data):
+        print "data:", data
         self._handle(data=data)
         self._finish()
 
@@ -28,7 +31,10 @@ class Handler(BaseHandler):
         self._pickHandler(data[0])(config.msgpack.decode(data[1:]))
 
     def _finish(self):
+        print "self.res:", self.res
+        print "encode(self.res):", config.msgpack.encode(self.res)
         self.sock.send(config.msgpack.encode(self.res))
+        print 'sent'
 
     def _store(self, ad):
         print 'storing ad:'
@@ -40,15 +46,20 @@ class Handler(BaseHandler):
         self.res = self.ERR
 
     def _pickHandler(self, byte):
-        action = self.actionPacker.unpack(byte)
+        action = self.actionPacker.unpack(byte)[0]
+        print 'action:[%d]' % action
         return getattr(self, '_' + self.actions[action]) if action in self.actions else self._error
 
 def run():
-    sock = sysconfig.zmq_context.socket(zmq.REP)
+    sock = zmq.Context(1).socket(zmq.REP)
     addr = config.getAdCollector()
-    sock.connect(addr)
+    sock.bind(addr)
     print "listen on", addr
     Handler(sock=sock).serve()
 
 if __name__ == '__main__':
     run()
+
+'''
+doc_1:{word_1:count_1, word_2:count_2, word_3:count_3...}
+'''

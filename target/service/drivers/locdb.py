@@ -87,9 +87,6 @@ if __name__ == '__main__':
         print "write %d entries in %d seconds" % (times, consumed)
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
-#    testWrite()
-#    sys.exit(0)
-
     def testRead():
         begin = time()
         for i in xrange(0, times):
