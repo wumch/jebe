@@ -27,6 +27,13 @@ class WsgiApp(object):
         pass
 
     def __call__(self, request):
+        try:
+            self._process(request)
+        except Exception, e:
+            logger.logException(e)
+            request.send_error()
+
+    def _process(self, request):
         handlerClass, params = self.parseUri(request.uri)
         if handlerClass:
             try:
