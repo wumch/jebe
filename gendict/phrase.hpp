@@ -2,23 +2,20 @@
 #pragma once
 
 #include "predef.hpp"
-#include <string.h>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/preprocessor.hpp>
-#include "utils.hpp"
-#include "hash.hpp"
-#include "misc.hpp"
 #ifdef __linux
 #	include <limits.h>
 #endif
+#include <string.h>
+#include <boost/unordered_map.hpp>
+#include <boost/preprocessor.hpp>
+#include <boost/pool/pool_alloc.hpp>
+#include "hash.hpp"
+#include "misc.hpp"
+#include "memory.hpp"
+#include "utils.hpp"
 
 namespace jebe {
 namespace cws {
-
-template<uint8_t plen, uint8_t bits>
-class PhraseHash;
 
 template<uint8_t length>
 class Phrase
@@ -27,60 +24,8 @@ class Phrase
 public:
 	enum { len = length };
 	typedef Phrase<length> P;
-	typedef std::equal_to<P> EqualType;
-
-	typedef PhraseHash<length, MapHashBits<length>::bits> MapHashType;
-	typedef boost::fast_pool_allocator<P, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 1 << (MapHashBits<length>::bits >> 2)> MapAllocType;
-
-	typedef PhraseHash<length, PadHashBits<length>::bits> PadHashType;
-	typedef boost::fast_pool_allocator<P, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 1 << (PadHashBits<length>::bits >> 2)> PadAllocType;
-
-	typedef boost::unordered_map<P, atimes_t, MapHashType, EqualType, MapAllocType> MapType;
-
-	typedef Phrase<1> Suffix;
-	typedef std::pair<Suffix, atimes_t> Pad;
-
-	typedef boost::fast_pool_allocator<Pad, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 6763> ListElemAllocType;
-
-	template<typename T>
-	class SumedList
-	{
-	public:
-		typedef std::list<T, ListElemAllocType> List;
-		typedef typename List::iterator iterator;
-		typedef typename List::const_iterator const_iterator;
-
-		std::size_t sum;
-		List list;
-
-		SumedList(): sum(0) {}
-
-		void append(const T& elem)
-		{
-			list.push_back(elem);
-			sum += elem.second;
-		}
-
-		const List* operator->() const
-		{
-			return &list;
-		}
-
-		List* operator->()
-		{
-			return &list;
-		}
-	};
-
-	typedef SumedList<Pad> PadList;
-	typedef boost::unordered_map<P, PadList, PadHashType, EqualType, PadAllocType> PadMap;
 
 	typedef CharType StrType[length];
-
-//protected:
 	StrType str;
 
 public:
@@ -101,9 +46,7 @@ public:
 
 	operator String() const
 	{
-		String s;
-		s.assign(str, length);
-		return s;
+		return String(str, length);
 	}
 
 	operator uint16_t() const
@@ -134,25 +77,6 @@ bool operator==(const Phrase<len>& lph, const Phrase<len>& rph)
 {
 	return PhraseMatch<len, len>::match(lph.str, rph.str);
 }
-
-template<uint8_t plen> CS_FORCE_INLINE
-uint32_t hfhash(const Phrase<plen>& p);
-
-template<uint8_t plen, uint8_t bits>
-class PhraseHash
-{
-	BOOST_STATIC_ASSERT(bits <= (sizeof(std::size_t) * CHAR_BIT));
-public:
-	typedef Phrase<plen> Ph;
-	typedef staging::BitsHash<bits> BHasher;
-
-	static BHasher hasher;
-
-	uint32_t operator()(const Ph& ph) const
-	{
-		return hfhash<plen>(ph);
-	}
-};
 
 } /* namespace fts */
 } /* namespace jebe */

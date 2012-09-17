@@ -6,7 +6,7 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/extractor
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -48,15 +48,15 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/extractor.o $(OBJECT_PATH)/main.o
+OBJS = $(OBJECT_PATH)/extractor.o $(OBJECT_PATH)/analyzer.o $(OBJECT_PATH)/phrase.o $(OBJECT_PATH)/main.o
 
 all: $(OBJS)
 	@echo Linking...
-	$(CCMD) $(LDFLAGS) $(LIBS) $^ $(EXEFLAG) $(EXE)
+	$(CCMD) $(LDFLAGS) $^ $(LIBS) $(EXEFLAG) $(EXE)
 
 clean:
 	-rm -f $(EXE)
-	-find $(OBJECT_PATH) -name "*.$(OBJ)" | xargs rm -f
+	-find $(OBJECT_PATH) -name "*.$(OBJ)" -type f | xargs rm -f
 
 .PHONY: .preany
 
@@ -66,13 +66,19 @@ clean:
 
 GLOBAL_DEPEND = $(SOURCE_PATH)/../staging/staging.hpp
 
-$(SOURCE_PATH)/predef.hpp: $(SOURCE_PATH)/allocator.hpp
-
 $(OBJECT_PATH)/main.o: $(SOURCE_PATH)/main.cpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/extractor.o: $(SOURCE_PATH)/extractor.cpp $(SOURCE_PATH)/extractor.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/analyzer.o: $(SOURCE_PATH)/analyzer.cpp $(SOURCE_PATH)/analyzer.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/phrase.o: $(SOURCE_PATH)/phrase.cpp $(SOURCE_PATH)/phrase.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

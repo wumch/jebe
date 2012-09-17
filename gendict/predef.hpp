@@ -1,29 +1,39 @@
 
 #pragma once
 
-#define CS_DEBUG	0
-#define CS_LOG_ON	0
-#define CS_USE_WCS	0
+//#define CS_DEBUG	0
+//#define CS_LOG_ON	0
+#define CS_USE_WCS	1
 
-#define _JEBE_WORD_MAX_LEN				7
+#define _JEBE_WORD_MAX_LEN				5
 #define _JEBE_ASCII_WORD_MAX_LEN		20
 #define _JEBE_WORD_MIN_ATIMES			10
 #define _JEBE_PROCESS_STEP				(2 << 20)
+#define	_JEBE_GB_CHAR_MAX				65536
 
 #include "staging.hpp"
+#include <string>
 #include <boost/static_assert.hpp>
 
-BOOST_STATIC_ASSERT(_JEBE_WORD_MAX_LEN < 256);
+#if CS_LOG_ON
+#	include <sstream>
+namespace jebe {
+namespace cws {
+static std::wstringstream log;
+}
+}
+#	define CS_LOG(...)		log << __VA_ARGS__
+#else
+#	define CS_LOG(...)
+#endif
 
 namespace jebe {
 namespace cws {
+typedef uint32_t atimes_t;
+typedef wchar_t	CharType;
+BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
+typedef std::wstring String;
 
-#if CS_LOG_ON
-std::wstringstream log;
-#define CS_LOG(...)  log << __VA_ARGS__
-#else
-#define CS_LOG(...)
-#endif
-
+BOOST_STATIC_ASSERT(_JEBE_WORD_MAX_LEN < 256);
 }
 }

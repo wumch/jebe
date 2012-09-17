@@ -19,25 +19,12 @@
 #include "utils.hpp"
 #include "hash.hpp"
 #include "misc.hpp"
+#include "phrase.hpp"
+#include "phrasetrait.hpp"
+//#include "extractor.impl.hpp"
 
 namespace jebe {
 namespace cws {
-
-template<uint8_t plen>
-class PadEqual
-{
-private:
-	typedef Phrase<plen> P;
-	const P& phrase;
-
-public:
-	explicit PadEqual(const P& p): phrase(p) {}
-
-	bool operator()(const typename P::Pad& p) const
-	{
-		return p.first == phrase;
-	}
-};
 
 class Analyzer
 {
@@ -45,18 +32,18 @@ public:
 	typedef boost::unordered_map<String, atimes_t> Words;
 
 protected:
-	typedef boost::array<atimes_t, Extractor::gb_char_max> SuffixMap;
+	typedef boost::array<atimes_t, _JEBE_GB_CHAR_MAX> SuffixMap;
 	SuffixMap smap;
 
-	#define _JEBE_DECL_MAP(Z, n, N)		BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(map, n);
+	#define _JEBE_DECL_MAP(Z, n, N)		PhraseTrait<n>::MapType& BOOST_PP_CAT(map, n);
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DECL_MAP, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_MAP
 
-	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(pad, n);
+	#define _JEBE_DECL_PAD(Z, n, N)		PhraseTrait<n>::PadMap BOOST_PP_CAT(pad, n);
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
-	#define _JEBE_DECL_PAD(Z, n, N)		BOOST_PP_CAT(Ph, n)::PadMap BOOST_PP_CAT(prx, n);
+	#define _JEBE_DECL_PAD(Z, n, N)		PhraseTrait<n>::PadMap BOOST_PP_CAT(prx, n);
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
@@ -67,7 +54,7 @@ protected:
 	static const double entropyThresholdLower	= 0.3;
 	static const double entropyThresholdUpper	= 1.5;
 	static const double joinThresholdLower		= 50.;
-	static const double joinThresholdUpper		= 1000.;
+	static const double joinThresholdUpper		= 100.;
 	static const uint32_t atimesThreshold		= 200;
 
 	enum WordExamineRes {
@@ -79,7 +66,7 @@ protected:
 	};
 
 public:
-	#define _JEBE_ANALYZER_ARG(Z, n, N)				BOOST_PP_CAT(Ph, n)::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+	#define _JEBE_ANALYZER_ARG(Z, n, N)				PhraseTrait<n>::MapType& BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 	#define _JEBE_ANALYZER_INIT_MAP(Z, n, N)		BOOST_PP_CAT(map, n)(BOOST_PP_CAT(BOOST_PP_CAT(map, n), _)),
 	#define _JEBE_ANALYZER_INIT_PAD(Z, n, N)		BOOST_PP_CAT(pad, n)(1 << PadHashBits<n>::bits),
 	#define _JEBE_ANALYZER_INIT_PRX(Z, n, N)		BOOST_PP_CAT(prx, n)(1 << PadHashBits<n>::bits)BOOST_PP_COMMA_IF(BOOST_PP_LESS(n, _JEBE_WORD_MAX_LEN))
@@ -110,20 +97,20 @@ protected:
 
 	template<uint8_t plen> CS_FORCE_INLINE
 	bool isTailTypo(const Phrase<plen>& phrase, atimes_t atimes,
-		const typename Phrase<plen - 1>::MapType& prefixmap) const;
+		const typename PhraseTrait<plen - 1>::MapType& prefixmap) const;
 
 	template<uint8_t plen>
-	void extractWords_(typename Phrase<plen>::MapType& map,
-			const typename Phrase<plen - 1>::MapType& prefixmap,
-			const typename Phrase<plen - 1>::PadMap& padmap,
-			const typename Phrase<plen - 1>::PadMap& prxmap
+	void extractWords_(typename PhraseTrait<plen>::MapType& map,
+			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+			const typename PhraseTrait<plen - 1>::PadMap& padmap,
+			const typename PhraseTrait<plen - 1>::PadMap& prxmap
 		)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
 
 		typedef Phrase<plen - 1> ShorterPhraseType;
 		WordExamineRes res = no;
-		for (typename Phrase<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
+		for (typename PhraseTrait<plen>::MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
 			res = judgePad<plen>(it->first, map, prefixmap, padmap);
 			if (CS_BUNLIKELY(res & yes))
@@ -158,16 +145,16 @@ protected:
 
 	template<uint8_t plen>
 	Analyzer::WordExamineRes judgePad(const Phrase<plen>& phrase,
-			const typename Phrase<plen>::MapType& map,
-			const typename Phrase<plen - 1>::MapType& prefixmap,
-			const typename Phrase<plen - 1>::PadMap& padmap
+			const typename PhraseTrait<plen>::MapType& map,
+			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+			const typename PhraseTrait<plen - 1>::PadMap& padmap
 		) const;
 
 	template<uint8_t plen>
 	Analyzer::WordExamineRes judgePrx(const Phrase<plen>& phrase,
-			const typename Phrase<plen>::MapType& map,
-			const typename Phrase<plen - 1>::MapType& prefixmap,
-			const typename Phrase<plen - 1>::PadMap& padmap
+			const typename PhraseTrait<plen>::MapType& map,
+			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+			const typename PhraseTrait<plen - 1>::PadMap& padmap
 		) const;
 
 	void caltureTotalAtimes()
@@ -178,9 +165,9 @@ protected:
 	}
 
 	template<uint8_t plen>
-	void caltureTotalAtimes_(const typename Phrase<plen>::MapType& map)
+	void caltureTotalAtimes_(const typename PhraseTrait<plen>::MapType& map)
 	{
-		typedef typename Phrase<plen>::MapType::const_iterator IterType;
+		typedef typename PhraseTrait<plen>::MapType::const_iterator IterType;
 		for (IterType it = map.begin(); it != map.end(); ++it)
 		{
 			totalAtimes[plen - 1] += it->second;
@@ -195,14 +182,15 @@ protected:
 	}
 
 	template<uint8_t prefix_len>
-	void buildPadMap_(typename Phrase<prefix_len>::PadMap& padmap, const typename Phrase<prefix_len + 1>::MapType& map)
+	void buildPadMap_(typename PhraseTrait<prefix_len>::PadMap& padmap, const typename PhraseTrait<prefix_len + 1>::MapType& map)
 	{
-		typedef Phrase<prefix_len> PrefixType;
-		typedef typename PrefixType::Suffix SuffixType;
-		typedef typename Phrase<prefix_len + 1>::MapType MapType;
+		typedef PhraseTrait<prefix_len> PrefixTrait;
+		typedef typename PrefixTrait::PhraseType PrefixType;
+		typedef typename PrefixTrait::SuffixType SuffixType;
+		typedef typename PhraseTrait<prefix_len + 1>::MapType MapType;
 
-		typedef typename PrefixType::PadList PadListType;
-		typedef typename PrefixType::PadMap PadMapType;
+		typedef typename PrefixTrait::PadList PadListType;
+		typedef typename PrefixTrait::PadMap PadMapType;
 
 		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
@@ -218,12 +206,12 @@ protected:
 			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(suffix));
 			if (padit == plist->end())
 			{
-				plist.append(typename PrefixType::Pad(suffix, it->second));
+				plist.append(typename PrefixTrait::PadType(suffix, it->second));
 				CS_SAY("first " << prefix_len << ", prefix: [" << prefix << "], suffix: [" << suffix << "], atimes: " << it->second);
 			}
 			else
 			{
-				padit->second = it->second;
+				padit->second += it->second;
 				CS_SAY("repeat " << prefix_len << ", prefix: [" << prefix << "], suffix: " << suffix << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
@@ -238,14 +226,17 @@ protected:
 	}
 
 	template<uint8_t prefix_len>
-	void buildPrxMap_(typename Phrase<prefix_len>::PadMap& prxmap, const typename Phrase<prefix_len + 1>::MapType& map)
+	void buildPrxMap_(typename PhraseTrait<prefix_len>::PadMap& prxmap, const typename PhraseTrait<prefix_len + 1>::MapType& map)
 	{
-		typedef Phrase<prefix_len> SuffixType;
-		typedef typename SuffixType::Suffix PrefixType;
-		typedef typename Phrase<prefix_len + 1>::MapType MapType;
+		typedef PhraseTrait<prefix_len> SuffixTrait_;
+		typedef typename SuffixTrait_::PhraseType SuffixType;
+		typedef typename SuffixTrait_::SuffixType PrefixType;
 
-		typedef typename SuffixType::PadList PadListType;
-		typedef typename SuffixType::PadMap PadMapType;
+		typedef PhraseTrait<prefix_len + 1> Trait;
+		typedef typename Trait::MapType MapType;
+
+		typedef typename SuffixTrait_::PadList PadListType;
+		typedef typename SuffixTrait_::PadMap PadMapType;
 
 		for (typename MapType::const_iterator it = map.begin(); it != map.end(); ++it)
 		{
@@ -261,12 +252,12 @@ protected:
 			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(prefix));
 			if (padit == plist->end())
 			{
-				plist.append(typename SuffixType::Pad(prefix, it->second));
+				plist.append(typename SuffixTrait::PadType(prefix, it->second));
 				CS_SAY("first " << prefix_len << ", prefix: [" << suffix << "], suffix: [" << prefix << "], atimes: " << it->second);
 			}
 			else
 			{
-				padit->second = it->second;
+				padit->second += it->second;
 				CS_SAY("repeat " << prefix_len << ", prefix: [" << suffix << "], suffix: " << prefix << "], atimes: " << it->second);
 			}
 			CS_SAY("plist.sum: " << plist.sum << " (" << &plist << ")");
@@ -275,8 +266,8 @@ protected:
 
 	void buildSuffixMap()
 	{
-		typedef Phrase<1> PhraseType;
-		typedef PhraseType::Suffix::MapType MapType;
+		typedef PhraseTrait<1> Trait;
+		typedef Trait::MapType MapType;
 		for (MapType::const_iterator it = map1.begin(); it != map1.end(); ++it)
 		{
 			smap[it->first] = it->second;
@@ -286,7 +277,7 @@ protected:
 	void clean(std::size_t min_atimes);
 
 	template<uint8_t plen>
-	void clean_(typename Phrase<plen>::MapType& map, std::size_t min_atimes);
+	void clean_(typename PhraseTrait<plen>::MapType& map, std::size_t min_atimes);
 };
 
 } /* namespace cws */

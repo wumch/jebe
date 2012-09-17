@@ -1,13 +1,10 @@
 
 #pragma once
 
+#include "predef.hpp"
+
 namespace jebe {
 namespace cws {
-
-typedef uint32_t atimes_t;
-typedef wchar_t	CharType;
-BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
-typedef std::wstring String;
 
 template<uint8_t plen> class MapHashBits { public: enum { bits = 13 }; };
 template<> class MapHashBits<1> { public: enum { bits = 12 }; };

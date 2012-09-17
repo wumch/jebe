@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "staging.hpp"
-#include "extractor.hpp"
-#include "misc.hpp"
+#include "predef.hpp"
 #include <boost/preprocessor.hpp>
+#include "misc.hpp"
+#include "phrase.hpp"
 
 #if CS_IS_LITTLE_ENDIAN
 #	define _JEBE_STR_SHT_2(bit)			BOOST_PP_IF(BOOST_PP_MOD(bit, 2), ^, _JEBE_STR_SHT_4(bit))
@@ -26,56 +26,60 @@ namespace cws {
 BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
 //#include BOOST_PP_LOCAL_ITERATE()
 
-template<uint8_t n> CS_FORCE_INLINE uint32_t hfhash(const Phrase<n>& p);
-//{
-//	unsigned int mask = 0;
-//	std::cout << "yundao" << std::endl;
-//	char* res = reinterpret_cast<char*>(&mask);
-//	for (uint i = 0; i < (n); ++i)
-//	{
-//		res[i & 3] ^= p.str[i];
-//	}
-//	return mask;
-//}
+class HFHash
+{
+public:
+	template<uint8_t n> CS_FORCE_INLINE static uint32_t hfhash(const Phrase<n>& p)
+	{
+		unsigned int mask = 0;
+		char* res = reinterpret_cast<char*>(&mask);
+		const char* data = reinterpret_cast<const char*>(p.str);
+		for (uint i = 0; i < (n); ++i)
+		{
+			res[i & 3] ^= p.str[i];
+		}
+		return mask;
+	}
+};
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<1>(const Phrase<1>& p)
+uint32_t HFHash::hfhash<1>(const Phrase<1>& p)
 {
 	return static_cast<uint16_t>(p.str[0]);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<2>(const Phrase<2>& p)
+uint32_t HFHash::hfhash<2>(const Phrase<2>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<3>(const Phrase<3>& p)
+uint32_t HFHash::hfhash<3>(const Phrase<3>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<4>(const Phrase<4>& p)
+uint32_t HFHash::hfhash<4>(const Phrase<4>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<5>(const Phrase<5>& p)
+uint32_t HFHash::hfhash<5>(const Phrase<5>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 16);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<6>(const Phrase<6>& p)
+uint32_t HFHash::hfhash<6>(const Phrase<6>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16);
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<7>(const Phrase<7>& p)
+uint32_t HFHash::hfhash<7>(const Phrase<7>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ (static_cast<uint16_t>(p.str[6]) << 16);
 }
@@ -87,22 +91,10 @@ uint32_t hfhash<8>(const Phrase<8>& p)
 }
 
 template<> CS_FORCE_INLINE
-uint32_t hfhash<9>(const Phrase<9>& p)
+uint32_t HFHash::hfhash<9>(const Phrase<9>& p)
 {
 	return static_cast<uint16_t>(p.str[0]) ^ (static_cast<uint16_t>(p.str[1]) << 8) ^ (static_cast<uint16_t>(p.str[2]) << 16) ^ static_cast<uint16_t>(p.str[3]) ^ (static_cast<uint16_t>(p.str[4]) << 8) ^ (static_cast<uint16_t>(p.str[5]) << 16)  ^ static_cast<uint16_t>(p.str[6]) ^ (static_cast<uint16_t>(p.str[7]) << 8)  ^ (static_cast<uint16_t>(p.str[8]) << 16);
 }
-
-//template<uint8_t n> CS_FORCE_INLINE uint32_t hfhash(const Phrase<n>& p)
-//{
-//	unsigned int mask = 0;
-//	char* res = reinterpret_cast<char*>(&mask);
-//	const char* data = reinterpret_cast<const char*>(p.str);
-//	for (uint i = 0; i < (n); ++i)
-//	{
-//		res[i & 3] ^= p.str[i];
-//	}
-//	return mask;
-//}
 
 }
 }

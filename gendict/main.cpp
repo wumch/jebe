@@ -1,5 +1,5 @@
 
-#include "staging.hpp"
+#include "predef.hpp"
 #include <iostream>
 #include <auto_ptr.h>
 #include <boost/filesystem.hpp>

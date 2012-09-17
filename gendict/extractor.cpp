@@ -1,7 +1,5 @@
 
 #include "extractor.hpp"
-#include "memory.hpp"
-#include "extractor.impl.hpp"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -11,10 +9,13 @@
 #include <boost/iostreams/code_converter.hpp>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/preprocessor.hpp>
-#include <boost/mpl/map.hpp>
-#include <boost/pool/pool_alloc.hpp>
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
+#include "memory.hpp"
+//#include "extractor.impl.hpp"
+#include "utils.hpp"
+#include "phrasetrait.hpp"
+#include "analyzer.hpp"
 
 namespace jebe {
 namespace cws {
@@ -116,19 +117,18 @@ void Extractor::addSentence(CharType* const str, String::size_type len)
 
 template<uint8_t plen>
 void Extractor::scanSentence_(CharType* const str, String::size_type len,
-		typename Phrase<plen>::MapType& map)
+		typename PhraseTrait<plen>::MapType& map)
 {
 	if (CS_BUNLIKELY(len < plen))
 	{
 		return;
 	}
 
+	typedef PhraseTrait<plen> PhraseTrait;
 	for (String::size_type i = 0, end = len - plen; i <= end; ++i)
 	{
-		typedef Phrase<plen> PhraseType;
-
-		const PhraseType p(str + i);
-		typename PhraseType::MapType::iterator it = map.find(p);
+		const typename PhraseTrait::PhraseType p(str + i);
+		typename PhraseTrait::MapType::iterator it = map.find(p);
 
 		if (plen == 1)
 		{
@@ -152,7 +152,7 @@ void Extractor::scanSentence_(CharType* const str, String::size_type len,
 void Extractor::display()
 {
 	#define _JEBE_DO_DISPLAY(Z, n, N)														\
-	for (BOOST_PP_CAT(Ph, n)::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
+	for (PhraseTrait<n>::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
 		it != BOOST_PP_CAT(map, n).end(); ++it)												\
 	{																						\
 		CS_SAY("phrase" << n << ": [" << it->first << "]: " << it->second);					\
@@ -181,7 +181,7 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 
 	for (uint16_t i = 0; i < _JEBE_GB2312_CHAR_NUM; ++i)
 	{
-		assert(gb[i] < gb_char_max);
+		assert(gb[i] < _JEBE_GB_CHAR_MAX);
 		gb2312[gb[i]] = true;
 	}
 
