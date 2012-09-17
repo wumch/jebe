@@ -20,8 +20,12 @@ class HAdsByLoc(Handler):
         self._fetchAds()
 
     def _genOut(self):
-        if not self.out:
-            self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '([' + ','.join(self.ads) + ']);'
+        content = '[' + ','.join(self.ads) + ']'
+        if sysconfig.RPC_KEY_NAME in self.params:
+            self.out = self.params[sysconfig.RPC_KEY_NAME] + '(' + content  + ');'
+        else:
+#            self.out = content
+            self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + content + ');'
 
     def _fetchAds(self):
         if not isinstance(self.pageUrl, basestring):

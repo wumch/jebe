@@ -17,7 +17,11 @@ class HKWByLoc(Handler):
         self._fetchWords()
 
     def _genOut(self):
-        self.out = sysconfig.RPC_FUNC_NAME['kwOfLoc'] + '=' + config.jsoner.encode(self.words) + ';'
+        content = config.jsoner.encode(self.words)
+        if sysconfig.RPC_KEY_NAME in self.params:
+            self.out = self.params[sysconfig.RPC_KEY_NAME] + '(' + content  + ');'
+        else:
+            self.out = content
 
     def _fetchWords(self):
         url = self._getPageUrl()

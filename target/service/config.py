@@ -170,6 +170,7 @@ class SysConfig(object):
     ERR_CODE_KEY_NAME = 'code'
     ERR_CODE_OK = 'ok'
     ERR_CODE_ERR = 'err'
+    RPC_KEY_NAME = 'callback'
 
     MOVE_KEY_HYPHEN = _MK_HYPHEN
 
