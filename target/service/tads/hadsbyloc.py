@@ -15,6 +15,7 @@ class HAdsByLoc(Handler):
         super(HAdsByLoc, self).__init__(request=request, params=params)
         self.ads = []
         self.pageUrl = self._getPageUrl()
+        self.isApi = 'callback' in self.params and self.params['callback'] == '0'
 
     def _handle(self):
         self._fetchAds()
@@ -44,7 +45,10 @@ class HAdsByLoc(Handler):
 
     def _processResult(self, words):
         if words is False:      # page non-exists
-            return self._reply(content=self.jsCrawlPage)
+            if self.isApi:
+                return self._reply(content='[' + self.adsupplier.fallback() + ']')
+            else:
+                return self._reply(content=self.jsCrawlPage)
         self.adsupplier.byMarvedWords(words=words or [], callback=self._onAds)
 
     def _onAds(self, ads):

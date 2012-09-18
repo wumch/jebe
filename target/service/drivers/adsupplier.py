@@ -34,7 +34,7 @@ class Adsupplier(object):
     def byIds(self, adids, jsonEncoded=True, fallback=True):
         ads = filter(None, [self.byId(adid=adid, jsonEncoded=jsonEncoded) for adid in adids])
         if fallback and not ads:
-            return [FallbackAd().getJSON() if jsonEncoded else FallbackAd().getAd()]
+            return [self.fallback(jsonEncoded=jsonEncoded)]
         return self.decorate(ads)
 
     def decorate(self, ads):
@@ -51,3 +51,6 @@ class Adsupplier(object):
                 if json:
                     self.cached[adid] = config.jsoner.decode(json)
             return self.cached.get(adid)
+
+    def fallback(self, jsonEncoded=True):
+        return FallbackAd().getJSON() if jsonEncoded else FallbackAd().getAd()
