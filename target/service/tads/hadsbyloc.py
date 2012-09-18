@@ -22,7 +22,8 @@ class HAdsByLoc(Handler):
     def _genOut(self):
         content = '[' + ','.join(self.ads) + ']'
         if sysconfig.RPC_KEY_NAME in self.params:
-            self.out = self.params[sysconfig.RPC_KEY_NAME] + '(' + content  + ');'
+            rpcname = self.params[sysconfig.RPC_KEY_NAME]
+            self.out = content if rpcname == '0' else (rpcname + '(' + content  + ');')
         else:
 #            self.out = content
             self.out = sysconfig.RPC_FUNC_NAME['showAds'] + '(' + content + ');'
