@@ -43,7 +43,7 @@ void Config::init(int argc, char* argv[])
 	{
 		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdDesc, boost::program_options::command_line_style::unix_style), cmdOptions);
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		CS_DIE(e.what() << "\n" << cmdDesc);
 	}
@@ -103,7 +103,7 @@ void Config::load(const std::string& config_file)
 	{
 		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.c_str(), desc), options);
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		CS_DIE("faild on read/parse config-file: " << config_file.c_str() << "\n" << e.what());
 	}

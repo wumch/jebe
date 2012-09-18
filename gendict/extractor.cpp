@@ -12,7 +12,6 @@
 #include "urlcode.hpp"
 #include "mbswcs.hpp"
 #include "memory.hpp"
-//#include "extractor.impl.hpp"
 #include "utils.hpp"
 #include "phrasetrait.hpp"
 #include "analyzer.hpp"

@@ -9,9 +9,13 @@
 #define _JEBE_ASCII_WORD_MAX_LEN		20
 #define _JEBE_WORD_MIN_ATIMES			10
 #define _JEBE_PROCESS_STEP				(2 << 20)
-#define	_JEBE_GB_CHAR_MAX				65536
 
 #include "staging.hpp"
+#ifdef __linux
+#	include <limits.h>
+#endif
+#define	_JEBE_GB_CHAR_MAX				((USHRT_MAX) + 1)
+
 #include <string>
 #include <boost/static_assert.hpp>
 

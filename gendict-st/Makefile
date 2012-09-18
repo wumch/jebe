@@ -25,7 +25,7 @@ ifeq ($(COMPILER), G++)
   OBJFLAG = -o
   EXEFLAG = -o
  INCLUDES = 
-  INCLUDES = -I../../staging
+  INCLUDES = -I../staging
 # LIBS = -lgc
 #  LIBS = -lluaplus -lboost_system -lboost_thread
   LIBS = -lboost_system -lboost_filesystem -lboost_thread
@@ -64,7 +64,7 @@ clean:
 	@echo preparing directories in $(OBJECT_PATH)
 	@-find $(SOURCE_PATH) -type d -not -name '\.*' -and -not -samefile $(SOURCE_PATH) | awk '{sub("$(SOURCE_PATH)", "$(OBJECT_PATH)"); print;}' | xargs mkdir -p
 
-GLOBAL_DEPEND = $(SOURCE_PATH)/../../staging/staging.hpp
+GLOBAL_DEPEND = $(SOURCE_PATH)/../staging/staging.hpp
 
 $(SOURCE_PATH)/predef.hpp: $(SOURCE_PATH)/allocator.hpp
 

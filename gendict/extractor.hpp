@@ -44,7 +44,7 @@ protected:
 	bool isAscii(const CharType c) const
 	{
 		return c < 128;
-		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
+//		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
 	}
 
 	void fetchContent(const PathList& contentfiles);
@@ -59,17 +59,12 @@ protected:
 	void scanSentence_(CharType* const str, String::size_type len,
 			typename PhraseTrait<plen>::MapType& map);
 
-	bool isGb2312(CharType c) const
+	bool isGb2312(uint16_t c) const
 	{
-		return c >= 0 && c < _JEBE_GB_CHAR_MAX && gb2312[c];
+		BOOST_STATIC_ASSERT(_JEBE_GB_CHAR_MAX >= USHRT_MAX);
+		return gb2312[c];
 	}
 };
-
-template<uint8_t prefix_len>
-bool padEq(const typename PhraseTrait<prefix_len>::PadType& p1, const typename PhraseTrait<prefix_len>::PadType& p2)
-{
-	return PhraseMatch<prefix_len, prefix_len>::match(p1.first.str, p2.first.str);	// Phrase
-}
 
 } /* namespace cws */
 } /* namespace jebe */
