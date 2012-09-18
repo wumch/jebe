@@ -66,6 +66,9 @@ class WsgiApp(object):
                     params[k] = v[-1].strip() if len(v) else ''
         else:
             params = {}
+        if 'callback' not in params:
+            if '?callback=' in qs or '&callback=' in qs:
+                params['callback'] = '0'
         return self._pickHandler(action), params
 
     def _pickHandler(self, action):
