@@ -14,7 +14,7 @@ class Ftree
 public:
     friend class Filter;
     explicit Ftree(const std::string& fname)
-        : root(Node::make_node())
+        : root(make_node(0))
     {
         build(fname);
     }
@@ -59,7 +59,7 @@ public:
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree.root;
-    	tsize_t offset = 1;
+    	int32_t offset = 1;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
@@ -87,7 +87,6 @@ public:
 #endif
 				if (CS_BUNLIKELY(node->patten_end))
 				{
-//					offset = i;
 					callback(node);
 					if (CS_BLIKELY(node->is_leaf))
 					{
@@ -109,6 +108,7 @@ public:
 			}
 			else
 			{
+				CS_SAY("atom [" << (int)atoms[i] << "] no match");
 				node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				begin_from_root = true;
@@ -123,7 +123,7 @@ public:
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 		return std::min(offset, _JEBE_WORD_MAX_LEN);
 #else
-		return std::max(offset, len > _JEBE_WORD_MAX_LEN ? len - _JEBE_WORD_MAX_LEN : len);
+		return std::max(offset, static_cast<int32_t>(len > _JEBE_WORD_MAX_LEN ? len - _JEBE_WORD_MAX_LEN : len));
 #endif
 	}
 

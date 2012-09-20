@@ -61,6 +61,7 @@ public:
 protected:
 	uint8_t getAction(zmq::message_t& req) const
 	{
+		BOOST_STATIC_ASSERT(sizeof(byte_t) == 1);
 		return *reinterpret_cast<const uint8_t*>(req.data());
 	}
 

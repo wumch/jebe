@@ -32,7 +32,7 @@ void Ftree::build(const std::string& fname)
             }
         }
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         CS_SAY("error occured while <Ftree> building: " << e.what());
         exit(1);

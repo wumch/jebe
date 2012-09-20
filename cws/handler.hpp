@@ -46,7 +46,7 @@ public:
 protected:
 	HandleRes handle_(zmq::message_t& req, zmq::message_t& rep)
 	{
-		return process(reinterpret_cast<byte_t*>(req.data()), req.size(), rep);
+		return process(reinterpret_cast<byte_t*>(req.data()) + 1, req.size() - 1, rep);
 	}
 
 	virtual HandleRes process(const byte_t* content, tsize_t len, zmq::message_t& rep) = 0;
