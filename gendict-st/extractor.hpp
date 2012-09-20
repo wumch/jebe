@@ -291,11 +291,11 @@ protected:
 
 	Words words;
 
-	static const double entropyThresholdLower	= 0.3;
-	static const double entropyThresholdUpper	= 1.5;
-	static const double joinThresholdLower		= 50.;
-	static const double joinThresholdUpper		= 1000.;
-	static const uint32_t atimesThreshold		= 200;
+	static const double entropyThresholdLower	= 0.6;
+	static const double entropyThresholdUpper	= 0.8;
+	static const double joinThresholdLower		= 200.;
+	static const double joinThresholdUpper		= 250.;
+	static const uint32_t atimesThreshold		= 500;
 
 	enum WordExamineRes {
 		no 					= 1,					// it's not a word.
