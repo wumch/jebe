@@ -67,8 +67,8 @@ void Config::initDesc()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
 		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://qdb"),
 				"internal communicate address, defaults to `inproc://qdb`")
-		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
-				"pid file, defaults to /var/run/tokenizer.pid")
+		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/qdb.pid"),
+				"pid file, defaults to /var/run/qdb.pid")
 		("db-path", boost::program_options::value<typeof(dbpath)>()->default_value("etc/qdbdb"),
 				"leveldb path, defaults to etc/qdbdb")
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
