@@ -92,8 +92,11 @@ class Config(object):
         'tcp://192.168.88.4:10018',
     )
 
-    tokenizers = ('tcp://192.168.88.2:10015',
-        'tcp://192.168.88.4:10015',)
+    tokenizers = (
+        'tcp://192.168.88.2:10015',
+        'tcp://192.168.88.3:10015',
+        'tcp://192.168.88.4:10015',
+    )
 
     adcollectors = ('tcp://%s:10016' % interal_api_host, )
 
