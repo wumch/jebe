@@ -84,18 +84,18 @@ class Config(object):
         dbs[k]['path'] = os.path.join(dbs[k]['path'], k)
     dbs['fti'] = dbs['idx']
 
-    ftengines = ('tcp://192.168.88.2:10050', 'tcp://192.168.88.3:10050', 'tcp://192.168.88.4:10050', )
+    ftengines = ('tcp://192.168.88.2:10016', 'tcp://192.168.88.3:10016', 'tcp://192.168.88.4:10016', )
     locdbs = (
         #'tcp://192.168.88.1:10051',
-        'tcp://192.168.88.2:10051',
-        'tcp://192.168.88.3:10051',
-        'tcp://192.168.88.4:10051',
+        'tcp://192.168.88.2:10018',
+        'tcp://192.168.88.3:10018',
+        'tcp://192.168.88.4:10018',
     )
 
-    tokenizers = ('tcp://192.168.88.2:10012',
-        'tcp://192.168.88.4:10012',)
+    tokenizers = ('tcp://192.168.88.2:10015',
+        'tcp://192.168.88.4:10015',)
 
-    adcollectors = ('tcp://%s:10013' % interal_api_host, )
+    adcollectors = ('tcp://%s:10016' % interal_api_host, )
 
     iothreads = 1
 
@@ -104,10 +104,10 @@ class Config(object):
         riaks = ({'host':natip, 'port':riak_port}, )
         for k in dbs:
             dbs[k]['path'] = os.path.join('/', 'server', 'leveldb', k)
-        tokenizers = ('tcp://%s:10012' % natip, )
-        ftengines = ('tcp://%s:10050' % natip, )
-        locdbs = ('tcp://%s:10051' % natip, )
-        adcollectors = ('tcp://%s:10013' % natip, )
+        tokenizers = ('tcp://%s:10015' % natip, )
+        ftengines = ('tcp://%s:10016' % natip, )
+        locdbs = ('tcp://%s:10018' % natip, )
+        adcollectors = ('tcp://%s:10017' % natip, )
         iothreads = 1
 
     __instance = None
