@@ -108,7 +108,6 @@ public:
 
 	typedef Phrase<length - 1> PrefixType;
 
-
 	typedef PhraseHash<length, MapHashBits<length>::bits> MapHashType;
 	typedef boost::fast_pool_allocator<PhraseType, boost::default_user_allocator_new_delete,
 			boost::details::pool::null_mutex, 1 << (MapHashBits<length>::bits >> 2)> MapAllocType;
@@ -174,6 +173,26 @@ public:
 		return p.first == phrase;
 	}
 };
+
+/**
+ * latin-phrase, non-fixed-length
+ */
+typedef std::string LatinPhrase;
+typedef std::equal_to<LatinPhrase> LatinPhraseEqual;
+typedef staging::Hflp<_JEBE_LATIN_PHRASE_NUM_EXPCET_BITS, LatinPhrase> LatinPhraseHash;
+typedef boost::fast_pool_allocator<LatinPhrase, boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1 << _JEBE_LATIN_PHRASE_NUM_EXPCET_BITS> LatinPhraseAllocType;
+typedef boost::unordered_map<LatinPhrase, atimes_t, LatinPhraseHash, LatinPhraseEqual, LatinPhraseAllocType> LatinPhraseMapType;
+
+/**
+ * prepend-words, non-fixed-length
+ */
+typedef String PrependPhrase;
+typedef staging::Hflp<_JEBE_PRE_WORDS_NUM_EXPCET_BITS, PrependPhrase> PrependPhraseHash;
+typedef std::equal_to<PrependPhrase> PrependPhraseEqual;
+typedef boost::fast_pool_allocator<PrependPhrase, boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1 << _JEBE_PRE_WORDS_NUM_EXPCET_BITS> PrependPhraseAllocType;
+typedef boost::unordered_map<PrependPhrase, atimes_t, PrependPhraseHash, PrependPhraseEqual, PrependPhraseAllocType> PrependPhraseMapType;
 
 }
 }

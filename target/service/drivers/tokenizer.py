@@ -65,7 +65,7 @@ if __name__ == '__main__':
     from time import time
     from utils.misc import export
     tokenizer = Tokenizer.instance()
-    testContent = (u'三个代表重要思想电影武侠客人' * 10000).encode(Tokenizer._SERVER_CHARSET)
+    testContent = (u'存储容量 dzwww').encode(Tokenizer._SERVER_CHARSET)
     if len(sys.argv) == 1:
         print "usage: %s <content> [request-times=1]" % sys.argv[0]
         sys.exit(1)

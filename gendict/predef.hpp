@@ -6,7 +6,8 @@
 #define CS_USE_WCS	1
 
 #define _JEBE_WORD_MAX_LEN				5
-#define _JEBE_ASCII_WORD_MAX_LEN		20
+#define _JEBE_LATIN_MAX_LEN				20
+#define _JEBE_LATIN_MIN_LEN				3
 #define _JEBE_WORD_MIN_ATIMES			10
 #define _JEBE_PROCESS_STEP				(2 << 20)
 
@@ -15,6 +16,8 @@
 #	include <limits.h>
 #endif
 #define	_JEBE_GB_CHAR_MAX				((USHRT_MAX) + 1)
+#define _JEBE_LATIN_PHRASE_NUM_EXPCET_BITS	20
+#define _JEBE_PRE_WORDS_NUM_EXPCET_BITS		20
 
 #include <string>
 #include <boost/static_assert.hpp>

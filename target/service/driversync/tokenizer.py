@@ -59,14 +59,16 @@ class Tokenizer(object):
 if __name__ == '__main__':
     from time import time
     from utils.misc import export
-    tokenizer = Tokenizer.instance()
-    testContent = (u'三个代表重要思想电影武侠客人' * 10000).encode(Tokenizer._SERVER_CHARSET)
     if len(sys.argv) == 1:
-        print "usage: %s <content> [request-times=1]" % sys.argv[0]
+        print """usage: %s <content="test"> [request-times=1]""" % sys.argv[0]
         sys.exit(1)
+    tokenizer = Tokenizer.instance()
+    testContent = (u'存储容量 dzwww').encode(Tokenizer._SERVER_CHARSET)
+    testContent = '存储容量dzwww'
     content = sys.argv[1] if sys.argv[1] != 'test' else testContent
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     res = tokenizer.marve(content=content)
+    print res
     begin = time()
     for i in xrange(0, times):
         assert tokenizer.marve(content=content) == res, "requests with same parameter got different results"

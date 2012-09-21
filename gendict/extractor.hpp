@@ -33,6 +33,9 @@ protected:
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_DECL_MAP, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_MAP
 
+	LatinPhraseMapType latinp;
+	PrependPhraseMapType pwords;
+
 public:
 	void extract(const PathList& contentfiles, const boost::filesystem::path& outfile);
 
@@ -41,10 +44,41 @@ public:
 	Extractor(const boost::filesystem::path& gbfile);
 
 protected:
-	bool isAscii(const CharType c) const
+	bool CS_FORCE_INLINE isAscii(const CharType c) const
 	{
 		return c < 128;
-//		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
+	}
+
+	bool CS_FORCE_INLINE isAsciiStrict(const CharType c) const
+	{
+		return CS_BLIKELY(c > 127) ? false : (L'a' <= c && c <= L'z') || (L'0' <= c && c <= L'9') || (c == L'-');
+	}
+
+	bool CS_FORCE_INLINE isAllDigit(const CharType* s, String::size_type len) const
+	{
+		for (uint i = 0; i < len; ++i)
+		{
+			if (CS_BLIKELY(s[i] <='0' || '9' <= s[i]))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	template<typename _CharType> CS_FORCE_INLINE
+	void replacetolower(_CharType* c) const
+	{
+		if (CS_BUNLIKELY(isUpperAlpha(*c)))
+		{
+			 *c |= 32;
+		}
+	}
+
+	template<typename _CharType> CS_FORCE_INLINE
+	bool isUpperAlpha(_CharType c) const
+	{
+		return 'A' <= c && c <= 'Z';
 	}
 
 	void fetchContent(const PathList& contentfiles);
@@ -55,13 +89,17 @@ protected:
 
 	void addSentence(CharType* const str, String::size_type len);
 
+	bool scanLatin(CharType* const str, String::size_type len);
+
+	void scanPrepends(CharType* const str, String::size_type len);
+
 	template<uint8_t plen>
 	void scanSentence_(CharType* const str, String::size_type len,
 			typename PhraseTrait<plen>::MapType& map);
 
 	bool isGb2312(uint16_t c) const
 	{
-		BOOST_STATIC_ASSERT(_JEBE_GB_CHAR_MAX >= USHRT_MAX);
+		BOOST_STATIC_ASSERT(_JEBE_GB_CHAR_MAX > USHRT_MAX);
 		return gb2312[c];
 	}
 };

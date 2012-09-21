@@ -76,7 +76,7 @@ if __name__ == '__main__':
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1000
     locdb = LocDB()
 
-    words = [['游戏d', 10.0], [u'充值d', 100.001], ['软件d',1009.0], ['手机', 10089]]
+    words = [['dzwww', 10.0], [u'存储容量', 100.001], ['软件d',1009.0], ['手机', 10089]]
     words = locdb.decorateWords(words)
 
     def testWrite():

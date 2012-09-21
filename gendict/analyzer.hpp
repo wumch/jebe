@@ -21,7 +21,6 @@
 #include "misc.hpp"
 #include "phrase.hpp"
 #include "phrasetrait.hpp"
-//#include "extractor.impl.hpp"
 
 namespace jebe {
 namespace cws {
@@ -40,11 +39,11 @@ protected:
 	#undef _JEBE_DECL_MAP
 
 	#define _JEBE_DECL_PAD(Z, n, N)		PhraseTrait<n>::PadMap BOOST_PP_CAT(pad, n);
-	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_LATIN_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
 	#define _JEBE_DECL_PAD(Z, n, N)		PhraseTrait<n>::PadMap BOOST_PP_CAT(prx, n);
-	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_ASCII_WORD_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
+	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_INC(_JEBE_LATIN_MAX_LEN), _JEBE_DECL_PAD, BOOST_PP_EMPTY())
 	#undef _JEBE_DECL_PAD
 
 	boost::array<uint64_t, BOOST_PP_INC(_JEBE_WORD_MAX_LEN)> totalAtimes;
@@ -53,9 +52,9 @@ protected:
 
 	static const double entropyThresholdLower	= 0.3;
 	static const double entropyThresholdUpper	= 1.5;
-	static const double joinThresholdLower		= 50.;
+	static const double joinThresholdLower		= 30.;
 	static const double joinThresholdUpper		= 100.;
-	static const uint32_t atimesThreshold		= 200;
+	static const uint32_t atimesThreshold		= 20;
 
 	enum WordExamineRes {
 		no 					= 1,					// it's not a word.

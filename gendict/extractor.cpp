@@ -109,6 +109,11 @@ void Extractor::scan(CharType* const str, String::size_type len)
 
 void Extractor::addSentence(CharType* const str, String::size_type len)
 {
+	scanPrepends(str, len);
+	if (scanLatin(str, len))
+	{
+		return;
+	}
 	#define _JEBE_CALL_SCAN(Z, n, N)		scanSentence_<n>(str, len, BOOST_PP_CAT(map, n));
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_SCAN, BOOST_PP_EMPTY())
 	#undef _JEBE_CALL_SCAN
@@ -131,10 +136,7 @@ void Extractor::scanSentence_(CharType* const str, String::size_type len,
 
 		if (plen == 1)
 		{
-			if (CS_BUNLIKELY(L'A' <= str[i] && str[i] <= L'Z'))
-			{
-				str[i] += 32;
-			}
+			replacetolower(str + i);
 		}
 
 		if (CS_BLIKELY(it != map.end()))
@@ -148,10 +150,49 @@ void Extractor::scanSentence_(CharType* const str, String::size_type len,
 	}
 }
 
+void Extractor::scanPrepends(CharType* const str, String::size_type len)
+{
+
+}
+
+// return true iff all are latin characters.
+bool Extractor::scanLatin(CharType* const str, String::size_type len)
+{
+	bool allarelatin = true;
+	for (uint i = 0, chkpoint = 0, latins = 0; i < len; ++i)
+	{
+		if (CS_BUNLIKELY(isAsciiStrict(str[i])))
+		{
+			latins += 1;
+		}
+		else
+		{
+			if (_JEBE_LATIN_MIN_LEN <= latins && latins <= _JEBE_LATIN_MAX_LEN)
+			{
+				LatinPhrase word;
+				word.assign(str + chkpoint, str + chkpoint + latins);
+				LatinPhraseMapType::iterator it = latinp.find(word);
+				if (it == latinp.end())
+				{
+					latinp.insert(std::make_pair(word, 1));
+					CS_SAY("latin-word: " << String(str + chkpoint, latins));
+				}
+				else
+				{
+					it->second += 1;
+				}
+			}
+			latins = 0;
+			chkpoint = i + 1;
+		}
+	}
+	return allarelatin;
+}
+
 void Extractor::display()
 {
 	#define _JEBE_DO_DISPLAY(Z, n, N)														\
-	for (PhraseTrait<n>::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 			\
+	for (PhraseTrait<n>::MapType::iterator it = BOOST_PP_CAT(map, n).begin(); 				\
 		it != BOOST_PP_CAT(map, n).end(); ++it)												\
 	{																						\
 		CS_SAY("phrase" << n << ": [" << it->first << "]: " << it->second);					\
