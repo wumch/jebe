@@ -10,7 +10,7 @@ class WsgiApp(object):
 
     handlerMap = {
         'target' : HAdsByLoc,
-        'kwofloc': HKWByLoc,
+        'words': HKWByLoc,
     }
     status = {
         200 : 'OK',
