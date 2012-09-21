@@ -29,4 +29,4 @@ class HCrawl(Handler):
 
     def store(self, meta, content):
         self.fileStorer.store(content)
-        return self.pageStorer.store(meta, content, callback=self._onWords)
+        return self.pageStorer.store(meta, content)
