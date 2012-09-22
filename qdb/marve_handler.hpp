@@ -23,7 +23,7 @@ public:
 	{
 		falsePacker.pack_false();
 		nullPacker.pack_nil();
-		wws.reserve(50);
+		wws.reserve(Config::getInstance()->max_retrieve_elements);
 		storer = Storage::getInstance();
 	}
 
@@ -69,7 +69,7 @@ protected:
 		}
 
 		wws.clear();
-		bool exists = storer->marve(curkey, wws, 20);
+		bool exists = storer->marve(curkey, wws, Config::getInstance()->max_retrieve_elements);
 		makeResponse(rep, exists);
 		return success;
 	}

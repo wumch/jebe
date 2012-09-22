@@ -354,7 +354,7 @@ function i8main()
 	//try to match words with text on page
 	function words()
 	{
-		var i= 0, length= i8vars.words.length, max= 30, matches= [], text= body.innerText.toLowerCase();
+		var i= 0, length= i8vars.words.length, max= 30, matches= [], text= getText();
 
 		//match
 		while( length>++i && matches.length<max ){
@@ -369,6 +369,28 @@ function i8main()
 		//return
 		return matches;
 	}
+
+    function getText()
+    {
+        var text = document.title ? (document.title + ' ') : '';
+        var metas = document.documentElement.getElementsByTagName('meta');
+        for (var i = 0; i < metas.length; ++i)
+        {
+            if(metas[i].getAttribute("name").toLowerCase() == "description")
+            {
+                var tmp = metas[i].getAttribute("content");
+                if (tmp.constructor === String && tmp.length)
+                {
+                    text += tmp + ' ';
+                }
+            }
+        }
+        if (body.innerText)
+        {
+            text += body.innerText.toLowerCase().replace(/\s+/g, ' ');
+        }
+        return text;
+    }
 
     function installShowAds()
     {
