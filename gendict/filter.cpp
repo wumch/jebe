@@ -65,7 +65,7 @@ void Filter::dumpTree() const
 #if BOOST_VERSION > 104200
 	.string()
 #endif
-	.c_str());
+	.c_str(), std::ios_base::trunc);
 
 	uint64_t total_atimes = 0;
 	for (Ftree::WordsAtime::const_iterator it = tree.words_atime.begin(); it != tree.words_atime.end(); ++it)

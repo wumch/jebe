@@ -126,14 +126,6 @@ public:
     		}
     		cur = (left + right) >> 1;
     	}
-//#define _JEBE_OUT_CONFIG_PROPERTY(property)		<< CS_OC_GREEN(#property) << ":\t" << CS_OC_RED(property) << std::endl
-//    	CS_SAY(""
-//			_JEBE_OUT_CONFIG_PROPERTY(childrenum)
-//			_JEBE_OUT_CONFIG_PROPERTY(_atom)
-//			_JEBE_OUT_CONFIG_PROPERTY(left)
-//			_JEBE_OUT_CONFIG_PROPERTY(right)
-//			_JEBE_OUT_CONFIG_PROPERTY(cur)
-//		);
 
 		if (children[right]->atom == _atom)
 		{

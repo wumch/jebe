@@ -28,7 +28,7 @@ protected:
     CS_FORCE_INLINE static bool notEdge(const byte_t c)
     {
     	return c > 44;		// chr(44) is '-'
-    	return c == '\n' || c == ' ' || c == '\t';
+//    	return c != '\n' && c != ' ' && c != '\t';
     }
 
 public:
@@ -135,7 +135,7 @@ public:
 		for (tsize_t i = 0; i < len ; )
 		{
 #endif
-			if (CS_LIKELY(node = node->cichildat(atoms[i])))
+			if ((node = node->cichildat(atoms[i])))
 			{
 				++i;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
@@ -149,10 +149,10 @@ public:
 #	endif
 				}
 #endif
-				if (CS_BUNLIKELY(node->patten_end))
+				if (node->patten_end)
 				{
 					handle_match(node);
-					if (CS_BLIKELY(node->is_leaf))
+					if (node->is_leaf)
 					{
 #if _JEBE_ENABLE_MAXMATCH
 						if (CS_BUNLIKELY(Config::getInstance()->max_match))
