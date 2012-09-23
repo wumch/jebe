@@ -3,7 +3,9 @@
 
 //#define CS_DEBUG	0
 //#define CS_LOG_ON	0
-#define CS_USE_WCS	1
+#ifndef CS_USE_WCS
+#	define CS_USE_WCS	1
+#endif
 
 #define _JEBE_WORD_MAX_LEN				5
 #define _JEBE_LATIN_MAX_LEN				20
@@ -36,6 +38,7 @@ static std::wstringstream log;
 
 namespace jebe {
 namespace cws {
+
 typedef uint32_t atimes_t;
 typedef wchar_t	CharType;
 BOOST_STATIC_ASSERT(sizeof(CharType) == 4);

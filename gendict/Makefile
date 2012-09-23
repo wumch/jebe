@@ -6,7 +6,8 @@ OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/extractor
-DEBUG = 0
+PREPROCESS_EXE = $(OUTPUT_PATH)/preprocess
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -18,7 +19,7 @@ ifeq ($(COMPILER), G++)
   COPT = -trigraphs -O0 -g3 -rdynamic -pipe -Wall -fno-strict-aliasing -fstack-protector
   LDOPT = -g -rdynamic
   else
-  COPT = -DNDEBUG -trigraphs -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -fno-rtti -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
+  COPT = -DNDEBUG -trigraphs -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
   LDOPT = $(COPT)
   endif
   CCMD = g++
@@ -29,6 +30,7 @@ ifeq ($(COMPILER), G++)
 # LIBS = -lgc
 #  LIBS = -lluaplus -lboost_system -lboost_thread
   LIBS = -lboost_system -lboost_filesystem -lboost_thread
+  PREPROCESS_LIBS = -lboost_system -lboost_filesystem -lboost_program_options
 # LIBPATH = -L../gc/.libs
   LIBPATH =
   CPPFLAGS = $(COPT) $(INCLUDES)
@@ -49,10 +51,17 @@ else
 endif
 
 OBJS = $(OBJECT_PATH)/extractor.o $(OBJECT_PATH)/analyzer.o $(OBJECT_PATH)/phrase.o $(OBJECT_PATH)/main.o
+PREPROCESS_OBJS = $(OBJECT_PATH)/preprocess.o $(OBJECT_PATH)/config.o $(OBJECT_PATH)/filter.o
 
-all: $(OBJS)
+all: extractor preprocess
+
+extractor: $(OBJS)
 	@echo Linking...
 	$(CCMD) $(LDFLAGS) $^ $(LIBS) $(EXEFLAG) $(EXE)
+
+preprocess: $(PREPROCESS_OBJS)
+	@echo Linking...
+	$(CCMD) $(LDFLAGS) $^ $(PREPROCESS_LIBS) $(EXEFLAG) $(PREPROCESS_EXE)
 
 clean:
 	-rm -f $(EXE)
@@ -79,6 +88,18 @@ $(OBJECT_PATH)/analyzer.o: $(SOURCE_PATH)/analyzer.cpp $(SOURCE_PATH)/analyzer.h
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/phrase.o: $(SOURCE_PATH)/phrase.cpp $(SOURCE_PATH)/phrase.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/preprocess.o: $(SOURCE_PATH)/preprocess.cpp $(SOURCE_PATH)/preprocess.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/filter.o: $(SOURCE_PATH)/filter.cpp $(SOURCE_PATH)/filter.hpp $(GLOBAL_DEPEND)
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/config.o: $(SOURCE_PATH)/config.cpp $(SOURCE_PATH)/config.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
