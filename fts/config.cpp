@@ -68,8 +68,8 @@ void Config::initDesc()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
 		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://fts"),
 				"internal communicate address, defaults to `inproc://fts`")
-		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/tokenizer.pid"),
-				"pid file, defaults to /var/run/tokenizer.pid")
+		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/fts.pid"),
+				"pid file, defaults to /var/run/fts.pid")
 		("db-path", boost::program_options::value<typeof(dbpath)>()->default_value("etc/ftsdb"),
 				"leveldb path, defaults to etc/ftsdb")
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),

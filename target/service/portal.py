@@ -15,7 +15,7 @@ from controler.wsgiwrap import WsgiApp
 
 def run():
     addr = (natip, int(sys.argv[1]) if len(sys.argv) > 1 else 10020)
-    backlog = 512
+    backlog = 64
     app = WsgiApp()
     if gevent.version_info < (0, 13, 7):
         HTTPServer(app).serve_forever(socket_or_address=addr, backlog=backlog)

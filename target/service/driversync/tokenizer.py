@@ -63,8 +63,9 @@ if __name__ == '__main__':
         print """usage: %s <content="test"> [request-times=1]""" % sys.argv[0]
         sys.exit(1)
     tokenizer = Tokenizer.instance()
+    print "cws-server:[%s]" % config.getTokenizer()
     testContent = (u'存储容量 dzwww').encode(Tokenizer._SERVER_CHARSET)
-    testContent = '存储容量dzwww'
+    testContent = '存存储容量 fcukyoudzwww' * 100000
     content = sys.argv[1] if sys.argv[1] != 'test' else testContent
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     res = tokenizer.marve(content=content)

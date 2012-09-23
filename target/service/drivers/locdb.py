@@ -61,7 +61,6 @@ class LocDB(object):
 
     def request(self, sock, data, action, callback):
         return sock.send(self.actionPacker.pack(self.actions[action]) + data, callback=callback)
-#        return sock.recv_multipart()
 
     def getSock(self, url):
         return self.socks[self.urlHash(url)]
@@ -88,9 +87,10 @@ if __name__ == '__main__':
         print "QPS:  ", (times / consumed) if consumed > 0 else 'infinite'
 
     def testRead():
+        correct = locdb.marve(url=url)
         begin = time()
         for i in xrange(0, times):
-            res = locdb.marve(url)
+            res = locdb.marve(url=url)
             assert res == correct, "got different results by same arguments."
         consumed = time() - begin
         print "read %d entries in %f seconds" % (times, consumed)

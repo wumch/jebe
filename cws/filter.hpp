@@ -14,7 +14,7 @@ class Ftree
 public:
     friend class Filter;
     explicit Ftree(const std::string& fname)
-        : root(make_node(0))
+        : root(make_node(0, 0))
     {
         build(fname);
     }
@@ -26,6 +26,9 @@ public:
     }
 
 private:
+    enum { word_max_len = UCHAR_MAX + 1 };
+    enum { word_max_bytes = 128 };
+
     void build(const std::string& fname);
 
     void attach_word(const char* word);
@@ -34,9 +37,6 @@ private:
 
     Node* root;
 
-    enum { word_max_len = UCHAR_MAX + 1 };
-    enum { word_max_bytes = 128 };
-
     uint64_t total_atimes;
     uint64_t total_words;
 };
@@ -44,12 +44,61 @@ private:
 class Filter
 {
 protected:
+	enum { char_bytes_talbe_size = (1 << CHAR_BIT) };
+    static uint8_t char_bytes_table[char_bytes_talbe_size];
+
     const Ftree& tree;
 
 public:
     explicit Filter(const std::string& fname)
         : tree(Ftree::make_ftree(fname))
     {
+    }
+
+    CS_FORCE_INLINE static uint charBytes(const byte_t _atom)
+    {
+    	return char_bytes_table[_atom];
+    }
+
+    static void initCharBytesTable()
+    {
+    	for (uint i = 0; i < char_bytes_talbe_size; ++i)
+    	{
+    		char_bytes_table[i] = genCharBytes(i);
+    	}
+    }
+
+    static uint genCharBytes(const byte_t _atom)
+    {
+    	if (_atom & (1 << 7))
+    	{
+			if (CS_BLIKELY(_atom & (1 << 6)))
+			{
+				if (CS_BLIKELY(_atom & (1 << 5)))
+				{
+					if (CS_BUNLIKELY(_atom & (1 << 4)))
+					{
+						if (CS_BUNLIKELY(_atom & (1 << 3)))
+						{
+							if (CS_BUNLIKELY(_atom & (1 << 2)))
+							{
+								if (CS_BUNLIKELY(_atom & (1 << 1)))
+								{
+									return 1;	// error occured.
+								}
+								return 6;
+							}
+							return 5;
+						}
+						return 4;
+					}
+					return 3;
+				}
+				return 2;
+			}
+			return 1;
+    	}
+    	return 1;
     }
 
     template<typename CallbackType>
@@ -59,7 +108,7 @@ public:
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree.root;
-    	int32_t offset = 1;
+    	int32_t offset = 0;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
@@ -116,7 +165,11 @@ public:
 #if _JEBE_SCAN_FROM_RIGHT
 				i = offset--;
 #else
+#	if defined(_JEBE_STEP_FWD_OPTI) && _JEBE_STEP_FWD_OPTI
+				i = (offset += charBytes(atoms[offset]));
+#	else
 				i = ++offset;
+#	endif
 #endif
 			}
 		}

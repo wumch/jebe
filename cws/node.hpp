@@ -12,7 +12,7 @@ namespace jebe {
 namespace cws {
 
 class Node;
-static Node* make_node(byte_t _atom);
+static Node* make_node(byte_t _atom, byte_t remain_bytes);
 
 class Node
 {
@@ -22,24 +22,25 @@ public:
 
     enum { word_max_len = UCHAR_MAX + 1 };
 
-    explicit Node(byte_t _atom)
-    	: children(NULL), childrenum(0), atom(_atom), is_leaf(true), patten_end(false)
+    explicit Node(byte_t _atom, byte_t remain_bytes)
+    	: children(NULL), childrenum(0), atom(_atom), is_leaf(true), patten_end(false),
+    	  is_char_begins_(testCharBegins(atom)), remain_bytes_(remain_bytes), step_forward(remain_bytes_ + 1)
     {
     }
 
-    Node* attach_child(byte_t _atom)
+    Node* attach_child(byte_t _atom, byte_t remain_bytes)
     {
 		is_leaf = false;
-    	return insert_child(_atom);
+    	return insert_child(_atom, remain_bytes);
     }
 
-    Node* insert_child(byte_t _atom)
+    Node* insert_child(byte_t _atom, byte_t remain_bytes)
     {
 		if (CS_BUNLIKELY(childrenum == 0))
 		{
 			children = reinterpret_cast<Node**>(malloc(sizeof(Node*)));
 			childrenum = 1;
-			return children[0] = make_node(_atom);
+			return children[0] = make_node(_atom, remain_bytes);
 		}
 
 		// hopefully avoid from loop.
@@ -78,10 +79,10 @@ public:
 			return children[right];
 		}
 
-		return insert_child_at(_atom, right + (children[right]->atom < _atom));
+		return insert_child_at(_atom, remain_bytes, right + (children[right]->atom < _atom));
     }
 
-    Node* insert_child_at(byte_t child_atom, byte_t index)
+    Node* insert_child_at(byte_t child_atom, byte_t remain_bytes, byte_t index)
     {
     	children = reinterpret_cast<Node**>(realloc(children, (childrenum + 1) * sizeof(Node*)));
     	assert(children != NULL);
@@ -89,7 +90,7 @@ public:
     	{
     		move_child(i - 1, i);
     	}
-    	children[index] = make_node(child_atom);
+    	children[index] = make_node(child_atom, remain_bytes);
     	++childrenum;
     	return children[index];
     }
@@ -180,7 +181,22 @@ public:
     	return afreq_;
     }
 
-private:	// sort declartion of data-fields for memory saving...
+    CS_FORCE_INLINE uint8_t remainBytes() const
+    {
+    	return remain_bytes_;
+    }
+
+    CS_FORCE_INLINE uint8_t isCharBegins() const
+    {
+    	return is_char_begins_;
+    }
+
+    CS_FORCE_INLINE static bool testCharBegins(const byte_t _atom)
+    {
+    	return _atom > 127 || _atom > 192;
+    }
+
+protected:	// sort declartion of data-fields for memory saving...
     std::string patten;
     Node** children;
 
@@ -191,17 +207,20 @@ private:	// sort declartion of data-fields for memory saving...
 
     byte_t atom;
 
-    bool is_leaf;
-    bool patten_end;
+    uint8_t is_leaf:1;
+    uint8_t patten_end:1;
+    uint8_t is_char_begins_:1;
+    uint8_t remain_bytes_:3;
+    uint8_t step_forward:2;
 };
 
 template<int id> class PoolTag {};
 typedef boost::singleton_pool<PoolTag<1>, sizeof(Node), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex> NodePool;
 typedef boost::singleton_pool<PoolTag<2>, sizeof(Node*), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex> NodePtrPool;
 
-static Node* make_node(byte_t _atom)
+static Node* make_node(byte_t _atom, byte_t remain_bytes)
 {
-	return new (NodePool::malloc()) Node(_atom);
+	return new (NodePool::malloc()) Node(_atom, remain_bytes);
 }
 
 }

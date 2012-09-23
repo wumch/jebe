@@ -110,7 +110,7 @@ public:
 		ow->reserve(words.size());
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
-			ow->push_back(WordWeight(it->first, (static_cast<double>(it->second) / words_atimes_total) / it->first->afreq()));
+			ow->push_back(WordWeight(it->first, (it->second * it->first->afreq() / words_atimes_total)));
 		}
 		std::sort(ow->begin(), ow->end(), comparer);
 

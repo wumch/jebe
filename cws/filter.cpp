@@ -9,6 +9,7 @@ namespace cws {
 
 void Ftree::build(const std::string& fname)
 {
+	Filter::initCharBytesTable();
     char word[word_max_bytes];
     memset(word, 0, word_max_bytes);
     try
@@ -45,6 +46,7 @@ void Ftree::attach_word(const char* const word)
     Node* node = root;
     atimes_t atimes = 0;
     wsize_t i = 0;
+    uint remain_bytes = 0;
 #if _JEBE_SCAN_FROM_RIGHT
     for(int32_t i = strlen(word) - 1; -1 < i; --i)
 #else
@@ -58,12 +60,20 @@ void Ftree::attach_word(const char* const word)
     	}
     	else
     	{
-    		node = node->attach_child(patten[i]);
+    		if (remain_bytes == 0)
+    		{
+    			assert(Filter::charBytes(patten[i]));
+				remain_bytes = Filter::charBytes(patten[i]);
+				assert(remain_bytes);
+    		}
+    		node = node->attach_child(patten[i], --remain_bytes);
     	}
     }
-    CS_SAY("[" << std::string(word, i) << "] atimes: " << atimes << ", total_atimes: " << total_atimes << ", freq: " << (static_cast<double>(atimes) / total_atimes));
-    node->endswith(std::string(word, i), atimes, static_cast<double>(atimes) / total_atimes);
+    CS_SAY("[" << std::string(word, i) << "] atimes: " << atimes << ", total_atimes: " << total_atimes << ", freq: " << (static_cast<double>(total_atimes) / atimes));
+    node->endswith(std::string(word, i), atimes, static_cast<double>(total_atimes) / atimes);
 }
+
+uint8_t Filter::char_bytes_table[char_bytes_talbe_size];
 
 }
 }

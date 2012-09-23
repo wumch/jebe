@@ -30,7 +30,7 @@ class QueuedSock(object):
 
     failflag = QUEUE_FAILED
     MAX_SERVE = 50000
-    QUEUE_SIZE = 2048
+    QUEUE_SIZE = 64 * (1 << 10)
 
     def __init__(self, uri, context=sysconfig.zmq_context, socktype=zmq.REQ):
         self.uri = uri
