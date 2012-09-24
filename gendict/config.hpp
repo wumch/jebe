@@ -60,11 +60,7 @@ private:
 		{
 			if (extension.empty() || path.extension() == extension)
 			{
-#if BOOST_VERSION > 104200
 				inputfiles.push_back(path.string());
-#else
-				inputfiles.push_back(dit->path());
-#endif
 				CS_SAY("inputfile: " << path);
 			}
 		}
