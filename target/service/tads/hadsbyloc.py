@@ -49,7 +49,7 @@ class HAdsByLoc(Handler):
                 return self._reply(content='[' + self.adsupplier.fallback() + ']')
             else:
                 return self._reply(content=self.jsCrawlPage)
-        return self._finish()   # no ads temporarily
+        return self._reply(content=' ')   # no ads temporarily
         self.adsupplier.byMarvedWords(words=words or [], callback=self._onAds)
 
     def _onAds(self, ads):
