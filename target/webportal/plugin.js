@@ -370,7 +370,6 @@ function i8main()
 
 	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/control.nocache.js','type': 'text/javascript'}), eldest);
 	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/crawler.js','type': 'text/javascript'}), eldest);
-//	body.insertBefore(i8vars.create('script', {'src': 'http://www.jebe.com/crawler.js','type': 'text/javascript'}), eldest);
 };
 
 (function(){
