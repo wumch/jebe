@@ -58,7 +58,6 @@
 			text += document.body.innerText.toLowerCase();
 		}
         return text.replace(/[^0-9a-zA-Z\-\u4e00-\u9fa5]+/g, ' ');
-		return text.replace(/[\s\x00-\x2c\x2e-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g, ' ');
 	}
 
 	function sendText(text)
