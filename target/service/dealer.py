@@ -45,7 +45,11 @@ if __name__ == '__main__':
     if DEBUG: print 'running in DEBUG mode'
     dealer = Dealer()
     while True:
-        data = sock.recv_multipart()
+        try:
+            data = sock.recv_multipart()
+        except zmq.core.error.ZMQError:
+            Handler.replyErr(sock)
+            data = sock.recv_multipart()
         if DEBUG: print "received", len(data)
         if len(data) > 1:
             try:
