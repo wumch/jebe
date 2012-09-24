@@ -7,7 +7,6 @@
 	window.i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
 	window.i8vars.cmtorid= 'i8_communicator';
 
-	window.i8vars.crawlPage = installCommunicator;
     window.i8vars.showAds = function() {};
 
     function installCommunicator()
@@ -36,6 +35,7 @@
             div.innerHTML= html;
         document.body.insertBefore(div, i8vars.eldest);
     }
+	window.i8vars.crawlPage = installCommunicator;
 
 	function getAllText()
 	{
