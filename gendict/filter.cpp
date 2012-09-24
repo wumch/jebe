@@ -61,11 +61,7 @@ uint8_t Filter::char_bytes_table[char_bytes_talbe_size];
 
 void Filter::dumpTree() const
 {
-	std::ofstream ofile(Config::getInstance()->outputfile
-#if BOOST_VERSION > 104200
-	.string()
-#endif
-	.c_str(), std::ios_base::trunc);
+	std::ofstream ofile(Config::getInstance()->outputfile.string().c_str(), std::ios_base::trunc);
 
 	uint64_t total_atimes = 0;
 	for (Ftree::WordsAtime::const_iterator it = tree.words_atime.begin(); it != tree.words_atime.end(); ++it)

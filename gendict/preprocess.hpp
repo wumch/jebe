@@ -30,11 +30,7 @@ public:
 protected:
 	void prepare()
 	{
-#if BOOST_VERSION > 104200
 		filter = new Filter(Config::getInstance()->pattenfile.string());
-#else
-		filter = new Filter(Config::getInstance()->pattenfile);
-#endif
 	}
 
 	void process()
