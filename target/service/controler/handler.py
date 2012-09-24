@@ -5,13 +5,13 @@ import zlib
 from urllib2 import urlopen
 from config import config, sysconfig, logger, DEBUG
 from utils.MarveWords import MarveWords
-from drivers.adsupplier import Adsupplier
 
 class Handler(object):
 
     OK  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_OK}
     ERR  = {sysconfig.ERR_CODE_KEY_NAME : sysconfig.ERR_CODE_ERR}
-    adsupplier = Adsupplier.instance()
+
+    adsupplier = None
 
     def __init__(self, sock):
         self.sock = sock

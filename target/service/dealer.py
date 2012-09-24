@@ -8,8 +8,10 @@ except ImportError:
     pass
 
 import zmq, struct
-from config import config, DEBUG
+from config import config, DEBUG, backtracer
+from driversync.adsupplier import Adsupplier
 from controler.handler import Handler
+Handler.adsupplier = Adsupplier.instance()
 from controler.hcrawl import HCrawl
 
 context = zmq.Context(1)
