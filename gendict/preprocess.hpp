@@ -61,11 +61,17 @@ protected:
 					break;
 				}
 				remains = filter->find(reinterpret_cast<byte_t*>(content), readed + remains);
-				if (CS_BUNLIKELY(remains > (_JEBE_PROCESS_STEP >> 1)))
+				if (remains)
 				{
-					CS_DIE("(remains > (_JEBE_PROCESS_STEP + 1) >> 1)");
+					if (CS_BLIKELY(remains <= (_JEBE_PROCESS_STEP >> 1)))
+					{
+						memcpy(content, content + (_JEBE_PROCESS_STEP - remains), remains);
+					}
+					else
+					{
+						remains = 0;
+					}
 				}
-				memcpy(content, content + (_JEBE_PROCESS_STEP - remains), remains);
 			}
 
 			file.close();

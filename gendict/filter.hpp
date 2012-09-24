@@ -172,6 +172,7 @@ public:
 			}
 			else
 			{
+				// jump more iff `atoms[i]` is impossible to appear in pattens.
 				node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				begin_from_root = true;
