@@ -1,7 +1,7 @@
 #coding:utf-8
 
 from tads.ads import ads
-from drivers.ftengine import FTEngine
+from driversync.ftengine import FTEngine
 from config import config
 from tads.fallbackads import FallbackAd
 
