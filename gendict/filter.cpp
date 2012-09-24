@@ -41,7 +41,7 @@ void Ftree::attach_word(const char* const word)
 #if _JEBE_SCAN_FROM_RIGHT
     for(int32_t i = strlen(word) - 1; -1 < i; --i)
 #else
-    for (wsize_t end = strlen(word); i < end && notEdge(patten[i]); ++i)
+    for (wsize_t end = strlen(word); (i < end) && notEdge(patten[i]); ++i)
 #endif
     {
 		if (remain_bytes == 0)
@@ -72,7 +72,7 @@ void Filter::dumpTree() const
 
 	for (size_t i = 0; i < tree.words.size(); ++i)
 	{
-		ofile << tree.words[i] << '\t' << tree.words_atime[i] << std::endl;
+		ofile << tree.words[i] << '\t' << tree.words_atime[i] << "\n";
 	}
 
 	ofile.close();
