@@ -8,7 +8,7 @@ except ImportError:
     pass
 
 import zmq, struct
-from config import config, DEBUG, backtracer
+from config import config, DEBUG
 from driversync.adsupplier import Adsupplier
 from controler.handler import Handler
 Handler.adsupplier = Adsupplier.instance()
