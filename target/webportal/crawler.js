@@ -4,10 +4,12 @@
 
     i8vars['crawlServer'] = {host:'211.154.172.172', port:'10010'};
     i8vars['targetServer'] = 'http://211.154.172.172/target/';
-	window.i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
-	window.i8vars.cmtorid= 'i8_communicator';
+	i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
+	i8vars.cmtorid= 'i8_communicator';
 
-    window.i8vars.showAds = function() {};
+    i8vars.showAds = function() {};
+    i8vars.skipTags = ['SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'BUTTON'];
+    i8vars.max_recurve = 20000;
 
     function installCommunicator()
     {
@@ -35,15 +37,16 @@
             div.innerHTML= html;
         document.body.insertBefore(div, i8vars.eldest);
     }
-	window.i8vars.crawlPage = installCommunicator;
+	i8vars.crawlPage = installCommunicator;
 
 	function getAllText()
 	{
-		var text = document.title ? (document.title.toLowerCase() + ' ') : '';
+		var text = (document.title ? (document.title.toLowerCase() + ' ') : '');
 		var metas = document.documentElement.getElementsByTagName('meta');
 		for (var i = 0; i < metas.length; ++i)
 		{
-            var type = metas[i].getAttribute("name").toLowerCase();
+            var type = metas[i].getAttribute("name");
+            type = type && type.toLowerCase();
             if (type == "description" || type == "keywords")
             {
                 var tmp = metas[i].getAttribute("content");
@@ -53,12 +56,39 @@
                 }
             }
 		}
-		if (document.body.innerText)
-		{
-			text += document.body.innerText.toLowerCase();
-		}
-        return text.replace(/[^0-9a-zA-Z\-\u4e00-\u9fa5]+/g, ' ');
+        var pices = [text];
+        getContent(document.body, pices);
+        return location.href + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
 	}
+
+    function getContent(node, pices)
+    {
+        if (!i8vars.recurved)
+        {
+            i8vars.recurved = 0;
+        }
+        for (var i = 0; i < node.childNodes.length; ++i)
+        {
+            getNodeText(node.childNodes[i], pices);
+            if (++i8vars.recurved < i8vars.max_recurve)
+            {
+                getContent(node.childNodes[i], pices);
+            }
+        }
+    }
+
+    function getNodeText(node, pices)
+    {
+        if (node.nodeType == 3)
+        {
+            if (i8vars.skipTags.indexOf(node.parentNode.nodeName) == -1 && node.nodeValue)
+            {
+                pices.push(node.nodeValue);
+            }
+            return true;
+        }
+        return false;
+    }
 
 	function sendText(text)
 	{
