@@ -57,9 +57,72 @@
             }
 		}
         var pices = [text];
+        i8vars.recurved = 0;
         getContent(document.body, pices);
-        return location.href + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
+        return location.href + "\t" + getLinks() + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
 	}
+
+    function getLinks()
+    {
+        var buffer = [];
+        for (var i = 0; i < document.links.length; ++i)
+        {
+            var str = formatLink(document.links[i]);
+            if (str)
+            {
+                buffer.push(str);
+            }
+        }
+        return '[' + buffer.join(',') + ']';
+    }
+
+    var regexp = /^https?:\/\/(([0-9a-z\-]+\.)*((([0-9a-z\-]+)\.){1,2}?([0-9a-z\-]+)))/;
+    var domainSuffix = ['com', 'net', 'org', 'gov', 'cc'];
+    function getMainDomain(href)
+    {
+        var info = regexp.exec(href);
+        if (!info || info.length != 7)
+        {
+            return '';
+        }
+        if (domainSuffix.indexOf(info[5]) != -1)
+        {
+            return info[2] + info[3];
+        }
+        return info[3];
+    }
+    var curDomain = getMainDomain(location.href);
+
+    var domainRecorded = {};
+    var maxRecordPerDomain = 20;
+    function formatLink(link)
+    {
+        if (link.text && link.href)
+        {
+            var domain = getMainDomain(link.href);
+            if (domain && curDomain && domain != curDomain)
+            {
+                if (!domainRecorded[domain])
+                {
+                    domainRecorded[domain] = 0;
+                }
+                if (domainRecorded[domain]++ < maxRecordPerDomain)
+                {
+                    return '["' + jsonEscape(link.href) + '","' + jsonEscape(link.title || link.text) + '"]';
+                }
+            }
+        }
+        return false;
+    }
+    function jsonEscape(text)
+    {
+        return text.replace(/"/g, '\\"').replace(/\t/g, '');
+    }
+
+    function isSameDomain(href)
+    {
+        return (!curDomain) ? true : (getMainDomain(href) == curDomain);
+    }
 
     function getContent(node, pices)
     {
@@ -133,7 +196,7 @@
             }
         }
         document.body.insertBefore(i8vars.create('script', {'src': url,'type': 'text/javascript'}), i8vars.eldest);
-	};
+	}
 
     requestAds();
 })();
