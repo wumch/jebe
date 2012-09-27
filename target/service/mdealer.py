@@ -10,9 +10,7 @@ except ImportError:
 import sys
 import zmq, struct
 from config import config, DEBUG
-from driversync.adsupplier import Adsupplier
 from controler.handler import Handler
-Handler.adsupplier = Adsupplier.instance()
 from controler.mhcrawl import HCrawl
 
 if len(sys.argv) < 2:
