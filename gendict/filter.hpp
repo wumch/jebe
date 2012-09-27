@@ -95,7 +95,7 @@ public:
 							{
 								if (CS_BUNLIKELY(_atom & (1 << 1)))
 								{
-									return 1;	// error occured.
+									return 1;	// error occured, make it neither optimization, nor side-effect.
 								}
 								return 6;
 							}

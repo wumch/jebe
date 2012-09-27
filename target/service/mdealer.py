@@ -8,14 +8,14 @@ except ImportError:
     pass
 
 import zmq, struct
-from config import config, DEBUG, logger
-from drivers.adsupplier import Adsupplier
+from config import config, DEBUG
+from driversync.adsupplier import Adsupplier
 from controler.handler import Handler
 Handler.adsupplier = Adsupplier.instance()
 from controler.hcrawl import HCrawl
 
 context = zmq.Context(1)
-sock = context.socket(zmq.XREP)
+sock = context.socket(zmq.REP)
 sock.connect("tcp://%(host)s:%(port)d" % config.getRouter())
 
 class Dealer(object):
@@ -28,23 +28,33 @@ class Dealer(object):
 
     def _getHandler(self, header):
         index = self.ucpacker.unpack(header[0])[0]
-        return self.handlerList[index] if 0 < index < len(self.handlerList) else None
+        if not 0 < index < len(self.handlerList):
+            global sock
+            Handler.replyErr(sock)
+        return self.handlerList[index]
 
     def handle(self, header, payload):
         handler = self._getHandler(header)
-        if handler is not None:
+        if handler is None:
+            global sock
+            Handler.replyErr(sock)
+        else:
             handler.handle(payload)
 
 if __name__ == '__main__':
     if DEBUG: print 'running in DEBUG mode'
     dealer = Dealer()
     while True:
-        data = sock.recv_multipart()
+        try:
+            data = sock.recv_multipart()
+        except zmq.core.error.ZMQError:
+            Handler.replyErr(sock)
+            data = sock.recv_multipart()
         if DEBUG: print "received", len(data)
         if len(data) > 1:
             try:
                 dealer.handle(data[0], data[1:])
-            except Exception, e:
-                logger.logException(e)
+            except Exception:
+                Handler.replyErr(sock)
         else:
-            logger.error("kid, some bad guys sent len(data)<=1")
+            Handler.replyErr(sock)

@@ -16,6 +16,7 @@ class FileStorer(object):
     def store(self, content):
         self.fp.write(content)
         self.fp.write(os.linesep)
+        if DEBUG: self.fp.flush()
 
     def genFileName(self):
         if not os.path.exists(self.prefix):

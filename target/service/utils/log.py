@@ -19,22 +19,25 @@ class Logger(logging.RootLogger):
     _instance = None
 
     @classmethod
-    def instance(cls, logfile=None):
+    def instance(cls, logfile=None, also_print=False):
         if cls._instance is None and logfile is not None:
-            cls._instance = cls(logfile=logfile)
+            cls._instance = cls(logfile=logfile, also_print=also_print)
         return cls._instance
 
-    def __init__(self, logfile, backtracer=None):
+    def __init__(self, logfile, backtracer=None, also_print=False):
         logging.RootLogger.__init__(self, logging.NOTSET)
         self.setLevel(logging.NOTSET)
         self.removeHandler(self.handlers)
         self.addHandler(LogHandler(filename=logfile))
         self.backtracer = backtracer or BackTracer(max_depth=10, extra_skip=2)
+        self.also_print = also_print
 
     def logException(self, e):
         self.error("kid, error occured: " + str(e.args))
 
     def error(self, msg, *args, **kwargs):
+        if self.also_print:
+            print >>sys.stderr, self, msg + ", call-chain: " + self.backtracer.prety()
         logging.RootLogger.error(self, msg + ", call-chain: " + self.backtracer.prety())
 
 def mklogger(logfile):
