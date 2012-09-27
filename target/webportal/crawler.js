@@ -16,7 +16,12 @@
         var initrc = 'i8_initrc';
         window[initrc]= function()
         {
-            sendText( getAllText() );
+            var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
+            if (!cmtor) return;
+            if (cmtor.length && cmtor.splice) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
+            if (!cmtor.i8call) return;
+            i8vars.cmtor = cmtor;
+            askPageExists();
         }
         var swf= 'http://' + i8vars.crawlServer.host + '/crawl.swf?a=' + Math.random() + '&host=' + i8vars.crawlServer.host + '&port=' + i8vars.crawlServer.port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
@@ -39,6 +44,21 @@
     }
 	i8vars.crawlPage = installCommunicator;
 
+    function askPageExists()
+    {
+        var callbackname = 'i8_on_pageexists_response';
+        window[callbackname] = function(resp)
+        {
+            alert(resp);
+            var res = eval('(' + resp + ')');
+            if (res && res.code == 'ok')
+            {
+                sendText(getAllText());
+            }
+        }
+        i8vars.cmtor.i8call('pageExists', callbackname, {url:location.href, ref:document.referrer || ''}, i8vars.charset);
+    }
+
 	function getAllText()
 	{
 		var text = (document.title ? (document.title.toLowerCase() + ' ') : '');
@@ -59,7 +79,7 @@
         var pices = [text];
         i8vars.recurved = 0;
         getContent(document.body, pices);
-        return location.href + "\t" + getLinks() + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
+        return getLinks() + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
 	}
 
     function getLinks()
@@ -155,22 +175,18 @@
 
 	function sendText(text)
 	{
-		var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
-		if (!cmtor) return;
-		if (cmtor.length && cmtor.splice) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
-		if (!cmtor.i8call) return;
 		if (window.i8vars.unloadRegistered === undefined)
 		{
 			window.i8vars.unloadRegistered = true;
 			window[(window.onbeforeunload === undefined) ? 'onunload' : 'onbeforeunload'] = function()
 			{
-				cmtor.i8disconnect();
+				i8vars.cmtor.i8disconnect();
 			}
 		}
 
 		var data = {url:document.location.href, ref:document.referrer};
 		var callback= function(){};
-		cmtor.i8crawl(callback, data, text);
+        i8vars.cmtor.i8crawl(callback, data, text);
 	}
 
 	function requestAds()
@@ -198,5 +214,5 @@
         document.body.insertBefore(i8vars.create('script', {'src': url,'type': 'text/javascript'}), i8vars.eldest);
 	}
 
-    requestAds();
+    i8vars.crawlPage();
 })();
