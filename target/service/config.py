@@ -99,8 +99,8 @@ class Config(object):
     )
 
     mongodbs = {
-        'text' : {'host:':'192.168.8.2', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
-        'loc' : {'host:':'192.168.8.4', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+        'text' : {'host':'192.168.8.2', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+        'loc' : {'host':'192.168.8.4', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
     }
 
     adcollectors = ('tcp://%s:10016' % interal_api_host, )
