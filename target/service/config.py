@@ -98,6 +98,11 @@ class Config(object):
         'tcp://192.168.88.4:10015',
     )
 
+    mongodbs = {
+        'text' : {'host:':'192.168.8.2', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+        'loc' : {'host:':'192.168.8.4', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+    }
+
     adcollectors = ('tcp://%s:10016' % interal_api_host, )
 
     iothreads = 1
@@ -111,6 +116,10 @@ class Config(object):
         ftengines = ('tcp://%s:10016' % natip, )
         locdbs = ('tcp://%s:10018' % natip, )
         adcollectors = ('tcp://%s:10017' % natip, )
+        mongodbs = {
+           'text' : {'host':'127.0.0.1', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+           'loc' : {'host':'127.0.0.1', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+        }
         iothreads = 1
 
     __instance = None
@@ -161,6 +170,10 @@ class Config(object):
             return self.adcollectors[0]
         else:
             return self.adcollectors[randint(0, len(self.adcollectors) - 1)]
+
+    def getMongoDB(self, type='loc'):
+        assert type in self.mongodbs, "kid, what do you what by `%s`" % type
+        return self.mongodbs[type]
 
     jsoner = JSONEr()
     msgpack = MsgPacker()
