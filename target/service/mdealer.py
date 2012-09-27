@@ -7,6 +7,7 @@ try:
 except ImportError:
     pass
 
+import sys
 import zmq, struct
 from config import config, DEBUG
 from driversync.adsupplier import Adsupplier
@@ -14,9 +15,13 @@ from controler.handler import Handler
 Handler.adsupplier = Adsupplier.instance()
 from controler.mhcrawl import HCrawl
 
+if len(sys.argv) < 2:
+    print "usage: %s <router-ip>" % sys.argv[1]
+    sys.exit(1)
+
 context = zmq.Context(1)
 sock = context.socket(zmq.REP)
-sock.connect("tcp://%(host)s:%(port)d" % config.getRouter())
+sock.connect("tcp://%s:%d" % (sys.argv[1], config.dealer_port))
 
 class Dealer(object):
 
