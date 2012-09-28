@@ -4,6 +4,7 @@ import pymongo
 from config import config
 from driversync.tokenizer import Tokenizer
 from utils.misc import md5
+import time
 
 class PageStorer(object):
 
@@ -33,11 +34,13 @@ class PageStorer(object):
         return self._store(url=meta['url'], content=content)
 
     def _store(self, url, content):
+        md5_res = md5(url)
+        time_stamp = time.time()
         links, content = self._parseContent(content=content)
         links = config.jsoner.decode(links)
-        text = {'_id':md5(url), 'url':url, 'text':content, 'links':links}
+        text = {'_id':md5_res, 'url':url, 'text':content, 'links':links, 'ts':time_stamp}
         self.collections['text'].insert(text)
-        loc = self._getData(url, content)
+        loc = self._getData(url, content, md5_res=md5_res, time_stamp=time_stamp)
         self.collections['loc'].insert(loc)
 
     def _parseContent(self, content):
@@ -47,10 +50,11 @@ class PageStorer(object):
     def exists(self, url):
         return not not self.collections['loc'].find_one({'_id':md5(url)})
 
-    def _getData(self, url, content):
+    def _getData(self, url, content, md5_res=None, time_stamp=None):
         wordsWeight = self._marve(content)
         return {
-            '_id' : md5(url),
+            '_id' : md5_res or md5(url),
+            'ts' : time.time() or time_stamp,
             'url' : url,
             'words' : [ww[0] for ww in wordsWeight],
             'weight' : [ww[1] for ww in wordsWeight],
