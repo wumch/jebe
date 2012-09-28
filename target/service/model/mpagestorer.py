@@ -27,7 +27,7 @@ class PageStorer(object):
         for dbtype in ('loc', 'text'):
             server = config.getMongoDB(type=dbtype)
             # dbname is same as the collection name
-            self.connections[dbtype] = pymongo.Connection(**server)
+            self.connections[dbtype] = pymongo.Connection(**server['param'])
             self.dbs[dbtype] = self.connections[dbtype][server['db']]
             self.collections[dbtype] = self.dbs[dbtype][server['db']]
 
