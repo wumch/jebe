@@ -53,10 +53,13 @@ class PageStorer(object):
         linksDict = {}
         for href, text in links:
             key = md5(href)
-            linksDict[key] = (linksDict[key] + text) if href in linksDict else text
+            if not key in linksDict:
+                linksDict[key] = [[text, href]]
+            else:
+                linksDict[key].append([text, href])
         return {
             '_id' : md5_res or md5(url),
-            'ts' : time.time() or time_stamp,
+            'ts' : int(time.time()) or time_stamp,
             'url' : url,
             'text' : content,
             'links' : linksDict,
@@ -66,7 +69,7 @@ class PageStorer(object):
         wordsWeight = self._marve(content)
         return {
             '_id' : md5_res or md5(url),
-            'ts' : time.time() or time_stamp,
+            'ts' : int(time.time()) or time_stamp,
             'url' : url,
             'words' : [ww[0] for ww in wordsWeight],
             'weight' : [ww[1] for ww in wordsWeight],
