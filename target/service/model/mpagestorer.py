@@ -35,7 +35,7 @@ class PageStorer(object):
 
     def _store(self, url, content):
         md5_res = md5(url)
-        time_stamp = time.time()
+        time_stamp = int(time.time())
         links, content = self._parseContent(content=content)
         text = self._genTextData(url=url, content=content, links=links, md5_res=md5_res, time_stamp=time_stamp)
         self.collections['text'].insert(text)
