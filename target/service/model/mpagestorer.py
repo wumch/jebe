@@ -35,7 +35,7 @@ class PageStorer(object):
     def _store(self, url, content):
         links, content = self._parseContent(content=content)
         links = config.jsoner.decode(links)
-        text = {'url':url, 'text':content, 'links':links}
+        text = {'_id':md5(url), 'url':url, 'text':content, 'links':links}
         self.collections['text'].insert(text)
         loc = self._getData(url, content)
         self.collections['loc'].insert(loc)
@@ -45,7 +45,7 @@ class PageStorer(object):
         return info
 
     def exists(self, url):
-        return not not self.collections['loc'].find_one({'url':url})
+        return not not self.collections['loc'].find_one({'_id':md5(url)})
 
     def _getData(self, url, content):
         wordsWeight = self._marve(content)
