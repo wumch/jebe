@@ -49,7 +49,7 @@ class PageStorer(object):
 
     def _getData(self, url, content):
         return {
-            'url' : md5(url),
+            '_id' : md5(url),
             'words' : self.marve(content),
         }
 
