@@ -39,7 +39,7 @@ class PageStorer(object):
         links, content = self._parseContent(content=content)
         text = {'_id':md5_res, 'url':url, 'text':content, 'links':links, 'ts':time_stamp}
         self.collections['text'].insert(text)
-        loc = self._getData(url, content, md5_res=md5_res, time_stamp=time_stamp)
+        loc = self._genLocData(url, content, md5_res=md5_res, time_stamp=time_stamp)
         self.collections['loc'].insert(loc)
 
     def _parseContent(self, content):
@@ -49,7 +49,20 @@ class PageStorer(object):
     def exists(self, url):
         return not not self.collections['loc'].find_one({'_id':md5(url)})
 
-    def _getData(self, url, content, md5_res=None, time_stamp=None):
+    def _genTextData(self, url, content, links, md5_res=None, time_stamp=None):
+        linksDict = {}
+        for href, text in links:
+            key = md5(href)
+            linksDict[key] = (linksDict[key] + text) if href in linksDict else text
+        return {
+            '_id' : md5_res or md5(url),
+            'ts' : time.time() or time_stamp,
+            'url' : url,
+            'text' : content,
+            'links' : linksDict,
+        }
+
+    def _genLocData(self, url, content, md5_res=None, time_stamp=None):
         wordsWeight = self._marve(content)
         return {
             '_id' : md5_res or md5(url),
