@@ -29,7 +29,7 @@ class PageStorer(object):
             # dbname is same as the collection name
             self.connections[dbtype] = pymongo.Connection(**server['param'])
             self.dbs[dbtype] = self.connections[dbtype][server['db']]
-            self.collections[dbtype] = self.dbs[dbtype][server['db']]
+            self.collections[dbtype] = self.dbs[dbtype][server['collection']]
 
     def store(self, meta, content):
         return self._store(url=meta['url'], content=content)
