@@ -54,10 +54,10 @@ class PageStorer(object):
         linksDict = {}
         for href, text in links:
             key = md5(href)
-            linksDict[key] = {'url':url, 'text': text}
+            linksDict[key] = {'url':href, 'text': text}
         return {
             '_id' : md5_res or md5(url),
-            'ts' : int(time.time()) or time_stamp,
+            'ts' : time_stamp or int(time.time()),
             'url' : url,
             'text' : content,
             'links' : linksDict,
