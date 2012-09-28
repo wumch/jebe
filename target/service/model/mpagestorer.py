@@ -37,7 +37,6 @@ class PageStorer(object):
         md5_res = md5(url)
         time_stamp = time.time()
         links, content = self._parseContent(content=content)
-        links = config.jsoner.decode(links)
         text = {'_id':md5_res, 'url':url, 'text':content, 'links':links, 'ts':time_stamp}
         self.collections['text'].insert(text)
         loc = self._getData(url, content, md5_res=md5_res, time_stamp=time_stamp)
@@ -45,7 +44,7 @@ class PageStorer(object):
 
     def _parseContent(self, content):
         info = content.split("\t", 1)
-        return info
+        return [config.jsoner.decode(info[0]), info[1]] if len(info) == 2 else ["", content]
 
     def exists(self, url):
         return not not self.collections['loc'].find_one({'_id':md5(url)})
