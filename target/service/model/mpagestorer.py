@@ -48,10 +48,13 @@ class PageStorer(object):
         return not not self.collections['loc'].find_one({'url':url})
 
     def _getData(self, url, content):
+        wordsWeight = self._marve(content)
         return {
             '_id' : md5(url),
-            'words' : self.marve(content),
+            'url' : url,
+            'words' : [ww[0] for ww in wordsWeight],
+            'weight' : [ww[1] for ww in wordsWeight],
         }
 
-    def marve(self, content):
+    def _marve(self, content):
         return self.tokenizer.marve(content=content)
