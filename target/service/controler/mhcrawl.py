@@ -26,7 +26,6 @@ class HCrawl(Handler):
     def pageExists(self, data):
         try:
             meta = config.jsoner.decode(data[0])
-            print meta
             if self._pageExists(meta['url']):
                 self.replyError()
             else:
