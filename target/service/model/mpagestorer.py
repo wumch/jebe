@@ -24,11 +24,12 @@ class PageStorer(object):
         self.connections = {}
         self.dbs = {}
         self.collections = {}
-        for dbname in ('loc', 'text'):
+        for dbtype in ('loc', 'text'):
+            server = config.getMongoDB(type=dbtype)
             # dbname is same as the collection name
-            self.connections[dbname] = pymongo.Connection(**config.getMongoDB(type=dbname))
-            self.dbs[dbname] = self.connections[dbname][dbname]
-            self.collections[dbname] = self.dbs[dbname][dbname]
+            self.connections[dbtype] = pymongo.Connection(**server)
+            self.dbs[dbtype] = self.connections[dbtype][server['db']]
+            self.collections[dbtype] = self.dbs[dbtype][server['db']]
 
     def store(self, meta, content):
         return self._store(url=meta['url'], content=content)
