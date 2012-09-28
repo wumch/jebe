@@ -44,7 +44,7 @@ class PageStorer(object):
 
     def _parseContent(self, content):
         info = content.split("\t", 1)
-        return [config.jsoner.decode(info[0]), info[1]] if len(info) == 2 else ["", content]
+        return [config.jsoner.decode(info[0]), info[1]] if len(info) == 2 else [[], content]
 
     def exists(self, url):
         return not not self.collections['loc'].find_one({'_id':md5(url)})
