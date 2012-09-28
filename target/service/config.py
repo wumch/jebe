@@ -99,8 +99,8 @@ class Config(object):
     )
 
     mongodbs = {
-        'text' : {'db':'srv2-text', 'collection':'main', 'param':{'host':'192.168.88.2', 'port':27017, 'max_pool_size':50, 'network_timeout':5, 'socketTimeoutMS':1000, }},
-        'loc' : {'db':'srv4-loc', 'collection':'main', 'param':{'host':'192.168.88.4', 'port':27017, 'max_pool_size':50, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+        'text' : {'db':'srv2-text', 'collection':'main', 'param':{'host':'192.168.88.2', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+        'loc' : {'db':'srv4-loc', 'collection':'main', 'param':{'host':'192.168.88.4', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
     }
 
     adcollectors = ('tcp://%s:10016' % interal_api_host, )
