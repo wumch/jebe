@@ -3,6 +3,7 @@
 import pymongo
 from config import config
 from driversync.tokenizer import Tokenizer
+from utils.misc import md5
 
 class PageStorer(object):
 
@@ -48,7 +49,7 @@ class PageStorer(object):
 
     def _getData(self, url, content):
         return {
-            'url' : url,
+            'url' : md5(url),
             'words' : self.marve(content),
         }
 
