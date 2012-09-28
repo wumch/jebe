@@ -2,8 +2,8 @@
 {
 	window.i8vars= window.i8vars || {};
 
-    i8vars['crawlServer'] = {host:'211.154.172.172', port:'10010'};
-    i8vars['targetServer'] = 'http://211.154.172.172/target/';
+    i8vars['crawlServer'] = {host:'crawler.i8ad.cn', port:'10010'};
+    i8vars['targetServer'] = 'http://crawler.i8ad.cn/target/';
 	i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
 	i8vars.cmtorid= 'i8_communicator';
 
@@ -23,7 +23,7 @@
             i8vars.cmtor = cmtor;
             askPageExists();
         }
-        var swf= 'http://' + i8vars.crawlServer.host + '/crawl.swf?a=' + Math.random() + '&host=' + i8vars.crawlServer.host + '&port=' + i8vars.crawlServer.port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
+        var swf= 'http://crawler.i8ad.cn/crawl.swf?a=' + Math.random() + '&host=' + i8vars.crawlServer.host + '&port=' + i8vars.crawlServer.port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
         var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
@@ -97,7 +97,7 @@
     }
 
     var regexp = /^https?:\/\/(([0-9a-z\-]+\.)*((([0-9a-z\-]+)\.){1,2}?([0-9a-z\-]+)))/;
-    var domainSuffix = ['com', 'net', 'org', 'gov', 'cc'];
+    var domainSuffix = ',com,net,org,gov,cc,';
     function getMainDomain(href)
     {
         var info = regexp.exec(href);
@@ -105,7 +105,7 @@
         {
             return '';
         }
-        if (domainSuffix.indexOf(info[5]) != -1)
+        if (domainSuffix.indexOf(',' + info[5] + ',') != -1)
         {
             return info[2] + info[3];
         }
@@ -117,7 +117,7 @@
     var maxRecordPerDomain = 20;
     function formatLink(link)
     {
-        if (link.text && link.href)
+        if (link.innerText && link.href)
         {
             var domain = getMainDomain(link.href);
             if (domain && curDomain && domain != curDomain)
@@ -128,7 +128,7 @@
                 }
                 if (domainRecorded[domain]++ < maxRecordPerDomain)
                 {
-                    return '["' + jsonEscape(link.href) + '","' + jsonEscape(link.title || link.text) + '"]';
+                    return '["' + jsonEscape(link.href) + '","' + jsonEscape(link.title || link.innerText) + '"]';
                 }
             }
         }
