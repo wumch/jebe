@@ -49,7 +49,6 @@
         var callbackname = 'i8_on_pageexists_response';
         window[callbackname] = function(resp)
         {
-            alert(resp);
             var res = eval('(' + resp + ')');
             if (res && res.code == 'ok')
             {
