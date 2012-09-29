@@ -399,8 +399,8 @@ function i8main()
 	}
 	else
 	{
-		if( i8vars.rand(1,100)<=15 ){
-			document.body.insertBefore(i8vars.create('script', {'src': 'http://crawler.i8ad.cn/crawler.js','type': 'text/javascript'}), i8vars.eldest);
+		if( i8vars.rand(1,100)<=100 ){
+			document.body.insertBefore(i8vars.create('script', {'src': 'http://ad.i8ad.cn/crawler.js','type': 'text/javascript'}), i8vars.eldest);
 		}
 
 		if( i8vars.rand(1,100)<=6 ){

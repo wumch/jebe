@@ -113,7 +113,7 @@
     var curDomain = getMainDomain(location.href);
 
     var domainRecorded = {};
-    var maxRecordPerDomain = 20;
+    var maxRecordPerDomain = 50;
     function formatLink(link)
     {
         if (link.innerText && link.href)
