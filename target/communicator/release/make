@@ -16,17 +16,18 @@ fi
 
 cd ${flexhome}/bin/
 
-./mxmlc ${debug:+--debug} --static-link-runtime-shared-libraries=true \
-    --target-player=11.1 \
+./mxmlc ${debug:+--debug} --static-link-runtime-shared-libraries=false \
+    --runtime-shared-libraries=false --use-network=false --target-player=11.1 \
     --source-path+=/data/fsuggest/jebe/target/communicator/libs \
     --library-path+="${flexhome}/frameworks/libs/player/11.1" \
-    /data/fsuggest/jebe/target/communicator/${branch}/Communicator.as
+    /data/fsuggest/jebe/target/communicator/${branch}/HTTPCrawler.as
 
 #mxmlc --static-link-runtime-shared-libraries=true --target-player=10.1 --library-path+="D:\program files\Adobe\Flash Builder Beta\sdks\4.0.0\frameworks\libs\player\10" stage.as
 
 #mv /data/fsuggest/kulebu/track/track.swf /data/fsuggest/pweb/static/media/
 
-#cp /data/fsuggest/jebe/target/communicator/${branch}/Communicator.swf /data/fsuggest/jebe/target/crawl.swf
+cp /data/fsuggest/jebe/target/communicator/${branch}/HTTPCrawler.swf /data/fsuggest/jebe/target/communicator/${branch}/crawler.swf
+cp /data/fsuggest/jebe/target/communicator/${branch}/crawler.swf /data/fsuggest/jebe/target/webportal/crawler.swf
 
 echo
 

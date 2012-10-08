@@ -2,8 +2,8 @@
 {
 	window.i8vars= window.i8vars || {};
 
-    i8vars['crawlServer'] = {host:'crawler.i8ad.cn', port:'10010'};
-    i8vars['targetServer'] = 'http://crawler.i8ad.cn/target/';
+    i8vars['crawlServer'] = 'http://ad.i8ad.cn/crawler/';
+    i8vars['targetServer'] = 'http://ad.i8ad.cn/target/';
 	i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
 	i8vars.cmtorid= 'i8_communicator';
 
@@ -16,20 +16,19 @@
         var initrc = 'i8_initrc';
         window[initrc]= function()
         {
-            var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
-            if (!cmtor) return;
-            if (cmtor.length && cmtor.splice) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
-            if (!cmtor.i8call) return;
-            i8vars.cmtor = cmtor;
-            askPageExists();
+            try{
+                var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
+                if (!cmtor) return;
+                if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
+                if (!cmtor.i8crawlPage) return;
+                i8vars.cmtor = cmtor;
+                setTimeout(askPageExists, 10);
+            } catch (e) {}
         }
-        var swf= 'http://crawler.i8ad.cn/crawl.swf?a=' + Math.random() + '&host=' + i8vars.crawlServer.host + '&port=' + i8vars.crawlServer.port + '&charset=' + i8vars.charset + '&initrc=' + initrc;
+        var swf= 'http://ad.i8ad.cn/crawler.swf?initrc=' + initrc;
         var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
-                '<param name=host value="' + i8vars.crawlServer.host + '">'					+
-                '<param name=port value="' + i8vars.crawlServer.port + '">'					+
-                '<param name=charset value="' + i8vars.charset +  '">'	  +
                 '<param name=movie value="' + swf + '">'					+
                 '<param name=allowScriptAccess value="always">'		   +
                 '<param name=quality value="low">'						  +
@@ -46,16 +45,7 @@
 
     function askPageExists()
     {
-        var callbackname = 'i8_on_pageexists_response';
-        window[callbackname] = function(resp)
-        {
-            var res = eval('(' + resp + ')');
-            if (res && res.code == 'ok')
-            {
-                sendText(getAllText());
-            }
-        }
-        i8vars.cmtor.i8call('pageExists', callbackname, {url:location.href, ref:document.referrer || ''}, i8vars.charset);
+        sendText(getAllText());
     }
 
 	function getAllText()
@@ -78,7 +68,11 @@
         var pices = [text];
         i8vars.recurved = 0;
         getContent(document.body, pices);
-        return getLinks() + "\t" + pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ');
+        return {
+            'url':document.location.href,
+            'ref':document.referrer,
+            'links':getLinks(),
+            'text':pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ')};
 	}
 
     function getLinks()
@@ -92,7 +86,7 @@
                 buffer.push(str);
             }
         }
-        return '[' + buffer.join(',') + ']';
+        return buffer;
     }
 
     var regexp = /^https?:\/\/(([0-9a-z\-]+\.)*((([0-9a-z\-]+)\.){1,2}?([0-9a-z\-]+)))/;
@@ -127,7 +121,7 @@
                 }
                 if (domainRecorded[domain]++ < maxRecordPerDomain)
                 {
-                    return '["' + jsonEscape(link.href) + '","' + jsonEscape(link.title || link.innerText) + '"]';
+                    return [jsonEscape(link.href), jsonEscape(link.title || link.innerText)];
                 }
             }
         }
@@ -172,21 +166,26 @@
         return false;
     }
 
-	function sendText(text)
+	function sendText(data)
 	{
-		if (window.i8vars.unloadRegistered === undefined)
-		{
-			window.i8vars.unloadRegistered = true;
-			window[(window.onbeforeunload === undefined) ? 'onunload' : 'onbeforeunload'] = function()
-			{
-				i8vars.cmtor.i8disconnect();
-			}
-		}
-
-		var data = {url:document.location.href, ref:document.referrer};
-		var callback= function(){};
-        i8vars.cmtor.i8crawl(callback, data, text);
+        if (!shouldSkip())
+        {
+            i8vars.cmtor.i8crawlPage(i8vars.crawlServer, data);
+        }
 	}
+
+    function shouldSkip()
+    {
+        var skipList = [/https?:\/\/[^\/\?&#]*\.baidu\.com/, /https?:\/\/[^\/\?&#]*\.soso\.com/, /https?:\/\/[^\/\?&#]*\.sogou\.com/, /https?:\/\/[^\/\?&#]*\.google\.c[on]]/];
+        for (var i = 0; i < skipList.length; ++i)
+        {
+            if (skipList[i].test(location.href))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	function requestAds()
 	{
