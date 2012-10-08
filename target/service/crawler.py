@@ -12,8 +12,9 @@ from controler.wsgi_crawler import WsgiCrawler
 
 headers = [
 #    ('Connection', 'close'),
-    ('Content-Type', 'application/x-javascript; charset=utf-8'),
-    ('Pragma', 'no-cache'),
+    ("Content-Type", "application/x-javascript; charset=utf-8"),
+    ("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"),
+#    ('Pragma', 'no-cache'),
 ]
 status_ok = '200 OK'
 status_error = '500 Internal Error'

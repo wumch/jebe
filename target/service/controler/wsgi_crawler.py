@@ -13,7 +13,7 @@ class WsgiCrawler(WsgiControler):
         self.pageStorer = PageStorer.instance()
 
     def handle(self):
-        return self.store()
+        return self.store() if self.env['REQUEST_METHOD'] == 'POST' else False
 
     def store(self):
         if not self.postData:
