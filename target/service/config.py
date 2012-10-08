@@ -117,8 +117,8 @@ class Config(object):
         locdbs = ('tcp://%s:10018' % natip, )
         adcollectors = ('tcp://%s:10017' % natip, )
         mongodbs = {
-           'text' : {'host':'127.0.0.1', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
-           'loc' : {'host':'127.0.0.1', 'port':27017, 'max_pool_size':50, 'network_timeout':1, 'socketTimeoutMS':200},
+            'text' : {'db':'text', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+            'loc' : {'db':'loc', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
         }
         iothreads = 1
 

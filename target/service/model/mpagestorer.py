@@ -1,10 +1,10 @@
 #coding:utf-8
 
+import time
 import pymongo
 from config import config
 from driversync.tokenizer import Tokenizer
 from utils.misc import md5
-import time
 
 class PageStorer(object):
 
@@ -32,12 +32,17 @@ class PageStorer(object):
             self.collections[dbtype] = self.dbs[dbtype][server['collection']]
 
     def store(self, meta, content):
-        return self._store(url=meta['url'], content=content)
-
-    def _store(self, url, content):
-        md5_res = md5(url)
-        time_stamp = int(time.time())
         links, content = self._parseContent(content=content)
+        return self._store(url=meta['url'], content=content, links=links)
+
+    def storeInfo(self, url, content, links=None):
+        return self._store(url=url, content=content, links=links or [])
+
+    def _store(self, url, content, links=None):
+        md5_res = md5(url)
+        if self._exists(md5ed_url=md5_res):
+            return
+        time_stamp = int(time.time())
         text = self._genTextData(url=url, content=content, links=links, md5_res=md5_res, time_stamp=time_stamp)
         self.collections['text'].insert(text)
         loc = self._genLocData(url, content, md5_res=md5_res, time_stamp=time_stamp)
@@ -48,7 +53,10 @@ class PageStorer(object):
         return [config.jsoner.decode(info[0]), info[1]] if len(info) == 2 else [[], content]
 
     def exists(self, url):
-        return not not self.collections['loc'].find_one({'_id':md5(url)})
+        return self._exists(md5ed_url=md5(url))
+
+    def _exists(self, md5ed_url):
+        return not not self.collections['loc'].find_one({'_id':md5ed_url})
 
     def _genTextData(self, url, content, links, md5_res=None, time_stamp=None):
         linksDict = {}

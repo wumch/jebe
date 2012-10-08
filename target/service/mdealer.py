@@ -9,17 +9,14 @@ except ImportError:
 
 import sys
 import zmq, struct
-from config import config, DEBUG
+from config import config, DEBUG, natip
 from controler.handler import Handler
 from controler.mhcrawl import HCrawl
 
-if len(sys.argv) < 2:
-    print "usage: %s <router-ip>" % sys.argv[1]
-    sys.exit(1)
-
 context = zmq.Context(1)
 sock = context.socket(zmq.REP)
-sock.connect("tcp://%s:%d" % (sys.argv[1], config.dealer_port))
+host = sys.argv[1] if len(sys.argv) > 1 else natip
+sock.connect("tcp://%s:%d" % (host, config.dealer_port))
 
 class Dealer(object):
 
