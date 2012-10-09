@@ -62,7 +62,7 @@ void Config::init(int argc, char* argv[])
 
 void Config::initDesc()
 {
-	std::string default_listen(std::string("tcp://") + staging::getNatIP() + ":10018");
+	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10018");
 	desc.add_options()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
 		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://qdb"),

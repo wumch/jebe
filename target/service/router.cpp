@@ -14,7 +14,7 @@ int main()
     	const std::string frontend_uri(std::string("tcp://") + staging::getWanIP() + ":10010");
     	zmq_bind(frontend, frontend_uri.c_str());
 
-    	const std::string backend_uri(std::string("tcp://") + staging::getNatIP() + ":10011");
+    	const std::string backend_uri(std::string("tcp://") + staging::getLanIP() + ":10011");
     	zmq_bind(backend, backend_uri.c_str());
 
     	std::cout << "frontend:\t" << frontend_uri << std::endl
