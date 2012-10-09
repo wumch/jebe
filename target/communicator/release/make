@@ -16,8 +16,8 @@ fi
 
 cd ${flexhome}/bin/
 
-./mxmlc ${debug:+--debug} --static-link-runtime-shared-libraries=false \
-    --runtime-shared-libraries=false --use-network=false --target-player=11.1 \
+./mxmlc ${debug:+--debug} --static-link-runtime-shared-libraries=true \
+    --use-network=false --target-player=11.1 \
     --source-path+=/data/fsuggest/jebe/target/communicator/libs \
     --library-path+="${flexhome}/frameworks/libs/player/11.1" \
     /data/fsuggest/jebe/target/communicator/${branch}/HTTPCrawler.as

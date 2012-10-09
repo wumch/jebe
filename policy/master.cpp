@@ -7,6 +7,7 @@
 #ifdef __linux
 #	include <sys/prctl.h>
 #endif
+#include "staging/net.hpp"
 
 namespace jebe {
 namespace policy {
@@ -52,7 +53,7 @@ void Master::listen()
     acptor = new ip::tcp::acceptor(getio());
     
     ip::tcp::resolver resolver(acptor->get_io_service());
-    ip::tcp::resolver::query query("0.0.0.0", "843");
+    ip::tcp::resolver::query query(staging::getWanIP(), "843");
     ip::tcp::endpoint ep = *resolver.resolve(query);
     acptor->open(ep.protocol());
 
