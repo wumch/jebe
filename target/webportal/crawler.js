@@ -8,7 +8,7 @@
 	i8vars.cmtorid= 'i8_communicator';
 
     i8vars.showAds = function() {};
-    i8vars.skipTags = ['SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'BUTTON'];
+    i8vars.skipTags = ',SCRIPT,STYLE,INPUT,TEXTAREA,BUTTON,';
     i8vars.max_recurve = 20000;
 
     function installCommunicator()
@@ -157,7 +157,7 @@
     {
         if (node.nodeType == 3)
         {
-            if (i8vars.skipTags.indexOf(node.parentNode.nodeName) == -1 && node.nodeValue)
+            if (i8vars.skipTags.indexOf(',' + node.parentNode.nodeName + ',') == -1 && node.nodeValue)
             {
                 pices.push(node.nodeValue);
             }
