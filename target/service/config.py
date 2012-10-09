@@ -93,7 +93,7 @@ class Config(object):
     )
 
     tokenizers = (
-        'tcp://127.0.0.1:10015',
+        'tcp://%s:10015' % natip,
     )
 
     mongodbs = {
