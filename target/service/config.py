@@ -179,6 +179,7 @@ class Config(object):
 
 class SysConfig(object):
 
+    CRAWL_UPDATE_INTERVAL = 86400
     INT_BIT = 64
 
     ERR_CODE_KEY_NAME = 'code'

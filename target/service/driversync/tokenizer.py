@@ -69,7 +69,7 @@ if __name__ == '__main__':
     content = sys.argv[1] if sys.argv[1] != 'test' else testContent
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     res = tokenizer.marve(content=content)
-    print res
+    print "standard result: ", res
     begin = time()
     for i in xrange(0, times):
         assert tokenizer.marve(content=content) == res, "requests with same parameter got different results"

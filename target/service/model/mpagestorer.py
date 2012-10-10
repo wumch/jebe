@@ -2,7 +2,7 @@
 
 import time
 import pymongo
-from config import config
+from config import config, sysconfig
 from driversync.tokenizer import Tokenizer
 from utils.misc import md5
 
@@ -40,13 +40,28 @@ class PageStorer(object):
 
     def _store(self, url, content, links=None):
         md5_res = md5(url)
-        if self._exists(md5ed_url=md5_res):
-            return
         time_stamp = int(time.time())
+        entry = self.collections['loc'].find_one(spec_or_id=md5_res)
+
+        willUpdate = False
+        if isinstance(entry, dict):
+            willUpdate = True if 'ts' not in entry else (entry['ts'] + sysconfig.CRAWL_UPDATE_INTERVAL < time_stamp)
+            if not willUpdate:
+                return
+
         text = self._genTextData(url=url, content=content, links=links, md5_res=md5_res, time_stamp=time_stamp)
-        self.collections['text'].insert(text)
+        if willUpdate:
+            del text['_id']
+            self.collections['text'].update(spec={'_id':entry['_id']}, document=text, upsert=False)
+        else:
+            self.collections['text'].insert(text)
+
         loc = self._genLocData(url, content, md5_res=md5_res, time_stamp=time_stamp)
-        self.collections['loc'].insert(loc)
+        if willUpdate:
+            del loc['_id']
+            self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
+        else:
+            self.collections['loc'].insert(loc)
 
     def _parseContent(self, content):
         info = content.split("\t", 1)
