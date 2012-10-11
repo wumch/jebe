@@ -5,10 +5,12 @@ import pymongo
 from config import config, sysconfig
 from driversync.tokenizer import Tokenizer
 from utils.misc import md5
+from utils.urlparser import UrlParser
 
 class PageStorer(object):
 
     _instance = None
+    urlParser = UrlParser()
 
     @classmethod
     def instance(cls):
@@ -49,14 +51,15 @@ class PageStorer(object):
             if not willUpdate:
                 return
 
-        text = self._genTextData(url=url, content=content, links=links, md5_res=md5_res, time_stamp=time_stamp)
+        path = self.urlParser.parse(url)
+        text = self._genTextData(url=url, content=content, path=path, links=links, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del text['_id']
             self.collections['text'].update(spec={'_id':entry['_id']}, document=text, upsert=False)
         else:
             self.collections['text'].insert(text)
 
-        loc = self._genLocData(url, content, md5_res=md5_res, time_stamp=time_stamp)
+        loc = self._genLocData(url=url, content=content, path=path, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del loc['_id']
             self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
@@ -73,7 +76,7 @@ class PageStorer(object):
     def _exists(self, md5ed_url):
         return not not self.collections['loc'].find_one({'_id':md5ed_url})
 
-    def _genTextData(self, url, content, links, md5_res=None, time_stamp=None):
+    def _genTextData(self, url, content, path, links, md5_res=None, time_stamp=None):
         linksDict = {}
         for href, text in links:
             key = md5(href)
@@ -82,16 +85,18 @@ class PageStorer(object):
             '_id' : md5_res or md5(url),
             'ts' : time_stamp or int(time.time()),
             'url' : url,
+            'path' : path,
             'text' : content,
             'links' : linksDict,
         }
 
-    def _genLocData(self, url, content, md5_res=None, time_stamp=None):
+    def _genLocData(self, url, content, path, md5_res=None, time_stamp=None):
         wordsWeight = self._marve(content)
         return {
             '_id' : md5_res or md5(url),
             'ts' : int(time.time()) or time_stamp,
             'url' : url,
+            'path' : path,
             'words' : [ww[0] for ww in wordsWeight],
             'weight' : [ww[1] for ww in wordsWeight],
         }
