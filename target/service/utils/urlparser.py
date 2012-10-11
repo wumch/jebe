@@ -39,7 +39,7 @@ class UrlParser(object):
         if parts == 1:
             return None
         elif parts == 2:
-            return info[:1]
+            return ['', '.'.join(info)]
         else:
             last = info[-1]
             if last in self._type:
@@ -64,6 +64,7 @@ def test(url):
 
 if __name__ == '__main__':
     test('http://www.baidu.com')
+    test('http://baidu.com')
     test('http:/www.baidu.com')
     test('http://www.baidu.com?fsdf=8998&fsdaf=fsdf')
     test('http://www.baidu.com/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')
