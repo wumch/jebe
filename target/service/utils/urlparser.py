@@ -2,7 +2,6 @@
 
 from urlparse import urlparse
 
-
 def unique(url):
     info = urlparse(url)
 
@@ -14,6 +13,7 @@ class UrlParser(object):
     def parse(self, url):
         return self.splitUrl(url)
 
+    # TODO: delimiters ('' bwtween sub-domain and main-domain, '?' between path and query) are not so strict.
     def splitUrl(self, url):
         info = urlparse(url)
         scheme = self.parseScheme(info[0])
@@ -26,12 +26,12 @@ class UrlParser(object):
             res += path
         query = self.parseQuery(info[4])
         if query:
+            res += ['?']
             res += query
         return res
 
     def parsePath(self, path):
-        info = filter(len, [fragment.strip() for fragment in path.split(r'/')])
-        return [(r'/' * i + info[i]) for i in range(0, len(info))]
+        return filter(len, [fragment.strip() for fragment in path.split(r'/')])
 
     def parseDomain(self, domain):
         info = (domain[:domain.find(':')] if ':' in domain else domain).split('.')
