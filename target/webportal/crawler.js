@@ -104,7 +104,7 @@
         }
         return info[3];
     }
-    var curDomain = getMainDomain(location.href);
+    var curDomain = getMainDomain(document.location.href);
 
     var domainRecorded = {};
     var maxRecordPerDomain = 50;
@@ -179,7 +179,7 @@
         var skipList = [/https?:\/\/[^\/\?&#]*\.baidu\.com/, /https?:\/\/[^\/\?&#]*\.soso\.com/, /https?:\/\/[^\/\?&#]*\.sogou\.com/, /https?:\/\/[^\/\?&#]*\.google\.c[on]]/];
         for (var i = 0; i < skipList.length; ++i)
         {
-            if (skipList[i].test(location.href))
+            if (skipList[i].test(document.location.href))
             {
                 return true;
             }

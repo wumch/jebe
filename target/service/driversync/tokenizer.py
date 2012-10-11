@@ -65,7 +65,7 @@ if __name__ == '__main__':
     tokenizer = Tokenizer.instance()
     print "cws-server:[%s]" % config.getTokenizer()
     testContent = (u'存储容量 dzwww').encode(Tokenizer._SERVER_CHARSET)
-    testContent = '存存储容量 fcukyoudzwww' * 100000
+    testContent = '存存储容量 fcukyoudzwww' * 3
     content = sys.argv[1] if sys.argv[1] != 'test' else testContent
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     res = tokenizer.marve(content=content)
