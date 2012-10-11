@@ -20,13 +20,13 @@ class UrlParser(object):
         domain = self.parseDomain(info[1])
         if scheme is None or domain is None:
             return None
-        res = scheme + ' ' + ' '.join(domain)
+        res = [scheme] + domain
         path = self.parsePath(info[2])
         if path:
-            res += ' ' + ' '.join(path)
+            res += path
         query = self.parseQuery(info[4])
         if query:
-            res += ' ' + ' '.join(query)
+            res += query
         return res
 
     def parsePath(self, path):
@@ -48,7 +48,7 @@ class UrlParser(object):
                 subLen = parts - 3
             else:
                 subLen = parts - 2
-            return '.'.join(info[:subLen]), '.'.join(info[subLen:])
+            return ['.'.join(info[:subLen]), '.'.join(info[subLen:])]
 
     def parseQuery(self, query):
         return filter(len, query.split('&'))
@@ -59,8 +59,8 @@ class UrlParser(object):
 def test(url):
     import os
     parser = UrlParser()
-    print 'url:  ', url, os.linesep,                        \
-        'info: ', parser.parse(url), os.linesep, os.linesep
+    print 'url: ', url, os.linesep,                        \
+        'res: ', parser.parse(url), os.linesep, os.linesep
 
 if __name__ == '__main__':
     test('http://www.baidu.com')
