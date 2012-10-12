@@ -6,10 +6,14 @@ src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file_
 if src_path not in sys.path:
     sys.path.append(src_path)
 import codecs
+import time
 import pymongo
 from config import config
 
 class TextExporter(object):
+
+    sleep_interval = 10000
+    sleep_millsecs = 100
 
     def __init__(self):
         server = config.getMongoDB('text')
@@ -18,11 +22,16 @@ class TextExporter(object):
 
     def export(self, output_file, max_scan):
         handler = self.handle(output_file=output_file)
+        counter = 0
         for entry in self.collection.find(None, fields=['text'], limit=max_scan, sort=[("$natural", 1)]):
             handler(entry)
+            counter += 1
+            if counter > self.sleep_interval:
+                counter = 0
+                time.sleep(self.sleep_millsecs / 1000.0)
 
     def handle(self, output_file):
-        fp = codecs.open(output_file, mode='a', encoding='utf-8', buffering=1 << 20)
+        fp = codecs.open(output_file, mode='a', encoding='utf-8', buffering=100 << 10)
         def _handle(entry):
             fp.write(entry['text'])
             fp.write(os.linesep)
