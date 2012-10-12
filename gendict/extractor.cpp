@@ -238,15 +238,15 @@ void Extractor::fetchContent(const PathList& contentfiles)
 		file.imbue(std::locale(""));
 
 		ssize_t readed = 0;
-		while (true)
+		while (file.good() && !file.eof())
 		{
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
 			CS_SAY("content readed: " << readed);
-			if (CS_BUNLIKELY((readed = file.readsome(content, _JEBE_PROCESS_STEP)) <= 0))
-			{
-				break;
-			}
-			scan(content, readed);
+//			if (CS_BUNLIKELY((readed = ) <= 0))
+//			{
+//				break;
+//			}
+			scan(content, file.readsome(content, _JEBE_PROCESS_STEP));
 		}
 		file.close();
 		std::cout << it->string() << " done" << std::endl;
