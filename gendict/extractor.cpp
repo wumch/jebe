@@ -121,7 +121,7 @@ void Extractor::addSentence(CharType* const str, String::size_type len)
 
 template<uint8_t plen>
 void Extractor::scanSentence_(CharType* const str, String::size_type len,
-		typename PhraseTrait<plen>::MapType& map)
+	typename PhraseTrait<plen>::MapType& map)
 {
 	if (CS_BUNLIKELY(len < plen))
 	{
@@ -184,6 +184,7 @@ bool Extractor::scanLatin(CharType* const str, String::size_type len)
 			}
 			latins = 0;
 			chkpoint = i + 1;
+			allarelatin = false;
 		}
 	}
 	return allarelatin;
@@ -202,7 +203,7 @@ void Extractor::display()
 }
 
 #define _JEBE_GB2312_CHAR_NUM (6763+63)
-#define _JEBE_EXTRACTOR_INIT(Z, n, N)		BOOST_PP_CAT(map, n)BOOST_PP_LPAREN()1 << MapHashBits<n>::bits BOOST_PP_RPAREN()BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
+#define _JEBE_EXTRACTOR_INIT(Z, n, N)		BOOST_PP_CAT(map, n)BOOST_PP_LPAREN()(1 << MapHashBits<n>::bits)BOOST_PP_RPAREN()BOOST_PP_COMMA_IF(BOOST_PP_LESS_EQUAL(n, _JEBE_WORD_MAX_LEN))
 Extractor::Extractor(const boost::filesystem::path& gbfile)
 	: BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_EXTRACTOR_INIT, BOOST_PP_EMPTY())
 {
@@ -212,17 +213,21 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	std::wifstream ifile(gbfile.string().c_str());
 	ifile.imbue(std::locale(""));
 
+	CS_SAY("starting reading gb2312-file");
 	ssize_t readed = 0;
-	while (readed < _JEBE_GB2312_CHAR_NUM)
+	while (ifile.peek() != EOF && ifile.good())
 	{
 		readed += ifile.readsome(gb + readed, _JEBE_GB2312_CHAR_NUM - readed);
+		CS_SAY("gb2312-file readed:" << readed);
 	}
-	CS_SAY("gb2312-file readed:" << readed);
+	CS_SAY("finally, gb2312-file readed:" << readed);
 
 	for (uint16_t i = 0; i < _JEBE_GB2312_CHAR_NUM; ++i)
 	{
-		assert(gb[i] < _JEBE_GB_CHAR_MAX);
-		gb2312[gb[i]] = true;
+		if (CS_BLIKELY(gb[i] < _JEBE_GB_CHAR_MAX))
+		{
+			gb2312[gb[i]] = true;
+		}
 	}
 
 	delete[] gb;
@@ -237,16 +242,14 @@ void Extractor::fetchContent(const PathList& contentfiles)
 		std::wfstream file(it->string().c_str(), std::ios_base::in);
 		file.imbue(std::locale(""));
 
-		ssize_t readed = 0;
-		while (file.good() && !file.eof())
+		ssize_t cur = 0;
+		while (file.good() && file.peek() != EOF)
 		{
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
-			CS_SAY("content readed: " << readed);
-//			if (CS_BUNLIKELY((readed = ) <= 0))
-//			{
-//				break;
-//			}
-			scan(content, file.readsome(content, _JEBE_PROCESS_STEP));
+			file.getline(content, _JEBE_PROCESS_STEP);
+			CS_SAY("content readed: " << static_cast<std::streamoff>(file.tellg()));
+			scan(content, static_cast<std::streamoff>(file.tellg()) - cur);
+			cur = static_cast<std::streamoff>(file.tellg());
 		}
 		file.close();
 		std::cout << it->string() << " done" << std::endl;
