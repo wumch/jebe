@@ -17,7 +17,7 @@
 #ifdef __linux
 #	include <limits.h>
 #endif
-#define	_JEBE_GB_CHAR_MAX				((USHRT_MAX) + 1)
+#define	_JEBE_GB_CHAR_MAX					((USHRT_MAX) + 1)
 #define _JEBE_LATIN_PHRASE_NUM_EXPCET_BITS	20
 #define _JEBE_PRE_WORDS_NUM_EXPCET_BITS		20
 
@@ -28,7 +28,7 @@
 #	include <sstream>
 namespace jebe {
 namespace cws {
-static std::wstringstream log;
+static std::wstringstream log;		// static, so, strange things can be happen.
 }
 }
 #	define CS_LOG(...)		log << __VA_ARGS__
@@ -45,5 +45,6 @@ BOOST_STATIC_ASSERT(sizeof(CharType) == 4);
 typedef std::wstring String;
 
 BOOST_STATIC_ASSERT(_JEBE_WORD_MAX_LEN < 256);
+
 }
 }

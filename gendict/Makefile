@@ -7,7 +7,7 @@ SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/extractor
 PREPROCESS_EXE = $(OUTPUT_PATH)/preprocess
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)

@@ -46,7 +46,7 @@ void Extractor::dump(const boost::filesystem::path& outfile)
 		++words_count;
 		words_atimes += it->second;
 	}
-	ofile << words_count << '\t' << words_atimes << '\n';
+	ofile << words_count << '\t' << words_atimes << CS_LINESEP;
 
 	for (Analyzer::Words::const_iterator it = words.begin(); it != words.end(); ++it)
 	{
@@ -60,7 +60,7 @@ void Extractor::dump(const boost::filesystem::path& outfile)
 				}
 			}
 		}
-		ofile << it->first.c_str() << '\t' << it->second << '\n';
+		ofile << it->first.c_str() << '\t' << it->second << CS_LINESEP;
 	}
 	ofile.close();
 }
@@ -110,7 +110,7 @@ void Extractor::scan(CharType* const str, String::size_type len)
 void Extractor::addSentence(CharType* const str, String::size_type len)
 {
 	scanPrepends(str, len);
-	if (scanLatin(str, len))
+	if (CS_BUNLIKELY(scanLatin(str, len)))
 	{
 		return;
 	}

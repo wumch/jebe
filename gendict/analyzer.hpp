@@ -77,7 +77,9 @@ public:
 		buildSuffixMap();
 	}
 	#undef _JEBE_ANALYZER_ARG
-	#undef _JEBE_ANALYZER_INIT
+	#undef _JEBE_ANALYZER_INIT_MAP
+	#undef _JEBE_ANALYZER_INIT_PAD
+	#undef _JEBE_ANALYZER_INIT_PRX
 
 	void analysis();
 
@@ -100,10 +102,10 @@ protected:
 
 	template<uint8_t plen>
 	void extractWords_(typename PhraseTrait<plen>::MapType& map,
-			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
-			const typename PhraseTrait<plen - 1>::PadMap& padmap,
-			const typename PhraseTrait<plen - 1>::PadMap& prxmap
-		)
+		const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+		const typename PhraseTrait<plen - 1>::PadMap& padmap,
+		const typename PhraseTrait<plen - 1>::PadMap& prxmap
+	)
 	{
 		BOOST_STATIC_ASSERT(plen > 1);
 
@@ -144,17 +146,17 @@ protected:
 
 	template<uint8_t plen>
 	Analyzer::WordExamineRes judgePad(const Phrase<plen>& phrase,
-			const typename PhraseTrait<plen>::MapType& map,
-			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
-			const typename PhraseTrait<plen - 1>::PadMap& padmap
-		) const;
+		const typename PhraseTrait<plen>::MapType& map,
+		const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+		const typename PhraseTrait<plen - 1>::PadMap& padmap
+	) const;
 
 	template<uint8_t plen>
 	Analyzer::WordExamineRes judgePrx(const Phrase<plen>& phrase,
-			const typename PhraseTrait<plen>::MapType& map,
-			const typename PhraseTrait<plen - 1>::MapType& prefixmap,
-			const typename PhraseTrait<plen - 1>::PadMap& padmap
-		) const;
+		const typename PhraseTrait<plen>::MapType& map,
+		const typename PhraseTrait<plen - 1>::MapType& prefixmap,
+		const typename PhraseTrait<plen - 1>::PadMap& padmap
+	) const;
 
 	void caltureTotalAtimes()
 	{
@@ -202,7 +204,7 @@ protected:
 			}
 
 			PadListType& plist = padmap[prefix];
-			typename PadListType::iterator padit =std::find_if(plist->begin(), plist->end(), PadEqual<1>(suffix));
+			typename PadListType::iterator padit = std::find_if(plist->begin(), plist->end(), PadEqual<1>(suffix));
 			if (padit == plist->end())
 			{
 				plist.append(typename PrefixTrait::PadType(suffix, it->second));
