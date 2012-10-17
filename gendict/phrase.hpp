@@ -58,11 +58,12 @@ public:
 	CharType* c_str() const
 	{
 		CharType* const cstr = new CharType[length + 1];
-		memset(cstr, 0, (length + 1) * sizeof(CharType));
-		memcpy(cstr, str, length * sizeof(CharType));
+		staging::memcpy4<length * sizeof(CharType)>(cstr, str);
+		cstr[length] = 0;
 		return cstr;
 	}
 #endif
+
 };
 
 #define _JEBE_DEF_PHRASE(Z, n, N)		typedef Phrase<n> BOOST_PP_CAT(Ph, n);
