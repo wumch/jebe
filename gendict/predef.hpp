@@ -13,7 +13,7 @@
 #define _JEBE_WORD_MIN_ATIMES			10
 #define _JEBE_PROCESS_STEP				(2 << 20)
 
-#include "staging.hpp"
+#include "meta.hpp"
 #ifdef __linux
 #	include <limits.h>
 #endif
