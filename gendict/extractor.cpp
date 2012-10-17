@@ -109,11 +109,11 @@ void Extractor::scan(CharType* const str, String::size_type len)
 
 void Extractor::addSentence(CharType* const str, String::size_type len)
 {
-	scanPrepends(str, len);
-	if (CS_BUNLIKELY(scanLatin(str, len)))
-	{
-		return;
-	}
+//	scanPrepends(str, len);
+//	if (CS_BUNLIKELY(scanLatin(str, len)))
+//	{
+//		return;
+//	}
 	#define _JEBE_CALL_SCAN(Z, n, N)		scanSentence_<n>(str, len, BOOST_PP_CAT(map, n));
 	BOOST_PP_REPEAT_FROM_TO(1, BOOST_PP_ADD(_JEBE_WORD_MAX_LEN, 2), _JEBE_CALL_SCAN, BOOST_PP_EMPTY())
 	#undef _JEBE_CALL_SCAN
