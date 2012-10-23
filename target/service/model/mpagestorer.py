@@ -51,7 +51,7 @@ class PageStorer(object):
             if not willUpdate:
                 return
 
-        path = self.urlParser.parse(url)
+        path = self.urlParser.toPath(url)
         text = self._genTextData(url=url, content=content, path=path, links=links, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del text['_id']
