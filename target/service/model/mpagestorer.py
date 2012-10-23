@@ -37,10 +37,10 @@ class PageStorer(object):
         links, content = self._parseContent(content=content)
         return self._store(url=meta['url'], content=content, links=links)
 
-    def storeInfo(self, url, content, links=None):
-        return self._store(url=url, content=content, links=links or [])
+    def storeInfo(self, url, title, content, links=None):
+        return self._store(url=url, title=title, content=content, links=links or [])
 
-    def _store(self, url, content, links=None):
+    def _store(self, url, title, content, links=None):
         md5_res = md5(url)
         time_stamp = int(time.time())
         entry = self.collections['loc'].find_one(spec_or_id=md5_res)
@@ -52,14 +52,14 @@ class PageStorer(object):
                 return
 
         path = self.urlParser.toPath(url)
-        text = self._genTextData(url=url, content=content, path=path, links=links, md5_res=md5_res, time_stamp=time_stamp)
+        text = self._genTextData(url=url, title=title, content=content, path=path, links=links, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del text['_id']
             self.collections['text'].update(spec={'_id':entry['_id']}, document=text, upsert=False)
         else:
             self.collections['text'].insert(text)
 
-        loc = self._genLocData(url=url, content=content, path=path, md5_res=md5_res, time_stamp=time_stamp)
+        loc = self._genLocData(url=url, title=title, content=content, path=path, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del loc['_id']
             self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
@@ -76,7 +76,7 @@ class PageStorer(object):
     def _exists(self, md5ed_url):
         return not not self.collections['loc'].find_one({'_id':md5ed_url})
 
-    def _genTextData(self, url, content, path, links, md5_res=None, time_stamp=None):
+    def _genTextData(self, url, content, path, links, title, md5_res=None, time_stamp=None):
         linksDict = {}
         for href, text in links:
             key = md5(href)
@@ -86,19 +86,21 @@ class PageStorer(object):
             'ts' : time_stamp or int(time.time()),
             'url' : url,
             'path' : path,
+            'title' : title,
             'text' : content,
             'links' : linksDict,
         }
 
-    def _genLocData(self, url, content, path, md5_res=None, time_stamp=None):
+    def _genLocData(self, url, content, path, title, md5_res=None, time_stamp=None):
         wordsWeight = self._marve(content)
         return {
             '_id' : md5_res or md5(url),
             'ts' : int(time.time()) or time_stamp,
             'url' : url,
             'path' : path,
+            'title' : title,
             'words' : [ww[0] for ww in wordsWeight],
-            'weight' : [ww[1] for ww in wordsWeight],
+#            'weight' : [ww[1] for ww in wordsWeight],
         }
 
     def _marve(self, content):

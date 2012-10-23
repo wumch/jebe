@@ -50,7 +50,7 @@
 
 	function getAllText()
 	{
-		var text = (document.title ? (document.title.toLowerCase() + ' ') : '');
+		var text = '';
 		var metas = document.documentElement.getElementsByTagName('meta');
 		for (var i = 0; i < metas.length; ++i)
 		{
@@ -72,6 +72,7 @@
             'url':document.location.href,
             'ref':document.referrer,
             'links':getLinks(),
+            'title':document.title ? document.title.toLowerCase() : '',
             'text':pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ')};
 	}
 
