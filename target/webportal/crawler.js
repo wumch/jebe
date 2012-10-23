@@ -72,7 +72,7 @@
             'url':document.location.href,
             'ref':document.referrer,
             'links':getLinks(),
-            'title':document.title ? document.title.toLowerCase() : '',
+            'title':document.title ? document.title.toLowerCase().replace(/\s{2,}/g, ' ').replace(/^\s+/, '').replace(/\s+$/, '') : '',
             'text':pices.join(' ').toLowerCase().replace(/<\s*\/?\w+[^>]*>/g, ' ').replace(/[^0-9a-zA-Z\-\.\u4e00-\u9fa5]+/g, ' ')};
 	}
 
