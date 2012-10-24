@@ -1,9 +1,3 @@
-/*
- * wordmap.cpp
- *
- *  Created on: 2012-10-19
- *      Author: root
- */
 
 #include "wordmap.hpp"
 

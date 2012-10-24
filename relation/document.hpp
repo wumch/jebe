@@ -36,7 +36,6 @@ public:
 		{
 			msgpack::unpack(&msg, buf, len);
 			msg.get().convert(&words);
-			CS_SAY("first word:" << words[0].word);
 		}
 		catch (const std::exception& e)
 		{

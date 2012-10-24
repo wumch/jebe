@@ -18,10 +18,9 @@ public:
 public:
 	IdCount() {}
 
-	explicit IdCount(id_t wordid_, count_t atime)
-		: id(wordid_), count(atime)
-	{
-	}
+	explicit IdCount(id_t id_, count_t count_)
+		: id(id_),count(count_)
+	{}
 
 	MSGPACK_DEFINE(id, count);
 };

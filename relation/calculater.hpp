@@ -18,13 +18,19 @@ protected:
 
 	WDMap wdmap;
 
+	docnum_t maxdf;
+
 public:
 	Calculater();
 
 	void attachDoc(const Document& doc);
 
+	void prepare();
+
 protected:
-	void attachWord(docid_t docid, wordid_t wordid, wnum_t wordnum);
+	void attachWord(wordid_t wordid, docid_t docid, wnum_t wordnum);
+
+	void calculate();
 };
 
 } /* namespace rel */

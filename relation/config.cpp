@@ -104,6 +104,7 @@ void Config::load(const std::string& config_file)
 	listen = options["listen"].as<typeof(listen)>();
 	internal = options["internal"].as<typeof(internal)>();
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
+	pattenfile = options["patten-file"].as<typeof(pattenfile)>();
 	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>() << 10;
 	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>() << 10;
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
@@ -124,6 +125,7 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(listen)
 		_JEBE_OUT_CONFIG_PROPERTY(internal)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
+		_JEBE_OUT_CONFIG_PROPERTY(pattenfile)
 		_JEBE_OUT_CONFIG_PROPERTY(worker_count)
 		_JEBE_OUT_CONFIG_PROPERTY(io_threads)
 		_JEBE_OUT_CONFIG_PROPERTY(stack_size)

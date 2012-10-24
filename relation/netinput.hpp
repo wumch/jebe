@@ -16,10 +16,15 @@ class NetInput
 		tellTotal = 1,
 		sendDoc	= 2,
 	};
+
 protected:
 	virtual void handleInput();
 
 	void handleInput(Action act);
+
+	Document* handleAction(Action act);
+
+	void handleDoc();
 
 	void handleTotal();
 
@@ -35,8 +40,6 @@ public:
 	virtual void stop();
 
 	virtual Document* next();
-
-	virtual docnum_t total() const;
 
 	virtual ~NetInput();
 

@@ -7,6 +7,7 @@
 #include <zmq.hpp>
 #include <msgpack.hpp>
 #include "config.hpp"
+#include "aside.hpp"
 
 namespace jebe {
 namespace rel {
@@ -59,21 +60,23 @@ void NetInput::stop()
 
 Document* NetInput::next()
 {
-	CS_SAY("waiting for incoming");
 	recv_buf.rebuild();
 	sock.recv(&recv_buf, 0);
-	CS_SAY("received bytes: " << recv_buf.size());
-	handleInput();
-	sock.send(send_buf);
-	CS_SAY("processed, res bytes: " << success_response.size());
-	return cur;
+	return handleAction(getAction());
 }
 
 void NetInput::handleTotal()
 {
 	msgpack::unpacked msg;
 	msgpack::unpack(&msg, reinterpret_cast<char*>(recv_buf.data()) + 1, recv_buf.size() - 1);
-	total_ = msg.get().as<docnum_t>();
+	Aside::totalDocNum = msg.get().as<docnum_t>();
+	CS_SAY("client said total count of documents is " << Aside::totalDocNum);
+}
+
+void NetInput::handleDoc()
+{
+	resetCurDoc(reinterpret_cast<char*>(recv_buf.data()) + 1, recv_buf.size() - 1);
+	send_buf.copy(&success_response);
 }
 
 void NetInput::handleInput()
@@ -99,9 +102,26 @@ void NetInput::handleInput(Action act)
 	}
 }
 
-docnum_t NetInput::total() const
+Document* NetInput::handleAction(Action act)
 {
-	return total_;
+	if (CS_BLIKELY(act == sendDoc))
+	{
+		handleDoc();
+		sock.send(send_buf);
+		return cur;
+	}
+	else if (CS_BUNLIKELY(act == tellTotal))
+	{
+		handleTotal();
+		sock.send(send_buf);
+		return next();
+	}
+	else
+	{
+		send_buf.copy(&failed_response);
+		sock.send(send_buf);
+		return next();
+	}
 }
 
 NetInput::Action NetInput::getAction()

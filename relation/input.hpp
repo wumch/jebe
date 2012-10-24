@@ -13,13 +13,12 @@ class BaseInput
 {
 private:
 	class DocIdGenTag {};
-	typedef staging::AutoIncr<DocIdGenTag> DocIdGen;
+	typedef staging::AutoIncr<DocIdGenTag, docid_t, 0> DocIdGen;
 
 	DocIdGen *docIdGen;
 
 protected:
 	Document* const cur;
-	docnum_t total_;
 
 	void resetCurDoc(const char* buf, size_t len)
 	{
@@ -32,8 +31,7 @@ protected:
 public:
 	BaseInput()
 		: docIdGen(DocIdGen::instance()),
-		  cur(reinterpret_cast<Document*>(new char[sizeof(Document)])),
-		  total_(0)
+		  cur(reinterpret_cast<Document*>(new char[sizeof(Document)]))
 	{
 	}
 
@@ -46,8 +44,6 @@ public:
 	virtual void start() = 0;
 	virtual void stop() {}
 	virtual Document* next() = 0;
-
-	virtual docnum_t total() const = 0;
 
 public:
 	Document& curdoc()

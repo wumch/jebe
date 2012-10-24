@@ -51,7 +51,9 @@ protected:
 		input->prepare();
 		input->start();
 		Document* doc;
-		while ((doc = input->next()))
+		while ((doc = input->next()) &&
+			(Aside::totalDocNum != 0) &&
+			(Aside::curDocNum < Aside::totalDocNum))
 		{
 			process(doc);
 		}
@@ -60,7 +62,6 @@ protected:
 
 	void process(Document* doc)
 	{
-		CS_SAY("first word of doc: " << doc->words[0].word);
 		Aside::caler->attachDoc(*doc);
 	}
 
