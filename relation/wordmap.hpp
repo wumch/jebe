@@ -38,7 +38,6 @@ public:
 
 	virtual ~WordNonExists() throw()
 	{
-
 	}
 };
 

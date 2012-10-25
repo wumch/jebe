@@ -1,6 +1,9 @@
 
 #include "calculater.hpp"
 #include <exception>
+#include <fstream>
+#include <iostream>
+#include <clocale>
 #include <boost/lexical_cast.hpp>
 #include "aside.hpp"
 #include "config.hpp"
@@ -194,14 +197,18 @@ void Calculater::check()
 
 void Calculater::dump()
 {
+	std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
+	ofile.imbue(std::locale(""));
 	for (WordSimList::const_iterator it = wslist.begin(); it != wslist.end(); ++it)
 	{
 		const SimList& simlist = it->second;
 		for (SimList::const_iterator iter = simlist.begin(); iter != simlist.end(); ++iter)
 		{
+			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
 			CS_SAY("in word-similarity-list, cov(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << iter->second);
 		}
 	}
+	ofile.close();
 }
 
 void Calculater::randomAttachWord(wordid_t wordid, docid_t docid, wnum_t atimes)

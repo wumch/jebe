@@ -113,6 +113,7 @@ void Config::load(const std::string& config_file)
 	internal = options["internal"].as<typeof(internal)>();
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
 	pattenfile = options["patten-file"].as<typeof(pattenfile)>();
+	outputfile = options["output-file"].as<typeof(outputfile)>();
 	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>() << 10;
 	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>() << 10;
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
