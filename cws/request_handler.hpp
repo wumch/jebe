@@ -134,9 +134,9 @@ public:
 				return spliter->genRes();
 				break;
 			case count:
-    			if (CS_BUNLIKELY(!spliter))
+    			if (CS_BUNLIKELY(!counter))
 				{
-    				spliter = new SplitHolder(buff);
+    				counter = new CountHolder(buff);
 				}
 				return counter->genRes();
 				break;

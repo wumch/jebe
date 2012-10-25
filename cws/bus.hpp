@@ -11,6 +11,7 @@
 #include "handler.hpp"
 #include "marve_handler.hpp"
 //#include "split_handler.hpp"
+#include "count_handler.hpp"
 
 namespace jebe {
 namespace cws {
@@ -70,7 +71,7 @@ protected:
 		Handler::initialize(Config::getInstance()->getInstance()->pattenfile.string());
 		handlers[marve] = new MarveHandler;
 //		handlers[split] = new SplitHandler;
-//		handlers[count];
+		handlers[count] = new CountHandler;
 //		handlers[compare];
 	}
 
