@@ -148,10 +148,10 @@ size_t Calculater::sum(const DocCountList& dlist) const
 
 void Calculater::toProper(const DocCountList& dlist, VaredProperList& plist) const
 {
-	size_t atimes = sum(dlist);
+//	size_t atimes = sum(dlist);
 	for (docnum_t i = 0; i < dlist.size(); ++i)
 	{
-		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count) / atimes));
+		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count)));
 	}
 	plist.reCalculate();
 }
@@ -289,6 +289,14 @@ decimal_t VaredProperList::properOnDoc(docid_t docid) const
 			right = cur;
 		}
 		cur = (left + right) >> 1;
+	}
+	if (plist[right].id == docid)
+	{
+		return plist[right].count;
+	}
+	else if (plist[left].id == docid)
+	{
+		return plist[left].count;
 	}
 	return .0;
 }
