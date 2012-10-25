@@ -46,7 +46,8 @@ typedef uint32_t		docid_t;
 typedef uint32_t		wordid_t;
 
 typedef std::string		Word;
-typedef double			weight_t;
+
+typedef long double		decimal_t;
 
 }
 }

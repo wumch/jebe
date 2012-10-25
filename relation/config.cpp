@@ -87,6 +87,14 @@ void Config::initDesc()
 		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""))
 		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(staging::getCpuNum() - 1))
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
+
+		("document-frequency-quantile-top", boost::program_options::value<typeof(df_quantile_top)>()->default_value(0.6))
+		("document-frequency-quantile-bottom", boost::program_options::value<typeof(df_quantile_bottom)>()->default_value(0.8))
+
+		("word-correlation-top", boost::program_options::value<typeof(word_corr_top)>()->default_value(0.6))
+		("word-correlation-bottom", boost::program_options::value<typeof(word_corr_bottom)>()->default_value(0.8))
+
+		("word-min-correlation", boost::program_options::value<typeof(min_corr)>()->default_value(0.3))
 		;
 }
 
@@ -110,6 +118,14 @@ void Config::load(const std::string& config_file)
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
 	io_threads = options["io-threads"].as<typeof(io_threads)>();
 
+	df_quantile_top = options["document-frequency-quantile-top"].as<typeof(df_quantile_top)>();
+	df_quantile_bottom = options["document-frequency-quantile-bottom"].as<typeof(df_quantile_bottom)>();
+
+	word_corr_top = options["word-correlation-top"].as<typeof(word_corr_top)>();
+	word_corr_bottom = options["word-correlation-bottom"].as<typeof(word_corr_bottom)>();
+
+	min_corr = options["word-min-correlation"].as<typeof(min_corr)>();
+
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
 	{
@@ -131,6 +147,12 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(stack_size)
 		_JEBE_OUT_CONFIG_PROPERTY(receive_buffer_size)
 		_JEBE_OUT_CONFIG_PROPERTY(send_buffer_size)
+
+		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_top)
+		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_bottom)
+		_JEBE_OUT_CONFIG_PROPERTY(word_corr_top)
+		_JEBE_OUT_CONFIG_PROPERTY(word_corr_bottom)
+		_JEBE_OUT_CONFIG_PROPERTY(min_corr)
 	);
 }
 

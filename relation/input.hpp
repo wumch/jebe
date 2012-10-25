@@ -25,9 +25,6 @@ protected:
 		new (cur) Document(docIdGen->gen(), buf, len);
 	}
 
-	// just unpack received message.
-	virtual void handleInput() = 0;
-
 public:
 	BaseInput()
 		: docIdGen(DocIdGen::instance()),

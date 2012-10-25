@@ -24,11 +24,13 @@ public:
 	}
 
 public:
-	double df_quantile_bottom;		// = 0.6
-	double df_quantile_top;			// = 0.9
+	decimal_t df_quantile_bottom;		// = 0.6
+	decimal_t df_quantile_top;			// = 0.9
 
-	double word_corr_bottom;		// min coefficient-of-correlation of a pair of related-words.
-	double word_corr_top;
+	decimal_t word_corr_bottom;		// min coefficient-of-correlation of a pair of related-words.
+	decimal_t word_corr_top;
+
+	decimal_t min_corr;
 
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;

@@ -15,18 +15,17 @@ class NetInput
 		wrong = 0,
 		tellTotal = 1,
 		sendDoc	= 2,
+		thatSAll = 99,
 	};
 
 protected:
-	virtual void handleInput();
-
-	void handleInput(Action act);
-
 	Document* handleAction(Action act);
 
 	void handleDoc();
 
 	void handleTotal();
+
+	void handleThatSAll();
 
 	Action getAction();
 

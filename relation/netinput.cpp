@@ -8,6 +8,7 @@
 #include <msgpack.hpp>
 #include "config.hpp"
 #include "aside.hpp"
+#include "calculater.hpp"
 
 namespace jebe {
 namespace rel {
@@ -70,6 +71,7 @@ void NetInput::handleTotal()
 	msgpack::unpacked msg;
 	msgpack::unpack(&msg, reinterpret_cast<char*>(recv_buf.data()) + 1, recv_buf.size() - 1);
 	Aside::totalDocNum = msg.get().as<docnum_t>();
+	send_buf.copy(&success_response);
 	CS_SAY("client said total count of documents is " << Aside::totalDocNum);
 }
 
@@ -79,27 +81,10 @@ void NetInput::handleDoc()
 	send_buf.copy(&success_response);
 }
 
-void NetInput::handleInput()
+void NetInput::handleThatSAll()
 {
-	handleInput(getAction());
-}
-
-void NetInput::handleInput(Action act)
-{
-	if (CS_BLIKELY(act == sendDoc))
-	{
-		resetCurDoc(reinterpret_cast<char*>(recv_buf.data()) + 1, recv_buf.size() - 1);
-		send_buf.copy(&success_response);
-	}
-	else if (CS_BUNLIKELY(act == tellTotal))
-	{
-		handleTotal();
-		send_buf.copy(&success_response);
-	}
-	else
-	{
-		send_buf.copy(&failed_response);
-	}
+	send_buf.copy(&success_response);
+	Aside::caler->calculate();
 }
 
 Document* NetInput::handleAction(Action act)
@@ -116,6 +101,12 @@ Document* NetInput::handleAction(Action act)
 		sock.send(send_buf);
 		return next();
 	}
+	else if (CS_BUNLIKELY(act == thatSAll))
+	{
+		handleThatSAll();
+		sock.send(send_buf);
+		return NULL;
+	}
 	else
 	{
 		send_buf.copy(&failed_response);
@@ -126,7 +117,7 @@ Document* NetInput::handleAction(Action act)
 
 NetInput::Action NetInput::getAction()
 {
-	return (CS_BLIKELY(recv_buf.size() > 1)) ?
+	return (CS_BLIKELY(recv_buf.size() > 0)) ?
 		static_cast<Action>(*reinterpret_cast<unsigned char*>(recv_buf.data())) : wrong;
 }
 

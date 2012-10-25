@@ -55,6 +55,7 @@ private:
 
 public:
 	WordIdMap map;		// {word:id} map.
+	std::vector<Word> wordList;
 
 public:
 	WordMap()
@@ -81,8 +82,23 @@ public:
 	wordid_t attachWord(const Word& word)
 	{
 		map.insert(std::make_pair(word, idGen.gen()));
-		CS_SAY("insert word [" << word << "] (" << map[word] << ")");
+		wordList.push_back(word);		// TODO: to be more strict!
 		return idGen.last();
+	}
+
+	Word& getWordById(wordid_t wordid)
+	{
+		return wordList[wordid];
+	}
+
+	Word& operator[](wordid_t wordid)
+	{
+		return getWordById(wordid);
+	}
+
+	wordid_t operator[](const Word& word)
+	{
+		return getWordId(word);
 	}
 };
 
