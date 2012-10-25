@@ -4,6 +4,7 @@
 #include "predef.hpp"
 #include <string>
 #include <vector>
+#include <iostream>
 #include <boost/noncopyable.hpp>
 #include <msgpack.hpp>
 #include "countedword.hpp"
