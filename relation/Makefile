@@ -55,7 +55,7 @@ OBJS = $(OBJECT_PATH)/master.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o $(O
 all: $(OBJS)
 	@echo Linking...
 	$(CCMD) $(LDFLAGS) $^ $(LIBS) $(EXEFLAG) $(EXE)
-	-cp $(PROGRAM_NAME).sh $(OUTPUT_PATH)/
+	-cp $(PROGRAM_NAME).sh patten_gen.sh $(OUTPUT_PATH)/
 
 clean:
 	-rm -f $(EXE)
