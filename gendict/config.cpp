@@ -133,8 +133,7 @@ void Config::load(const std::string& config_file)
 	if (memlock)
 	{
 #if CS_DEBUG
-		int res = mlockall(MCL_CURRENT | MCL_FUTURE);
-		assert(!res);
+		assert(!mlockall(MCL_CURRENT | MCL_FUTURE));
 #else
 		mlockall(MCL_CURRENT | MCL_FUTURE);
 #endif

@@ -68,11 +68,11 @@ void Extractor::dump(const boost::filesystem::path& outfile)
 void Extractor::extract(const PathList& contentfiles,
 		const boost::filesystem::path& outfile)
 {
-	fetchContent(contentfiles);
+	scan(contentfiles);
 	dump(outfile);
 }
 
-void Extractor::scan(CharType* const str, String::size_type len)
+void Extractor::scanPara(CharType* const str, String::size_type len)
 {
 	CS_SAY(str);
 	String::size_type i = 0, chkPoint = 0;
@@ -215,7 +215,7 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 
 	CS_SAY("starting reading gb2312-file");
 	ssize_t readed = 0;
-	while (ifile.peek() != EOF && ifile.good())
+	while (static_cast<int64_t>(ifile.peek()) != EOF && ifile.good())
 	{
 		readed += ifile.readsome(gb + readed, _JEBE_GB2312_CHAR_NUM - readed);
 		CS_SAY("gb2312-file readed:" << readed);
@@ -233,7 +233,7 @@ Extractor::Extractor(const boost::filesystem::path& gbfile)
 	delete[] gb;
 }
 
-void Extractor::fetchContent(const PathList& contentfiles)
+void Extractor::scan(const PathList& contentfiles)
 {
 	CharType* const content = new CharType[_JEBE_PROCESS_STEP + 1];
 
@@ -243,12 +243,12 @@ void Extractor::fetchContent(const PathList& contentfiles)
 		file.imbue(std::locale(""));
 
 		ssize_t cur = 0;
-		while (file.good() && file.peek() != EOF)
+		while (file.good() && static_cast<int64_t>(file.peek()) != EOF)
 		{
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
 			file.getline(content, _JEBE_PROCESS_STEP);
 			CS_SAY("content readed: " << static_cast<std::streamoff>(file.tellg()));
-			scan(content, static_cast<std::streamoff>(file.tellg()) - cur);
+			scanPara(content, static_cast<std::streamoff>(file.tellg()) - cur);
 			cur = static_cast<std::streamoff>(file.tellg());
 		}
 		file.close();

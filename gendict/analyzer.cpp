@@ -154,12 +154,12 @@ void Analyzer::analysis()
 #endif
 }
 
-template<uint8_t plen> class MinMiss { public: static const double rate = 0.9; };
+template<uint8_t plen> class MinMiss { public: static const double rate = 0.96; };
 template<> class MinMiss<3> { public: static const double rate = 0.50; };
-template<> class MinMiss<4> { public: static const double rate = 0.60; };
-template<> class MinMiss<5> { public: static const double rate = 0.70; };
-template<> class MinMiss<6> { public: static const double rate = 0.80; };
-template<> class MinMiss<7> { public: static const double rate = 0.90; };
+template<> class MinMiss<4> { public: static const double rate = 0.65; };
+template<> class MinMiss<5> { public: static const double rate = 0.80; };
+template<> class MinMiss<6> { public: static const double rate = 0.90; };
+template<> class MinMiss<7> { public: static const double rate = 0.93; };
 template<> class MinMiss<8> { public: static const double rate = 0.95; };
 
 template<uint8_t plen> CS_FORCE_INLINE

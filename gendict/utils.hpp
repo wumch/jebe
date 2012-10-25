@@ -14,6 +14,7 @@ template<> class MapHashBits<4> { public: enum { bits = 22 }; };
 template<> class MapHashBits<5> { public: enum { bits = 20 }; };
 template<> class MapHashBits<6> { public: enum { bits = 18 }; };
 template<> class MapHashBits<7> { public: enum { bits = 15 }; };
+template<> class MapHashBits<8> { public: enum { bits = 13 }; };
 
 template<uint8_t plen> class PadHashBits { public: enum { bits = 12 }; };
 template<> class PadHashBits<1> { public: enum { bits = MapHashBits<1>::bits }; };
@@ -22,6 +23,7 @@ template<> class PadHashBits<3> { public: enum { bits = 20 }; };
 template<> class PadHashBits<4> { public: enum { bits = 18 }; };
 template<> class PadHashBits<5> { public: enum { bits = 16 }; };
 template<> class PadHashBits<6> { public: enum { bits = 14 }; };
+template<> class PadHashBits<7> { public: enum { bits = 12 }; };
 
 template<uint8_t len_1, uint8_t len_2>
 class PhraseMatch

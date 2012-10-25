@@ -81,11 +81,11 @@ protected:
 		return 'A' <= c && c <= 'Z';
 	}
 
-	void fetchContent(const PathList& contentfiles);
+	void scan(const PathList& contentfiles);
 
 	void dump(const boost::filesystem::path& outfile);
 
-	void scan(CharType* const str, String::size_type len);
+	void scanPara(CharType* const str, String::size_type len);
 
 	void addSentence(CharType* const str, String::size_type len);
 
