@@ -39,7 +39,7 @@ class Tokenizer(object):
         return self.request(content=content, action='marve')
 
     def count(self, content):
-        return config.jsoner.decode(self.request(content=content, action='count'))
+        return self.request(content=content, action='count')
 
     def split(self, content):
         return self.request(content=content, action='split')
@@ -68,11 +68,11 @@ if __name__ == '__main__':
     testContent = '存存储容量 fcukyoudzwww' * 3
     content = sys.argv[1] if sys.argv[1] != 'test' else testContent
     times = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-    res = tokenizer.marve(content=content)
+    res = tokenizer.count(content=content)
     print "standard result: ", res
     begin = time()
     for i in xrange(0, times):
-        assert tokenizer.marve(content=content) == res, "requests with same parameter got different results"
+        assert tokenizer.count(content=content) == res, "requests with same parameter got different results"
     consumed = time() - begin
     print "finished %d requests in %f seconds" % (times, consumed)
     print "QPS: " + (str(times / consumed) if consumed > 0 else 'infinite')

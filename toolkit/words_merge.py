@@ -34,7 +34,7 @@ class WordsMerge(object):
         self.rate = scipy.sqrt(median_b) * median_d / median_b
 
         tpl = "%s\t%s\t%s"
-        print tpl % (r"a\b", "median", "mean")
+        print tpl % (r"r\c", "median", "mean")
         tpl = "%s\t%d\t%d"
         print tpl % ("dict", median_d, mean_d)
         print tpl % ("bmf", median_b, mean_b)
