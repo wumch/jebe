@@ -2,6 +2,7 @@
 #pragma once
 
 #include "predef.hpp"
+#include <vector>
 #include <exception>
 #include <string.h>
 #include <boost/unordered_map.hpp>
