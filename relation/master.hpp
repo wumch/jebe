@@ -52,8 +52,7 @@ protected:
 		input->start();
 		Document* doc;
 		while ((doc = input->next()) &&
-			(Aside::totalDocNum != 0) &&
-			(Aside::curDocNum < Aside::totalDocNum))
+			((Aside::totalDocNum != 0) && (Aside::curDocNum < Aside::totalDocNum)))
 		{
 			process(doc);
 		}

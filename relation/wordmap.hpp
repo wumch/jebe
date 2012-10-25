@@ -5,6 +5,7 @@
 #include <vector>
 #include <exception>
 #include <string.h>
+#include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include "hash.hpp"
 #include "autoincr.hpp"
@@ -45,7 +46,9 @@ class WordMap
 {
 public:
 	typedef staging::Hflp<_JEBE_WORD_MAP_HASH_BITS, Word> WordMapHash;
-	typedef boost::unordered_map<Word, wordid_t, WordMapHash, std::equal_to<std::string> > WordIdMap;
+	typedef boost::fast_pool_allocator<boost::unordered_map<Word, wordid_t>::value_type, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> MapAllocType;
+	typedef boost::unordered_map<Word, wordid_t, WordMapHash, std::equal_to<std::string>, MapAllocType> WordIdMap;
 
 private:
 	class WordIdTag {};

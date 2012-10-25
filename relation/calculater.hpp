@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include <vector>
+#include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include "math.hpp"
 #include "aside.hpp"
@@ -94,12 +95,16 @@ protected:
 	docnum_t mindf;
 	docnum_t maxdf;
 
-	typedef boost::unordered_map<wordid_t, VaredProperList> WordProperMap;
+	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, VaredProperList>::value_type, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> ProperMapAllocType;
+	typedef boost::unordered_map<wordid_t, VaredProperList, staging::BitsHash<_JEBE_WORD_MAP_HASH_BITS>, std::equal_to<wordid_t>, ProperMapAllocType> WordProperMap;
 	WordProperMap wpmap;
 
 	typedef std::pair<wordid_t, decimal_t> Similarity;
 	typedef std::list<Similarity> SimList;
-	typedef boost::unordered_map<wordid_t, SimList> WordSimList;
+	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> SimListAllocType;
+	typedef boost::unordered_map<wordid_t, SimList, staging::BitsHash<_JEBE_WORD_MAP_HASH_BITS>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
 
 	WordSimList wslist;
 
