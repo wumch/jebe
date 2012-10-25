@@ -45,7 +45,7 @@ protected:
 		decimal_t d = ex_square * (Aside::totalDocNum - plist.size());
 		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
 		{
-			d += staging::square(it->count - ex);
+			d += staging::square<decimal_t>(it->count - ex);
 		}
 		return std::sqrt(d);
 	}

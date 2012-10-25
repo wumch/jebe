@@ -148,10 +148,10 @@ size_t Calculater::sum(const DocCountList& dlist) const
 
 void Calculater::toProper(const DocCountList& dlist, VaredProperList& plist) const
 {
-//	size_t atimes = sum(dlist);
+	decimal_t atimes = sum(dlist);
 	for (docnum_t i = 0; i < dlist.size(); ++i)
 	{
-		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count)));
+		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count) / atimes));
 	}
 	plist.reCalculate();
 }
