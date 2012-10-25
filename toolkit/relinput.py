@@ -64,7 +64,7 @@ class RelInput(object):
 
 
     def _calculateTotal(self):
-        return min(self.mongo.count(), 1000)
+        return min(self.mongo.count(), 20000)
 
     def tellTotal(self):
         return self._request('tellTotal', self._calculateTotal())
