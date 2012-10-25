@@ -23,11 +23,18 @@ class RelInput(object):
 
     def __init__(self):
         self._prepare()
+        self.step = self._calculateTotal() // 100
 
     def run(self):
+        cur = 0
+        finished = 0
         for doc in self._getDocFromMongo(self._calculateTotal()):
-            print "send doc: ", doc
-            print "res: ", self._sendDoc(doc)
+            self._sendDoc(doc)
+            cur += 1
+            if cur >= self.step:
+                finished += 1
+                print "finished %d%%" % finished
+                cur = 0
 
     def _prepare(self):
         self.sock = sysconfig.zmq_context.socket(zmq.REQ)
@@ -57,7 +64,7 @@ class RelInput(object):
 
 
     def _calculateTotal(self):
-        return min(self.mongo.count(), 10000)
+        return min(self.mongo.count(), 1000)
 
     def tellTotal(self):
         return self._request('tellTotal', self._calculateTotal())
