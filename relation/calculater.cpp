@@ -290,6 +290,14 @@ decimal_t VaredProperList::properOnDoc(docid_t docid) const
 		}
 		cur = (left + right) >> 1;
 	}
+	if (plist[right].id == docid)
+	{
+		return plist[right].count;
+	}
+	else if (plist[left].id == docid)
+	{
+		return plist[left].count;
+	}
 	return .0;
 }
 
