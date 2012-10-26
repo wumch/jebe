@@ -73,14 +73,10 @@ class UrlParser(object):
             return ['', info[0]]
         else:
             tldlen = 1
-            last = info[-1]
-            if last in self._type:
-                subLen = parts - 2
-            elif last in self._area:
+            subLen = parts - 2
+            if info[-2] in self._type:    # *.com.cn
                 subLen = parts - 3
                 tldlen = 2
-            else:
-                subLen = parts - 2
             return info[:subLen] + info[subLen:-tldlen]
 
     def parseQuery(self, query):
@@ -98,6 +94,9 @@ def test(url):
 if __name__ == '__main__':
     test('http://www.baidu.com')
     test('http://baidu.com')
+    test('http://baidu.cn')
+    test('http://porn.baidu.cn')
+    test('http://porn.many.so.baidu.cn')
     test('http:/www.baidu.com')
     test('http://www.baidu.com?fsdf=8998&fsdaf=fsdf')
     test('http://www.baidu.com/fasdfd/afsdfadf/fasdf?fsdf=8998&fsdaf=fsdf')

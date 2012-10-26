@@ -70,7 +70,7 @@ void NetInput::handleTotal()
 {
 	msgpack::unpacked msg;
 	msgpack::unpack(&msg, reinterpret_cast<char*>(recv_buf.data()) + 1, recv_buf.size() - 1);
-	Aside::totalDocNum = msg.get().as<docnum_t>();
+	Aside::totalDocNum += msg.get().as<docnum_t>();
 	send_buf.copy(&success_response);
 	CS_SAY("client said total count of documents is " << Aside::totalDocNum);
 }

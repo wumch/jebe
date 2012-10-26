@@ -23,17 +23,17 @@ class RelInput(object):
 
     def __init__(self):
         self._prepare()
-        self.step = self._calculateTotal() // 100
+        self.step = int(self._calculateTotal() / 100)
 
     def run(self):
         cur = 0
-        finished = 0
+        sent = 0
         for doc in self._getDocFromMongo(self._calculateTotal()):
             self._sendDoc(doc)
             cur += 1
             if cur >= self.step:
-                finished += 1
-                print "finished %d%%" % finished
+                sent += 1
+                print "sent %d%%" % sent
                 cur = 0
 
     def _prepare(self):

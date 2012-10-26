@@ -8,7 +8,7 @@
 #		define CS_DEBUG				0
 #	endif
 #endif
-#define CS_LOG_ON					0
+#define CS_LOG_ON					1
 
 #define CS_USE_WCS					0
 
