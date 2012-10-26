@@ -72,12 +72,10 @@ class UrlParser(object):
         elif parts == 2:
             return ['', info[0]]
         else:
-            tldlen = 1
             subLen = parts - 2
             if info[-2] in self._type:    # *.com.cn
                 subLen = parts - 3
-                tldlen = 2
-            return info[:subLen] + info[subLen:-tldlen]
+            return info[:subLen] + ['.'.join(info[subLen:])]
 
     def parseQuery(self, query):
         return filter(len, query.split('&'))
