@@ -268,10 +268,7 @@ void Calculater::randomAttachWord(wordid_t wordid, docid_t docid, wnum_t atimes)
 
 decimal_t VaredProperList::properOnDoc(docid_t docid) const
 {
-	if (CS_BUNLIKELY(plist.empty()))
-	{
-		return .0;
-	}
+	CS_RETURN_IF(plist.empty(), .0);
 	docnum_t left = 0, right = plist.size() - 1;
 	docnum_t cur = (left + right) >> 1;
 	while (left < cur && cur < right)
