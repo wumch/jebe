@@ -74,6 +74,7 @@ void Calculater::calculate()
 
 void Calculater::ready()
 {
+	Aside::totalDocNum = Aside::curDocNum;
 	std::vector<wnum_t> worddf;
 	worddf.reserve(wdlist.size());
 	for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
