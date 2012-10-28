@@ -113,21 +113,22 @@ void Calculater::filter()
 void Calculater::calcu()
 {
 	decimal_t c = .0;
-	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); ++it)
+	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); )
 	{
+		 ++it;
 		const VaredProperList& plist_1 = it->second;
 		SimList& simlist = wslist.insert(std::make_pair(it->first, SimList())).first->second;
-		for (WordProperMap::const_iterator iter = wpmap.begin(); iter != wpmap.end(); ++iter)
+		for (WordProperMap::const_iterator iter = it; iter != wpmap.end(); ++iter)
 		{
-			if (CS_BLIKELY(iter != it))
-			{
+//			if (CS_BLIKELY(iter != it))
+//			{
 				c = corr(plist_1, iter->second);
 				LOG_IF(INFO, Aside::config->loglevel > 1) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
 				if (c >= Aside::config->min_corr)
 				{
 					simlist.push_back(Similarity(iter->first, c));
 				}
-			}
+//			}
 		}
 	}
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
