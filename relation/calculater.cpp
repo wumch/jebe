@@ -88,7 +88,7 @@ void Calculater::ready()
 	}
 	std::sort(worddf.begin(), worddf.end());
 	maxdf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_top * worddf.size())];
-	mindf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())];
+	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())]);
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "total-documents: " << Aside::totalDocNum << ", maxdf: " << maxdf << ", mindf: " << mindf;
 }
 
@@ -103,7 +103,7 @@ void Calculater::filter()
 		}
 		else
 		{
-			wdlist[wordid].clear();
+			wdlist[wordid].resize(0);
 		}
 	}
 //	wdlist.clear();
