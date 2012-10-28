@@ -58,7 +58,7 @@ class RelInput(object):
                 yield doc_useless
 
     def _getDocFromMongo(self, max):
-        cursor = self.mongo.find().limit(max).sort("$natural", pymongo.DESCENDING)
+        cursor = self.mongo.find().limit(max).sort("$natural", pymongo.ASCENDING)
         for doc in cursor:
             words = self.tokenizer.count(doc["text"])
             if words:
