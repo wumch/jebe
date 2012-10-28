@@ -40,10 +40,7 @@ public:
 
 ProperList VaredProperList::empty_plist;
 
-Calculater::Calculater()
-{
-
-}
+Calculater::Calculater() {}
 
 void Calculater::attachDoc(const Document& doc)
 {
@@ -109,6 +106,7 @@ void Calculater::filter()
 			wdlist[wordid].resize(0);
 		}
 	}
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered, remain words: " << wpmap.size();
 }
 
 void Calculater::calcu()
@@ -131,6 +129,7 @@ void Calculater::calcu()
 			}
 		}
 	}
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
 }
 
 decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const
@@ -188,17 +187,6 @@ size_t Calculater::sum(const DocCountList& dlist) const
 	return res;
 }
 
-void Calculater::toProper(const DocCountList& dlist, VaredProperList& plist) const
-{
-	decimal_t atimes = sum(dlist);
-	plist->reserve(dlist.size());
-	for (docnum_t i = 0; i < dlist.size(); ++i)
-	{
-		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count) / atimes));
-	}
-	plist.reCalculate();
-}
-
 bool Calculater::shouldSkip(const DocCountList& dlist) const
 {
 	return dlist.empty() || dlist.size() < mindf || maxdf < dlist.size();
@@ -235,7 +223,7 @@ void Calculater::check()
 		}
 #endif
 	}
-	CS_SAY("all of order are correct!");
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "checked, all of order are correct!";
 }
 
 void Calculater::dump()
@@ -251,6 +239,7 @@ void Calculater::dump()
 		}
 	}
 	ofile.close();
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile;
 }
 
 void Calculater::randomAttachWord(wordid_t wordid, docid_t docid, wnum_t atimes)

@@ -98,8 +98,13 @@ public:
 class Calculater
 {
 protected:
-	typedef std::vector<DIdCount> DocCountList;
-	typedef std::vector<DocCountList> WDList;	// word-doc map, actually a spare matrix.
+	typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
+		boost::details::pool::null_mutex, 4> DListAllocType;
+	typedef std::vector<DIdCount, DListAllocType> DocCountList;
+
+	typedef boost::pool_allocator<DocCountList, boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> WDListAllocType;
+	typedef std::vector<DocCountList, WDListAllocType> WDList;	// word-doc map, actually a spare matrix.
 
 	WDList wdlist;
 
@@ -144,15 +149,13 @@ protected:
 	void dump();
 
 private:
-	inline size_t sum(const DocCountList& dlist) const;
-
-	void toProper(const DocCountList& dlist, VaredProperList& plist) const;
+	CS_FORCE_INLINE size_t sum(const DocCountList& dlist) const;
 
 	CS_FORCE_INLINE decimal_t corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
 
 	CS_FORCE_INLINE decimal_t cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
 
-	bool shouldSkip(const DocCountList& dlist) const;
+	CS_FORCE_INLINE bool shouldSkip(const DocCountList& dlist) const;
 };
 
 } /* namespace rel */
