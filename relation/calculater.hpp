@@ -7,6 +7,7 @@
 #include <boost/unordered_map.hpp>
 #include <glog/logging.h>
 #include "math.hpp"
+#include "config.hpp"
 #include "aside.hpp"
 #include "widcount.hpp"
 #include "countedword.hpp"
