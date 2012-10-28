@@ -87,7 +87,7 @@ void Calculater::ready()
 	std::sort(worddf.begin(), worddf.end());
 	maxdf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_top * worddf.size())];
 	mindf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())];
-	CHECK(Aside::config->loglevel > 0) << "total-documents: " << Aside::totalDocNum << ", maxdf: " << maxdf << ", mindf: " << mindf;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "total-documents: " << Aside::totalDocNum << ", maxdf: " << maxdf << ", mindf: " << mindf;
 }
 
 void Calculater::filter()
@@ -97,11 +97,11 @@ void Calculater::filter()
 		if (!shouldSkip(wdlist[wordid]))
 		{
 			toProper(wdlist[wordid], wpmap.insert(std::make_pair(wordid, VaredProperList())).first->second);
-			CHECK(Aside::config->loglevel > 1) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
+			LOG_IF(INFO, Aside::config->loglevel > 1) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
 		}
 		else if (!wdlist[wordid].empty())
 		{
-			CHECK(Aside::config->loglevel > 1) << "skipped [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << ")";
+			LOG_IF(INFO, Aside::config->loglevel > 1) << "skipped [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << ")";
 		}
 		wdlist[wordid].clear();
 	}
@@ -120,7 +120,7 @@ void Calculater::calcu()
 			if (CS_BLIKELY(iter != it))
 			{
 				c = corr(plist_1, iter->second);
-				CHECK(Aside::config->loglevel > 2) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
+				LOG_IF(INFO, Aside::config->loglevel > 2) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
 				if (c >= Aside::config->min_corr)
 				{
 					simlist.push_back(Similarity(iter->first, c));
