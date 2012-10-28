@@ -18,8 +18,12 @@ namespace rel {
 
 //class ProperTag {};
 //typedef IdCount<ProperTag, docid_t, atimes_t> Proper;
+typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
+	boost::details::pool::null_mutex, 4> DListAllocType;
+typedef std::vector<DIdCount, DListAllocType> DocCountList;
+
 typedef DIdCount Proper;
-typedef std::vector<Proper> ProperList;
+typedef DocCountList ProperList;
 
 class Calculater;
 
@@ -98,10 +102,6 @@ public:
 class Calculater
 {
 protected:
-	typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
-		boost::details::pool::null_mutex, 4> DListAllocType;
-	typedef std::vector<DIdCount, DListAllocType> DocCountList;
-
 	typedef boost::pool_allocator<DocCountList, boost::default_user_allocator_new_delete,
 		boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> WDListAllocType;
 	typedef std::vector<DocCountList, WDListAllocType> WDList;	// word-doc map, actually a spare matrix.
