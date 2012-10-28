@@ -39,9 +39,9 @@ protected:
 		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
 		{
 			psum += it->count;
-			LOG(INFO) << "it->count:" << it->count;
+			LOG_IF(INFO, Aside::config->loglevel > 2) << "it->count:" << it->count;
 		}
-		LOG(INFO) << "plist.size():" << plist.size() << ", psum:" << psum << ", ex:" << (psum / Aside::totalDocNum);
+		LOG_IF(INFO, Aside::config->loglevel > 2) << "plist.size():" << plist.size() << ", psum:" << psum << ", ex:" << (psum / Aside::totalDocNum);
 		return psum / Aside::totalDocNum;
 	}
 
