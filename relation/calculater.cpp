@@ -99,16 +99,14 @@ void Calculater::filter()
 		if (!shouldSkip(wdlist[wordid]))
 		{
 			wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
-//			toProper(wdlist[wordid], wpmap.insert(std::make_pair(wordid, VaredProperList())).first->second);
 			LOG_IF(INFO, Aside::config->loglevel > 1) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
 		}
-		else if (!wdlist[wordid].empty())
+		else
 		{
-			LOG_IF(INFO, Aside::config->loglevel > 1) << "skipped [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << ")";
+			wdlist[wordid].clear();
 		}
-		wdlist[wordid].clear();
 	}
-	wdlist.clear();
+//	wdlist.clear();
 }
 
 void Calculater::calcu()
