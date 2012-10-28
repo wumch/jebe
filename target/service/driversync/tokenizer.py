@@ -30,9 +30,9 @@ class Tokenizer(object):
             cls._instance = cls()
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, server=config.getTokenizer()):
         self.sock = sysconfig.zmq_context.socket(zmq.REQ)
-        self.sock.connect(config.getTokenizer())
+        self.sock.connect(server)
         self.actionPacker = struct.Struct('B')
 
     def marve(self, content):

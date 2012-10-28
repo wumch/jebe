@@ -44,7 +44,7 @@ class RelInput(object):
         mongoServer = config.getMongoDB("text")
         self.mongoCon = pymongo.Connection(**mongoServer["param"])
         self.mongo = self.mongoCon[mongoServer['db']][mongoServer['collection']]
-        self.tokenizer = Tokenizer.instance()
+        self.tokenizer = Tokenizer("tcp://127.0.0.1:10022")
 
     def _getDoc(self):
         min_df = self._calculateTotal() * 0.1
