@@ -89,7 +89,10 @@ void Calculater::ready()
 	std::sort(worddf.begin(), worddf.end());
 	maxdf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_top * worddf.size())];
 	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())]);
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "total-documents: " << Aside::totalDocNum << ", maxdf: " << maxdf << ", mindf: " << mindf;
+	LOG_IF(INFO, Aside::config->loglevel > 0) <<
+		"total-documents: " << Aside::totalDocNum <<
+		", maxdf: " << maxdf << ", mindf: " << mindf <<
+		", min_corr: " << Aside::config->min_corr;
 }
 
 void Calculater::filter()
@@ -106,7 +109,6 @@ void Calculater::filter()
 			wdlist[wordid].resize(0);
 		}
 	}
-//	wdlist.clear();
 }
 
 void Calculater::calcu()
@@ -121,7 +123,7 @@ void Calculater::calcu()
 			if (CS_BLIKELY(iter != it))
 			{
 				c = corr(plist_1, iter->second);
-				LOG_IF(INFO, Aside::config->loglevel > 2) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
+				LOG_IF(INFO, Aside::config->loglevel > 1) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
 				if (c >= Aside::config->min_corr)
 				{
 					simlist.push_back(Similarity(iter->first, c));

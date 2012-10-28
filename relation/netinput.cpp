@@ -57,6 +57,7 @@ void NetInput::start()
 void NetInput::stop()
 {
 	sock.close();
+	Aside::totalDocNum = Aside::curDocNum;
 }
 
 Document* NetInput::next()
