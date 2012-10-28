@@ -53,7 +53,7 @@ protected:
 		{
 			d += staging::square<decimal_t>(it->count - ex);
 		}
-		return std::sqrt(d);
+		return std::sqrt(d / Aside::totalDocNum);
 	}
 
 public:
