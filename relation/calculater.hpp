@@ -15,8 +15,9 @@
 namespace jebe {
 namespace rel {
 
-class ProperTag {};
-typedef IdCount<ProperTag, docid_t, decimal_t> Proper;
+//class ProperTag {};
+//typedef IdCount<ProperTag, docid_t, atimes_t> Proper;
+typedef DIdCount Proper;
 typedef std::vector<Proper> ProperList;
 
 class Calculater;
@@ -24,8 +25,9 @@ class Calculater;
 class VaredProperList
 {
 	friend class Calculater;
+	static ProperList empty_plist;
 protected:
-	ProperList plist;
+	ProperList &plist;
 	decimal_t ex;
 	decimal_t ex_square;
 	decimal_t var_sqrt;
@@ -55,11 +57,16 @@ protected:
 
 public:
 	VaredProperList()
-		: ex(.0), ex_square(.0), var_sqrt(.0)
+		: plist(empty_plist), ex(.0), ex_square(.0), var_sqrt(.0)
 	{}
 
-	explicit VaredProperList(const ProperList& plist_)
+	explicit VaredProperList(ProperList& plist_)
 		: plist(plist_), ex(ex_c()), ex_square(ex * ex), var_sqrt(var_sqrt_c())
+	{}
+
+	// to know how often being duplicated.
+	VaredProperList(const VaredProperList& other)
+		: plist(other.plist), ex(other.ex), ex_square(other.ex_square), var_sqrt(other.var_sqrt)
 	{}
 
 	ProperList* operator->()

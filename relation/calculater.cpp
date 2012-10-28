@@ -96,7 +96,8 @@ void Calculater::filter()
 	{
 		if (!shouldSkip(wdlist[wordid]))
 		{
-			toProper(wdlist[wordid], wpmap.insert(std::make_pair(wordid, VaredProperList())).first->second);
+			wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
+//			toProper(wdlist[wordid], wpmap.insert(std::make_pair(wordid, VaredProperList())).first->second);
 			LOG_IF(INFO, Aside::config->loglevel > 1) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
 		}
 		else if (!wdlist[wordid].empty())
@@ -135,14 +136,44 @@ decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList
 	return CS_BUNLIKELY(plist_1.var_sqrt == 0 || plist_2.var_sqrt == 0) ? .0 : (cov(plist_1, plist_2) / (plist_1.var_sqrt * plist_2.var_sqrt));
 }
 
+// var(X+Y) = var(X) + var(Y) + 2 * cov(X, Y)
 decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const
 {
-	decimal_t exy = .0;
-	for (ProperList::const_iterator it = plist_1->begin(); it != plist_1->end(); ++it)
+	decimal_t summary = 0;
+	bool used = false;
+	docnum_t k = 0;
+	for (docnum_t i = 0, j = 0; i < plist_1->size(); ++i)
 	{
-		exy += plist_2.properOnDoc(it->id) * it->count;
+		for (; j < plist_2->size(); ++j)
+		{
+			if (plist_2.plist[j].id < plist_1.plist[i].id)
+			{
+				summary -= plist_1.ex * (plist_2.plist[j].count - plist_2.ex);
+				++k;
+			}
+			else if (plist_2.plist[j].id == plist_1.plist[i].id)
+			{
+				summary += (plist_1.plist[i].count - plist_1.ex) * (plist_2.plist[j].count - plist_2.ex);
+				++k;
+				used = true;
+				break;
+			}
+			else
+			{
+				break;
+			}
+		}
+		if (CS_BLIKELY(!used))
+		{
+			summary -= (plist_1.plist[i].count - plist_1.ex) * plist_2.ex;
+			++k;
+		}
+		else
+		{
+			used = false;
+		}
 	}
-	return exy - plist_1.ex * plist_2.ex;
+	return (summary + (Aside::totalDocNum - k) * plist_1.ex * plist_2.ex) / Aside::totalDocNum;
 }
 
 size_t Calculater::sum(const DocCountList& dlist) const

@@ -23,7 +23,7 @@ class RelInput(object):
 
     def __init__(self):
         self._prepare()
-        self.step = int(self._calculateTotal() / 100)
+        self.step = int(float(self._calculateTotal()) / 100)
 
     def run(self):
         cur = 0
@@ -33,7 +33,7 @@ class RelInput(object):
             cur += 1
             if cur >= self.step:
                 sent += 1
-                print "sent %d%%" % sent
+                print "sent %d%% (%d)" % (sent, self.step)
                 cur = 0
 
     def _prepare(self):
