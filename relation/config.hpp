@@ -35,6 +35,9 @@ public:
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;
     boost::filesystem::path outputfile;
+    boost::filesystem::path logfile;
+
+    int loglevel;
 
     uint32_t io_threads;
     uint32_t worker_count;
@@ -48,6 +51,7 @@ public:
     FileList inputfiles;
     boost::filesystem::path extension;
 
+    const char* argv_first;
     std::string program_name;
     std::size_t stack_size;
     bool memlock;
@@ -65,7 +69,7 @@ protected:
 
     void init(int argc, char* argv[]);
 
-    Config(): desc("allowed config options") {}
+    Config(): argv_first(NULL), desc("allowed config options") {}
 
     void load(const std::string& config_file);
 

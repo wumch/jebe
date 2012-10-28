@@ -2,6 +2,9 @@
 #include "aside.hpp"
 #include <fstream>
 #include <iostream>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <glog/logging.h>
+#include "datetime.hpp"
 #include "config.hpp"
 #include "calculater.hpp"
 
@@ -20,6 +23,7 @@ docnum_t Aside::totalDocNum = 0;
 
 void Aside::init()
 {
+	initLogger();
 	initWordMap();
 	initCalculater();
 }
@@ -41,6 +45,14 @@ void Aside::initWordMap()
 		wordmap.attachWord(Word(line, line_len));
 		last_pos = pfile.tellg();
 	}
+}
+
+void Aside::initLogger()
+{
+	google::InitGoogleLogging(config->argv_first);
+	google::SetLogDestination(google::INFO, config->logfile.string().c_str());
+//	google::SetLogFilenameExtension("log");
+//	setenv("GLOG_log_dir", (config->logfile.string() + " " + config->argv_first).c_str(), 0);
 }
 
 void Aside::initCalculater()

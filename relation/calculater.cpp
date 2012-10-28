@@ -5,6 +5,7 @@
 #include <iostream>
 #include <clocale>
 #include <boost/lexical_cast.hpp>
+#include <glog/logging.h>
 #include "aside.hpp"
 #include "config.hpp"
 #include "document.hpp"
@@ -86,9 +87,7 @@ void Calculater::ready()
 	std::sort(worddf.begin(), worddf.end());
 	maxdf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_top * worddf.size())];
 	mindf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())];
-	CS_DUMP(worddf.size());
-	CS_DUMP(maxdf);
-	CS_DUMP(mindf);
+	LOG(INFO) << "total-documents: " << Aside::totalDocNum << ", maxdf: " << maxdf << ", mindf: " << mindf;
 }
 
 void Calculater::filter()
@@ -98,6 +97,11 @@ void Calculater::filter()
 		if (!shouldSkip(wdlist[wordid]))
 		{
 			toProper(wdlist[wordid], wpmap.insert(std::make_pair(wordid, VaredProperList())).first->second);
+			LOG(INFO) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
+		}
+		else if (!wdlist[wordid].empty())
+		{
+			LOG(INFO) << "skipped [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << ")";
 		}
 		wdlist[wordid].clear();
 	}
@@ -115,8 +119,8 @@ void Calculater::calcu()
 		{
 			if (CS_BLIKELY(iter != it))
 			{
-				c = cov(plist_1, iter->second);
-				CS_SAY("cov(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c);
+				c = corr(plist_1, iter->second);
+				LOG(INFO) << "cov(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
 				if (c >= Aside::config->min_corr)
 				{
 					simlist.push_back(Similarity(iter->first, c));
@@ -126,12 +130,17 @@ void Calculater::calcu()
 	}
 }
 
+decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const
+{
+	return CS_BUNLIKELY(plist_1.var_sqrt == 0 || plist_2.var_sqrt == 0) ? .0 : (cov(plist_1, plist_2) / (plist_1.var_sqrt * plist_2.var_sqrt));
+}
+
 decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const
 {
 	decimal_t exy = .0;
 	for (ProperList::const_iterator it = plist_1->begin(); it != plist_1->end(); ++it)
 	{
-		exy += plist_2.properOnDoc(it->id);
+		exy += plist_2.properOnDoc(it->id) * it->count;
 	}
 	return exy - plist_1.ex * plist_2.ex;
 }
@@ -149,6 +158,7 @@ size_t Calculater::sum(const DocCountList& dlist) const
 void Calculater::toProper(const DocCountList& dlist, VaredProperList& plist) const
 {
 	decimal_t atimes = sum(dlist);
+	plist->reserve(dlist.size());
 	for (docnum_t i = 0; i < dlist.size(); ++i)
 	{
 		plist->push_back(Proper(dlist[i].id, static_cast<decimal_t>(dlist[i].count) / atimes));
@@ -169,7 +179,7 @@ void Calculater::check()
 #if CS_DEBUG
 		if (!dlist.empty())
 		{
-			CS_STDOUT << "word:[" << Aside::wordmap[wid] << "] => (";
+			CS_STDOUT << "word:[" << Aside::wordmap[wid] << "] => (0[" << dlist[0].count << "]";
 		}
 #endif
 		for (docnum_t i = 1; i < dlist.size(); ++i)
@@ -177,7 +187,7 @@ void Calculater::check()
 #if CS_DEBUG
 			if (!dlist.empty())
 			{
-				CS_STDOUT << i << ',';
+				CS_STDOUT << "," << i << "[" << dlist[i].count << "]";
 			}
 #endif
 			if (CS_BUNLIKELY(!(dlist[i - 1] < dlist[i])))
@@ -205,7 +215,6 @@ void Calculater::dump()
 		for (SimList::const_iterator iter = simlist.begin(); iter != simlist.end(); ++iter)
 		{
 			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
-			CS_SAY("in word-similarity-list, cov(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << iter->second);
 		}
 	}
 	ofile.close();

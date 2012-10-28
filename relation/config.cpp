@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
+#include <glog/logging.h>
 extern "C" {
 #include <sched.h>
 }
@@ -23,6 +24,7 @@ namespace rel {
 
 void Config::init(int argc, char* argv[])
 {
+	argv_first = argv[0];
 	boost::program_options::options_description cmdDesc("allowed options");
 
 	boost::filesystem::path program_path = argv[0];
@@ -32,8 +34,7 @@ void Config::init(int argc, char* argv[])
 	program_name = program_path.filename();
 #endif
 
-	std::string default_confile("etc/") ;
-	default_confile += program_name + ".conf";
+	std::string default_confile = "etc/" + program_name + ".conf";
 	cmdDesc.add_options()
 		("help,h", "show this help and exit.")
 		("config,c", boost::program_options::value<std::string>()->default_value(default_confile),
@@ -68,16 +69,19 @@ void Config::init(int argc, char* argv[])
 
 void Config::initDesc()
 {
-	std::string default_pidfile(std::string("/var/run/") + program_name + ".pid");
+	boost::filesystem::path default_pidfile(std::string("/var/run/") + program_name + ".pid");
 	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10021");
+	boost::filesystem::path default_logfile(std::string("/var/log/") + program_name + ".log");
 	desc.add_options()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
 		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://qdb"),
 				"internal communicate address, defaults to `inproc://qdb`")
 		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value(default_pidfile),
-				(std::string("pid file, defaults to ") + default_pidfile).c_str())
+				(std::string("pid file, defaults to ") + default_pidfile.string()).c_str())
 		("patten-file", boost::program_options::value<typeof(pattenfile)>()->default_value("etc/patten.txt"))
-		("output-file", boost::program_options::value<typeof(outputfile)>()->default_value("etc/words.txt"))
+		("output-file", boost::program_options::value<typeof(outputfile)>()->default_value("etc/words-relation.txt"))
+		("log-file", boost::program_options::value<typeof(logfile)>()->default_value(default_logfile))
+		("log-level", boost::program_options::value<typeof(loglevel)>()->default_value(0))
 		("receive-buffer-size", boost::program_options::value<typeof(receive_buffer_size)>()->default_value((64)),
 				"siz eof receive buffer (in bytes), default is 4KB")
 		("send-buffer-size", boost::program_options::value<typeof(send_buffer_size)>()->default_value((4)),
@@ -85,7 +89,7 @@ void Config::initDesc()
 		("memlock", boost::program_options::value<typeof(memlock)>()->default_value(false))
 		("stack-size", boost::program_options::value<typeof(stack_size)>()->default_value(staging::getRlimitCur(RLIMIT_STACK)))
 		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""))
-		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(staging::getCpuNum() - 1))
+		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(std::max<int>(1, staging::getCpuNum() - 1)))
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
 
 		("document-frequency-quantile-top", boost::program_options::value<typeof(df_quantile_top)>()->default_value(0.6))
@@ -114,6 +118,8 @@ void Config::load(const std::string& config_file)
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
 	pattenfile = options["patten-file"].as<typeof(pattenfile)>();
 	outputfile = options["output-file"].as<typeof(outputfile)>();
+	logfile = options["log-file"].as<typeof(logfile)>();
+	loglevel = options["log-level"].as<typeof(loglevel)>();
 	receive_buffer_size = options["receive-buffer-size"].as<typeof(receive_buffer_size)>() << 10;
 	send_buffer_size = options["send-buffer-size"].as<typeof(send_buffer_size)>() << 10;
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
@@ -142,6 +148,8 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(listen)
 		_JEBE_OUT_CONFIG_PROPERTY(internal)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
+		_JEBE_OUT_CONFIG_PROPERTY(logfile)
+		_JEBE_OUT_CONFIG_PROPERTY(loglevel)
 		_JEBE_OUT_CONFIG_PROPERTY(pattenfile)
 		_JEBE_OUT_CONFIG_PROPERTY(worker_count)
 		_JEBE_OUT_CONFIG_PROPERTY(io_threads)

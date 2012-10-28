@@ -5,6 +5,7 @@
 #include <vector>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
+#include <glog/logging.h>
 #include "math.hpp"
 #include "aside.hpp"
 #include "widcount.hpp"
@@ -36,7 +37,9 @@ protected:
 		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
 		{
 			psum += it->count;
+			LOG(INFO) << "it->count:" << it->count;
 		}
+		LOG(INFO) << "plist.size():" << plist.size() << ", psum:" << psum << ", ex:" << (psum / Aside::totalDocNum);
 		return psum / Aside::totalDocNum;
 	}
 
@@ -137,7 +140,9 @@ private:
 
 	void toProper(const DocCountList& dlist, VaredProperList& plist) const;
 
-	decimal_t cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
+	CS_FORCE_INLINE decimal_t corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
+
+	CS_FORCE_INLINE decimal_t cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
 
 	bool shouldSkip(const DocCountList& dlist) const;
 };

@@ -47,7 +47,7 @@ typedef uint32_t		wordid_t;
 
 typedef std::string		Word;
 
-typedef long double		decimal_t;
+typedef double		decimal_t;
 
 }
 }
