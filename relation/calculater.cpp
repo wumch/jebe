@@ -38,6 +38,8 @@ public:
 	virtual ~DocDuplicated() throw() {}
 };
 
+ProperList VaredProperList::empty_plist;
+
 Calculater::Calculater()
 {
 
