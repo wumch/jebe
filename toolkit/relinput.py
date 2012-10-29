@@ -37,6 +37,7 @@ class RelInput(object):
                 sent += 1
                 print "sent %d%% (%d)" % (sent, total)
                 cur = 0
+        print "all are sent: %d" % total
 
     def _prepare(self):
         self.sock = sysconfig.zmq_context.socket(zmq.REQ)
