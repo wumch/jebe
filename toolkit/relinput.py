@@ -58,7 +58,7 @@ class RelInput(object):
                 yield doc_useless
 
     def _getDocFromMongo(self, max):
-        cursor = self.mongo.find().limit(max).sort("$natural", pymongo.ASCENDING)
+        cursor = self.mongo.find().limit(max).sort("$natural", pymongo.DESCENDING)
         for doc in cursor:
             words = self.tokenizer.count(doc["text"])
             if words:
@@ -66,7 +66,7 @@ class RelInput(object):
 
 
     def _calculateTotal(self):
-        return min(self.mongo.count(), 20000)
+        return min(self.mongo.count(), 100000)
 
     def tellTotal(self):
         return self._request('tellTotal', self._calculateTotal())

@@ -66,7 +66,9 @@ void Calculater::prepare()
 void Calculater::calculate()
 {
 	ready();
+#if CS_DEBUG
 	check();
+#endif
 	filter();
 	calcu();
 	dump();
