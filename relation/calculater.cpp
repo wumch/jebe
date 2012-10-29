@@ -156,6 +156,7 @@ decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList&
 			else if (plist_2.plist[j].id == plist_1.plist[i].id)
 			{
 				summary += (plist_1.plist[i].count - plist_1.ex) * (plist_2.plist[j].count - plist_2.ex);
+				++j;
 				++k;
 				used = true;
 				break;
