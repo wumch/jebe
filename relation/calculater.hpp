@@ -34,7 +34,6 @@ class VaredProperList
 protected:
 	ProperList &plist;
 	decimal_t ex;
-	decimal_t ex_square;
 	decimal_t var_sqrt;
 
 protected:
@@ -52,7 +51,7 @@ protected:
 
 	decimal_t var_sqrt_c() const
 	{
-		decimal_t d = ex_square * (Aside::totalDocNum - plist.size());
+		decimal_t d = ex * ex * (Aside::totalDocNum - plist.size());
 		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
 		{
 			d += staging::square<decimal_t>(it->count - ex);
@@ -62,16 +61,16 @@ protected:
 
 public:
 	VaredProperList()
-		: plist(empty_plist), ex(.0), ex_square(.0), var_sqrt(.0)
+		: plist(empty_plist), ex(.0), var_sqrt(.0)
 	{}
 
 	explicit VaredProperList(ProperList& plist_)
-		: plist(plist_), ex(ex_c()), ex_square(ex * ex), var_sqrt(var_sqrt_c())
+		: plist(plist_), ex(ex_c()), var_sqrt(var_sqrt_c())
 	{}
 
 	// to know how often being duplicated.
 	VaredProperList(const VaredProperList& other)
-		: plist(other.plist), ex(other.ex), ex_square(other.ex_square), var_sqrt(other.var_sqrt)
+		: plist(other.plist), ex(other.ex), var_sqrt(other.var_sqrt)
 	{}
 
 	ProperList* operator->()
@@ -87,7 +86,6 @@ public:
 	void reCalculate()
 	{
 		ex = ex_c();
-		ex_square = ex * ex;
 		var_sqrt = var_sqrt_c();
 	}
 
