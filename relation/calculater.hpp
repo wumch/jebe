@@ -18,7 +18,7 @@ namespace jebe {
 namespace rel {
 
 typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
-	boost::details::pool::null_mutex, 1 << 20> DListAllocType;
+	boost::details::pool::null_mutex, 8 << 20> DListAllocType;
 typedef std::list<DIdCount, DListAllocType> DocCountList;
 
 typedef DIdCount Proper;

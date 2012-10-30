@@ -16,7 +16,9 @@ class Document
 	: private boost::noncopyable
 {
 private:
-	static msgpack::unpacked msg;
+	static size_t moffset;
+	static msgpack::object mobj;
+	static msgpack::zone mzone;
 
 public:
 	typedef std::vector<CountedWord> WordList;
@@ -37,8 +39,9 @@ public:
 	{
 		try
 		{
-			msgpack::unpack(&msg, buf, len);
-			msg.get().convert(&words);
+			moffset = 0;
+			msgpack::unpack(buf, len, &moffset, &mzone, &mobj);
+			mobj.convert(&words);
 		}
 		catch (const std::exception& e)
 		{
