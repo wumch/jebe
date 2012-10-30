@@ -91,7 +91,7 @@ void Calculater::ready()
 	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * (worddf.size() - 1))]);
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "statistics:" << CS_LINESEP <<
 		"total-documents: " << Aside::totalDocNum << CS_LINESEP <<
-		"doc-frequency: [" << maxdf << ", " << mindf << "]" << CS_LINESEP <<
+		"doc-frequency: [" << mindf << ", " << maxdf << "]" << CS_LINESEP <<
 		"word-doc-var: [" << Aside::config->min_wd_var << ", " << Aside::config->max_wd_var << "]" << CS_LINESEP <<
 		"word-doc-var-rate-range: [" << Aside::config->wd_var_bottom << ", " << (1.0 - Aside::config->wd_var_top) << "]" << CS_LINESEP <<
 		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]";
