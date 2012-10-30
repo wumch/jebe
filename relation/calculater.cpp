@@ -89,10 +89,12 @@ void Calculater::ready()
 	std::sort(worddf.begin(), worddf.end());
 	maxdf = worddf[static_cast<wordid_t>((1.0 - Aside::config->df_quantile_top) * (worddf.size() - 1))];
 	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * (worddf.size() - 1))]);
-	LOG_IF(INFO, Aside::config->loglevel > 0) <<
-		"total-documents: " << Aside::totalDocNum <<
-		", maxdf: " << maxdf << ", mindf: " << mindf <<
-		", required corr: [" << Aside::config->min_word_corr << "," << Aside::config->max_word_corr << "]";
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "statistics:" << CS_LINESEP <<
+		"total-documents: " << Aside::totalDocNum << CS_LINESEP <<
+		"doc-frequency: [" << maxdf << ", " << mindf << "]" << CS_LINESEP <<
+		"word-doc-var: [" << Aside::config->min_wd_var << ", " << Aside::config->max_wd_var << "]" << CS_LINESEP <<
+		"word-doc-var-rate-range: [" << Aside::config->wd_var_bottom << ", " << (1.0 - Aside::config->wd_var_top) << "]" << CS_LINESEP <<
+		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]";
 }
 
 void Calculater::calcu()
@@ -232,7 +234,7 @@ void Calculater::filterByVarRate()
 	{
 		varlist.push_back(getFilterVar(it->second));
 	}
-	std::sort(varlist.begin(), varlist.end(), std::greater_equal<decimal_t>());
+	std::sort(varlist.begin(), varlist.end());
 
 	decimal_t min_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * Aside::config->wd_var_bottom)];
 	decimal_t max_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * (1.0 - Aside::config->wd_var_top))];
