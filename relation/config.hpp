@@ -27,10 +27,14 @@ public:
 	decimal_t df_quantile_bottom;		// = 0.6
 	decimal_t df_quantile_top;			// = 0.9
 
-	decimal_t word_corr_bottom;		// min coefficient-of-correlation of a pair of related-words.
-	decimal_t word_corr_top;
+	decimal_t min_word_corr;		// min coefficient-of-correlation of a pair of related-words.
+	decimal_t max_word_corr;
 
-	decimal_t min_corr;
+	decimal_t min_wd_var;
+	decimal_t max_wd_var;
+
+	decimal_t wd_var_bottom;
+	decimal_t wd_var_top;
 
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;

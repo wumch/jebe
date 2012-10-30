@@ -13,7 +13,7 @@ from driversync.tokenizer import Tokenizer
 
 class RelInput(object):
 
-    calculater = "tcp://%s:10021" % natip
+    calculater = "tcp://127.0.0.1:10021"
     actionPacker = struct.Struct('B')
     actions = {
         'tellTotal' : actionPacker.pack(1),
@@ -23,7 +23,7 @@ class RelInput(object):
 
     def __init__(self):
         self._prepare()
-        self.step = int(float(self._calculateTotal()) / 100)
+        self.step = self._calculateTotal() // 100
 
     def run(self):
         cur = 0
@@ -53,10 +53,7 @@ class RelInput(object):
         doc_useful = [["设计大赛", 3], ["朋克耳钉女", 1]]
         doc_useless = [["宝宝哈衣外贸原单", 100], ["男短袖衬衫特价", 1]]
         for i in xrange(0, self._calculateTotal()):
-            if min_df < i < max_df:
-                yield doc_useful
-            else:
-                yield doc_useless
+            yield doc_useful if min_df < i < max_df else doc_useless
 
     def _getDocFromMongo(self, max):
         cursor = self.mongo.find().limit(max).sort("$natural", pymongo.DESCENDING)

@@ -15,6 +15,9 @@ namespace rel {
 class Document
 	: private boost::noncopyable
 {
+private:
+	static msgpack::unpacked msg;
+
 public:
 	typedef std::vector<CountedWord> WordList;
 
@@ -32,7 +35,6 @@ public:
 	explicit Document(docid_t id_, const char* buf, size_t len)
 		: id(id_)
 	{
-		msgpack::unpacked msg;
 		try
 		{
 			msgpack::unpack(&msg, buf, len);

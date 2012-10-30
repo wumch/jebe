@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include <vector>
+#include <list>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include <glog/logging.h>
@@ -16,11 +17,9 @@
 namespace jebe {
 namespace rel {
 
-//class ProperTag {};
-//typedef IdCount<ProperTag, docid_t, atimes_t> Proper;
 typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
-	boost::details::pool::null_mutex, 4> DListAllocType;
-typedef std::vector<DIdCount, DListAllocType> DocCountList;
+	boost::details::pool::null_mutex, 256> DListAllocType;
+typedef std::list<DIdCount, DListAllocType> DocCountList;
 
 typedef DIdCount Proper;
 typedef DocCountList ProperList;
@@ -73,6 +72,14 @@ public:
 		: plist(other.plist), ex(other.ex), var_sqrt(other.var_sqrt)
 	{}
 
+	const VaredProperList& operator=(const VaredProperList& other)
+	{
+		plist = other.plist;
+		ex = other.ex;
+		var_sqrt = other.var_sqrt;
+		return *this;
+	}
+
 	ProperList* operator->()
 	{
 		return &plist;
@@ -93,8 +100,6 @@ public:
 	{
 		return docid == proper.id;
 	}
-
-	decimal_t properOnDoc(docid_t docid) const;
 };
 
 class Calculater
@@ -134,8 +139,6 @@ public:
 protected:
 	void attachWord(wordid_t wordid, docid_t docid, wnum_t wordnum);
 
-	void randomAttachWord(wordid_t wordid, docid_t docid, wnum_t atimes);
-
 	void ready();
 
 	void check();
@@ -147,6 +150,8 @@ protected:
 	void dump();
 
 private:
+	void filterByVarRate();
+
 	CS_FORCE_INLINE size_t sum(const DocCountList& dlist) const;
 
 	CS_FORCE_INLINE decimal_t corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
@@ -154,6 +159,13 @@ private:
 	CS_FORCE_INLINE decimal_t cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const;
 
 	CS_FORCE_INLINE bool shouldSkip(const DocCountList& dlist) const;
+
+	CS_FORCE_INLINE bool needFilterByVar() const;
+
+	CS_FORCE_INLINE bool shouldSkipByVar(const VaredProperList& plist) const;
+	CS_FORCE_INLINE bool shouldSkipByVar(decimal_t var) const;
+
+	CS_FORCE_INLINE decimal_t getFilterVar(const VaredProperList& plist) const;
 };
 
 } /* namespace rel */

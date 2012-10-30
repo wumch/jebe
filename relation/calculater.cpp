@@ -46,7 +46,7 @@ void Calculater::attachDoc(const Document& doc)
 {
 	for (Document::WordList::const_iterator it = doc.words.begin(); it != doc.words.end(); ++it)
 	{
-		attachWord(Aside::wordmap.getWordId(it->word), doc.id, it->count);
+		attachWord(Aside::wordmap[it->word], doc.id, it->count);
 	}
 	++Aside::curDocNum;
 }
@@ -58,9 +58,9 @@ void Calculater::attachWord(wordid_t wordid, docid_t docid, wnum_t atimes)
 
 void Calculater::prepare()
 {
-	CS_SAY(wdlist.size());
+	CS_DUMP(wdlist.size());
 	wdlist.assign(Aside::wordmap.map.size(), DocCountList());
-	CS_SAY(wdlist.size());
+	CS_DUMP(wdlist.size());
 }
 
 void Calculater::calculate()
@@ -87,29 +87,12 @@ void Calculater::ready()
 		}
 	}
 	std::sort(worddf.begin(), worddf.end());
-	maxdf = worddf[static_cast<wordid_t>(Aside::config->df_quantile_top * worddf.size())];
-	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * worddf.size())]);
+	maxdf = worddf[static_cast<wordid_t>((1.0 - Aside::config->df_quantile_top) * (worddf.size() - 1))];
+	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * (worddf.size() - 1))]);
 	LOG_IF(INFO, Aside::config->loglevel > 0) <<
 		"total-documents: " << Aside::totalDocNum <<
 		", maxdf: " << maxdf << ", mindf: " << mindf <<
-		", min_corr: " << Aside::config->min_corr;
-}
-
-void Calculater::filter()
-{
-	for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
-	{
-		if (!shouldSkip(wdlist[wordid]))
-		{
-			wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
-			LOG_IF(INFO, Aside::config->loglevel > 1) << "reserved [" << Aside::wordmap[wordid] << "](" << wdlist[wordid].size() << "),(" << wpmap[wordid].ex << "," << wpmap[wordid].var_sqrt << ")";
-		}
-		else
-		{
-			wdlist[wordid].resize(0);
-		}
-	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered, remain words: " << wpmap.size();
+		", required corr: [" << Aside::config->min_word_corr << "," << Aside::config->max_word_corr << "]";
 }
 
 void Calculater::calcu()
@@ -125,7 +108,7 @@ void Calculater::calcu()
 			{
 				c = corr(plist_1, iter->second);
 				LOG_IF(INFO, Aside::config->loglevel > 1) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
-				if (c >= Aside::config->min_corr)
+				if (Aside::config->min_word_corr <= c && c <= Aside::config->max_word_corr)
 				{
 					simlist.push_back(Similarity(iter->first, c));
 				}
@@ -140,24 +123,24 @@ decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList
 	return CS_BUNLIKELY(plist_1.var_sqrt == 0 || plist_2.var_sqrt == 0) ? .0 : (cov(plist_1, plist_2) / (plist_1.var_sqrt * plist_2.var_sqrt));
 }
 
-// var(X+Y) = var(X) + var(Y) + 2 * cov(X, Y)
+// cov(X,Y) = (X - Ex)*(Y - Ey)
 decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const
 {
 	decimal_t summary = 0;
 	bool used = false;
 	docnum_t k = 0;
-	for (docnum_t i = 0, j = 0; i < plist_1->size(); ++i)
+	for (ProperList::const_iterator i = plist_1->begin(), j = plist_2->begin(); i != plist_1->end(); ++i)
 	{
-		for (; j < plist_2->size(); ++j)
+		for (; j != plist_2->end(); ++j)
 		{
-			if (plist_2.plist[j].id < plist_1.plist[i].id)
+			if (j->id < i->id)
 			{
-				summary -= plist_1.ex * (plist_2.plist[j].count - plist_2.ex);
+				summary -= plist_1.ex * (j->count - plist_2.ex);
 				++k;
 			}
-			else if (plist_2.plist[j].id == plist_1.plist[i].id)
+			else if (j->id == i->id)
 			{
-				summary += (plist_1.plist[i].count - plist_1.ex) * (plist_2.plist[j].count - plist_2.ex);
+				summary += (i->count - plist_1.ex) * (j->count - plist_2.ex);
 				++j;
 				++k;
 				used = true;
@@ -170,7 +153,7 @@ decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList&
 		}
 		if (CS_BLIKELY(!used))
 		{
-			summary -= (plist_1.plist[i].count - plist_1.ex) * plist_2.ex;
+			summary -= (i->count - plist_1.ex) * plist_2.ex;
 			++k;
 		}
 		else
@@ -191,9 +174,110 @@ size_t Calculater::sum(const DocCountList& dlist) const
 	return res;
 }
 
+void Calculater::filter()
+{
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size();
+	if (needFilterByVar())
+	{
+		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
+		{
+			if (!shouldSkip(wdlist[wordid]))
+			{
+				VaredProperList plist(wdlist[wordid]);
+				if (!shouldSkipByVar(plist))
+				{
+					wpmap.insert(std::make_pair(wordid, plist));
+				}
+				else
+				{
+					LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[wordid] << "] filtered by var = " << plist.var_sqrt << "/" << plist.ex;
+					wdlist[wordid].resize(0);
+				}
+			}
+			else
+			{
+				LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[wordid] << "] filtered by df = " << wdlist[wordid].size();
+				wdlist[wordid].resize(0);
+			}
+		}
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size();
+	}
+	else
+	{
+		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
+		{
+			if (!shouldSkip(wdlist[wordid]))
+			{
+				wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
+			}
+			else
+			{
+				LOG_IF(INFO, Aside::config->loglevel > 2) << Aside::wordmap[wordid] << "filtered by df = " << wdlist[wordid].size();
+				wdlist[wordid].resize(0);
+			}
+		}
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size();
+	}
+	filterByVarRate();
+}
+
+void Calculater::filterByVarRate()
+{
+	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || Aside::config->wd_var_top > 0));
+	CS_RETURN_IF(wpmap.empty());
+
+	std::vector<decimal_t> varlist;
+	varlist.reserve(wpmap.size());
+	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); ++it)
+	{
+		varlist.push_back(getFilterVar(it->second));
+	}
+	std::sort(varlist.begin(), varlist.end(), std::greater_equal<decimal_t>());
+
+	decimal_t min_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * Aside::config->wd_var_bottom)];
+	decimal_t max_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * (1.0 - Aside::config->wd_var_top))];
+
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "will filter by var-rate not between [" << min_var << "," << max_var << "]";
+
+	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); )
+	{
+		if (!staging::between(getFilterVar(it->second), min_var, max_var))
+		{
+			LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[it->first] << "] filtered by var-rate = " << it->second.var_sqrt << "/" << it->second.ex;
+			wdlist[it->first].resize(0);
+			it = wpmap.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by var-rate, remain words: " << wpmap.size();
+}
+
+decimal_t Calculater::getFilterVar(const VaredProperList& plist) const
+{
+	return plist.var_sqrt / plist.ex;
+}
+
 bool Calculater::shouldSkip(const DocCountList& dlist) const
 {
 	return dlist.empty() || dlist.size() < mindf || maxdf < dlist.size();
+}
+
+bool Calculater::needFilterByVar() const
+{
+	return Aside::config->min_wd_var > 0 || Aside::config->max_wd_var > 0;
+}
+
+bool Calculater::shouldSkipByVar(const VaredProperList& plist) const
+{
+	return shouldSkipByVar(plist.var_sqrt / plist.ex);
+}
+
+bool Calculater::shouldSkipByVar(decimal_t var) const
+{
+	return Aside::config->min_wd_var > var || var < Aside::config->max_wd_var;
 }
 
 void Calculater::check()
@@ -201,31 +285,13 @@ void Calculater::check()
 	for (wordid_t wid = 0; wid < wdlist.size(); ++wid)
 	{
 		const DocCountList& dlist = wdlist[wid];
-#if CS_DEBUG
-		if (!dlist.empty())
+		for (DocCountList::const_iterator i = dlist.begin(), prev = i++; i != dlist.end(); ++i)
 		{
-			CS_STDOUT << "word:[" << Aside::wordmap[wid] << "] => (0[" << dlist[0].count << "]";
-		}
-#endif
-		for (docnum_t i = 1; i < dlist.size(); ++i)
-		{
-#if CS_DEBUG
-			if (!dlist.empty())
+			if (CS_BUNLIKELY(!(prev->id < i->id)))
 			{
-				CS_STDOUT << "," << i << "[" << dlist[i].count << "]";
-			}
-#endif
-			if (CS_BUNLIKELY(!(dlist[i - 1] < dlist[i])))
-			{
-				CS_DIE("kid, the order of [{document-id,word-appear-times}...][" << i << "] of some word is wrong!");
+				CS_DIE("kid, the order of [{document-id,word-appear-times}...][] of some word is wrong!");
 			}
 		}
-#if CS_DEBUG
-		if (!dlist.empty())
-		{
-			CS_STDOUT << ")" << std::endl;
-		}
-#endif
 	}
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "checked, all of order are correct!";
 }
@@ -244,93 +310,6 @@ void Calculater::dump()
 	}
 	ofile.close();
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile;
-}
-
-void Calculater::randomAttachWord(wordid_t wordid, docid_t docid, wnum_t atimes)
-{
-	DocCountList& dlist = wdlist[wordid];
-	DIdCount dic(docid, atimes);
-	if (CS_BUNLIKELY(dlist.empty()))
-	{
-		dlist.push_back(dic);
-	}
-	else
-	{
-		docnum_t left = 0, right = dlist.size() - 1;
-		docnum_t cur = (left + right) >> 1;
-		while (left < cur && cur < right)
-		{
-			if (CS_BUNLIKELY(dlist[cur].id == docid))
-			{
-				throw DocDuplicated(wordid, docid);
-			}
-			if (dlist[cur].id < docid)
-			{
-				left = cur;
-			}
-			else
-			{
-				right = cur;
-			}
-			cur = (left + right) >> 1;
-		}
-		if (CS_BLIKELY(dlist[right] < dic))
-		{
-			dlist.insert(dlist.end(), dic);
-		}
-		else
-		{
-			if (dic < dlist[left])
-			{
-				cur = left;
-			}
-			else if (CS_BUNLIKELY(dic == dlist[left]))
-			{
-				throw DocDuplicated(wordid, docid);
-			}
-			else if (dic < dlist[right])
-			{
-				cur = right;
-			}
-			else if (CS_BUNLIKELY(dic == dlist[right]))
-			{
-				throw DocDuplicated(wordid, docid);
-			}
-			dlist.insert(DocCountList::iterator(&dlist[cur]), dic);
-		}
-	}
-}
-
-decimal_t VaredProperList::properOnDoc(docid_t docid) const
-{
-	CS_RETURN_IF(plist.empty(), .0);
-	docnum_t left = 0, right = plist.size() - 1;
-	docnum_t cur = (left + right) >> 1;
-	while (left < cur && cur < right)
-	{
-		if (plist[cur].id == docid)
-		{
-			return plist[cur].count;
-		}
-		else if (plist[cur].id < docid)
-		{
-			left = cur;
-		}
-		else
-		{
-			right = cur;
-		}
-		cur = (left + right) >> 1;
-	}
-	if (plist[right].id == docid)
-	{
-		return plist[right].count;
-	}
-	else if (plist[left].id == docid)
-	{
-		return plist[left].count;
-	}
-	return .0;
 }
 
 } /* namespace rel */

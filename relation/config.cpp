@@ -95,10 +95,14 @@ void Config::initDesc()
 		("document-frequency-quantile-top", boost::program_options::value<typeof(df_quantile_top)>()->default_value(0.6))
 		("document-frequency-quantile-bottom", boost::program_options::value<typeof(df_quantile_bottom)>()->default_value(0.8))
 
-		("word-correlation-top", boost::program_options::value<typeof(word_corr_top)>()->default_value(0.6))
-		("word-correlation-bottom", boost::program_options::value<typeof(word_corr_bottom)>()->default_value(0.8))
+		("min-word-correlation", boost::program_options::value<typeof(min_word_corr)>()->default_value(0.4))
+		("max-word-correlation", boost::program_options::value<typeof(max_word_corr)>()->default_value(1.0))
 
-		("word-min-correlation", boost::program_options::value<typeof(min_corr)>()->default_value(0.3))
+		("min-word-doc-var", boost::program_options::value<typeof(min_wd_var)>()->default_value(.0))
+		("max-word-doc-var", boost::program_options::value<typeof(max_wd_var)>()->default_value(.0))
+
+		("word-doc-var-bottom", boost::program_options::value<typeof(wd_var_bottom)>()->default_value(.0))
+		("word-doc-var-top", boost::program_options::value<typeof(wd_var_top)>()->default_value(.0))
 		;
 }
 
@@ -128,10 +132,15 @@ void Config::load(const std::string& config_file)
 	df_quantile_top = options["document-frequency-quantile-top"].as<typeof(df_quantile_top)>();
 	df_quantile_bottom = options["document-frequency-quantile-bottom"].as<typeof(df_quantile_bottom)>();
 
-	word_corr_top = options["word-correlation-top"].as<typeof(word_corr_top)>();
-	word_corr_bottom = options["word-correlation-bottom"].as<typeof(word_corr_bottom)>();
+	min_word_corr = options["min-word-correlation"].as<typeof(max_word_corr)>();
+	max_word_corr = options["max-word-correlation"].as<typeof(min_word_corr)>();
 
-	min_corr = options["word-min-correlation"].as<typeof(min_corr)>();
+	min_wd_var = options["min-word-doc-var"].as<typeof(min_wd_var)>();
+	max_wd_var = options["max-word-doc-var"].as<typeof(max_wd_var)>();
+
+	wd_var_bottom = options["word-doc-var-top"].as<typeof(wd_var_bottom)>();
+	wd_var_top = options["word-doc-var-bottom"].as<typeof(wd_var_top)>();
+
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
@@ -159,9 +168,13 @@ void Config::load(const std::string& config_file)
 
 		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_top)
 		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_bottom)
-		_JEBE_OUT_CONFIG_PROPERTY(word_corr_top)
-		_JEBE_OUT_CONFIG_PROPERTY(word_corr_bottom)
-		_JEBE_OUT_CONFIG_PROPERTY(min_corr)
+		_JEBE_OUT_CONFIG_PROPERTY(max_word_corr)
+		_JEBE_OUT_CONFIG_PROPERTY(min_word_corr)
+
+		_JEBE_OUT_CONFIG_PROPERTY(min_wd_var)
+		_JEBE_OUT_CONFIG_PROPERTY(wd_var_bottom)
+		_JEBE_OUT_CONFIG_PROPERTY(max_wd_var)
+		_JEBE_OUT_CONFIG_PROPERTY(wd_var_top)
 	);
 }
 

@@ -10,6 +10,7 @@
 #	include <unistd.h>
 #endif
 #include <zmq.hpp>
+#include <glog/logging.h>
 #include "config.hpp"
 #include "aside.hpp"
 #include "calculater.hpp"
@@ -47,6 +48,7 @@ protected:
 
 	void work()
 	{
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "start inputing";
 		BaseInput* input = create_input();
 		input->prepare();
 		input->start();
@@ -57,6 +59,7 @@ protected:
 			process(doc);
 		}
 		input->stop();
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "finished inputing";
 	}
 
 	void process(Document* doc)
