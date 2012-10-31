@@ -28,8 +28,8 @@ public:
 class WIdCountTag {};
 typedef IdCount<WIdCountTag, wordid_t, wnum_t> WIdCount;
 
-class DIdCountTag {};
-typedef IdCount<DIdCountTag, docid_t, docnum_t> DIdCount;
+//class DIdCountTag {};
+//typedef IdCount<DIdCountTag, docid_t, docnum_t> DIdCount;
 
 template<typename Tag, typename id_t, typename count_t>
 static inline bool operator==(const IdCount<Tag, id_t, count_t>& id_count_1, const IdCount<Tag, id_t, count_t>& id_count_2)

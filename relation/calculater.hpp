@@ -17,6 +17,20 @@
 namespace jebe {
 namespace rel {
 
+class DIdCount
+{
+public:
+	uint32_t id:24;
+	uint32_t count:8;
+
+public:
+	DIdCount() {}
+
+	explicit DIdCount(uint32_t id_, uint32_t count_)
+		: id(id_),count(count_)
+	{}
+};
+
 typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
 	boost::details::pool::null_mutex, 8 << 20> DListAllocType;
 typedef std::list<DIdCount, DListAllocType> DocCountList;

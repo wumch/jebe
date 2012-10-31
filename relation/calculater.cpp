@@ -6,6 +6,7 @@
 #include <clocale>
 #include <boost/lexical_cast.hpp>
 #include <glog/logging.h>
+#include "math.hpp"
 #include "aside.hpp"
 #include "config.hpp"
 #include "document.hpp"
@@ -225,7 +226,7 @@ void Calculater::filter()
 
 void Calculater::filterByVarRate()
 {
-	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || Aside::config->wd_var_top > 0));
+	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || staging::between(Aside::config->wd_var_top, .0, 1.0)));
 	CS_RETURN_IF(wpmap.empty());
 
 	std::vector<decimal_t> varlist;
