@@ -39,7 +39,12 @@ public:
 
 	virtual void prepare() {}
 	virtual void start() = 0;
-	virtual void stop() {}
+
+	virtual void stop()
+	{
+		Document::finalize();
+	}
+
 	virtual Document* next() = 0;
 
 public:

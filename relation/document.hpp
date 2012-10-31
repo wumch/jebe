@@ -37,16 +37,21 @@ public:
 	explicit Document(docid_t id_, const char* buf, size_t len)
 		: id(id_)
 	{
-		try
+		moffset = 0;
+		if (CS_BLIKELY(msgpack::unpack(buf, len, &moffset, &mzone, &mobj) == msgpack::UNPACK_SUCCESS))
 		{
-			moffset = 0;
-			msgpack::unpack(buf, len, &moffset, &mzone, &mobj);
 			mobj.convert(&words);
 		}
-		catch (const std::exception& e)
+		else
 		{
-			CS_DIE("kid, error occured: " << e.what());
+			CS_DIE("kid, unpack <Document(" << id << ")> from " << len << " bytes failed!");
 		}
+	}
+
+public:
+	static void finalize()
+	{
+		mzone.~zone();
 	}
 };
 
