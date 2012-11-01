@@ -103,7 +103,7 @@ void Calculater::calcu()
 	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); ++it)
 	{
 		const VaredProperList& plist_1 = it->second;
-		SimList& simlist = wslist.insert(std::make_pair(it->first, SimList())).first->second;
+		SimList& simlist = wslist.insert(std::pair<wordid_t, SimList>(it->first, SimList())).first->second;
 		WordProperMap::const_iterator iter = it;
 		while (++iter != wpmap.end())
 		{
@@ -211,7 +211,7 @@ void Calculater::filter()
 		{
 			if (!shouldSkip(wdlist[wordid]))
 			{
-				wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
+				wpmap.insert(std::pair<wordid_t, VaredProperList>(wordid, VaredProperList(wdlist[wordid])));
 			}
 			else
 			{

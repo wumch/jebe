@@ -31,7 +31,7 @@ public:
 	{}
 };
 
-typedef boost::pool_allocator<DIdCount, boost::default_user_allocator_malloc_free,
+typedef boost::fast_pool_allocator<DIdCount, boost::default_user_allocator_new_delete,
 	boost::details::pool::null_mutex, 8 << 20> DListAllocType;
 typedef std::list<DIdCount, DListAllocType> DocCountList;
 
