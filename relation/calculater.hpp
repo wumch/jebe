@@ -40,12 +40,23 @@ public:
 	typedef typename ListType::iterator iterator;
 	typedef typename ListType::value_type value_type;
 
-	size_t length;
 	ListType list;
+	uint32_t length;
 
 	SizedList()
 		: length(0)
 	{}
+
+	SizedList(const SizedList& sized)
+		: list(sized.list), length(sized.length)
+	{}
+
+	SizedList& operator=(const SizedList& sized)
+	{
+		length = sized.length;
+		list = sized.list;
+		return *this;
+	}
 
 	void push_back(const T& item)
 	{
