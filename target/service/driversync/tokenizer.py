@@ -38,11 +38,18 @@ class Tokenizer(object):
     def marve(self, content):
         return self.request(content=content, action='marve')
 
-    def count(self, content):
+    def count(self, content, raw=False):
         return self.request(content=content, action='count')
 
     def split(self, content):
         return self.request(content=content, action='split')
+
+    def raw_request(self, content, action):
+        try:
+            data = self.actionPacker.pack(self.actions[action]) + (content.encode(self._SERVER_CHARSET) if isinstance(content, unicode) else content)
+            return self._request(data=data)
+        except Exception, e:
+            logger.error(('kid, request to tokenizer/split with len(content)=%d failed: ' % len(content)) + str(e.args))
 
     def request(self, content, action):
         try:

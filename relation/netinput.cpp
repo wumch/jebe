@@ -57,6 +57,7 @@ void NetInput::start()
 void NetInput::stop()
 {
 	sock.close();
+	context.~context_t();
 }
 
 Document* NetInput::next()
@@ -84,6 +85,8 @@ void NetInput::handleDoc()
 void NetInput::handleThatSAll()
 {
 	send_buf.copy(&success_response);
+	sock.send(send_buf);
+	stop();
 	Aside::caler->calculate();
 }
 
@@ -104,7 +107,6 @@ Document* NetInput::handleAction(Action act)
 	else if (CS_BUNLIKELY(act == thatSAll))
 	{
 		handleThatSAll();
-		sock.send(send_buf);
 		return NULL;
 	}
 	else
