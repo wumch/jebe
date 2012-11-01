@@ -92,6 +92,8 @@ void Config::initDesc()
 		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(std::max<int>(1, staging::getCpuNum() - 1)))
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
 
+		("similarity-buffer-size", boost::program_options::value<typeof(sim_buff_size)>()->default_value(8 << 10))
+
 		("document-frequency-quantile-top", boost::program_options::value<typeof(df_quantile_top)>()->default_value(0.6))
 		("document-frequency-quantile-bottom", boost::program_options::value<typeof(df_quantile_bottom)>()->default_value(0.8))
 
@@ -129,6 +131,8 @@ void Config::load(const std::string& config_file)
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
 	io_threads = options["io-threads"].as<typeof(io_threads)>();
 
+	sim_buff_size = options["similarity-buffer-size"].as<typeof(sim_buff_size)>();
+
 	df_quantile_top = options["document-frequency-quantile-top"].as<typeof(df_quantile_top)>();
 	df_quantile_bottom = options["document-frequency-quantile-bottom"].as<typeof(df_quantile_bottom)>();
 
@@ -165,6 +169,7 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(stack_size)
 		_JEBE_OUT_CONFIG_PROPERTY(receive_buffer_size)
 		_JEBE_OUT_CONFIG_PROPERTY(send_buffer_size)
+		_JEBE_OUT_CONFIG_PROPERTY(sim_buff_size)
 
 		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_top)
 		_JEBE_OUT_CONFIG_PROPERTY(df_quantile_bottom)

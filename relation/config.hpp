@@ -36,6 +36,8 @@ public:
 	decimal_t wd_var_bottom;
 	decimal_t wd_var_top;
 
+	size_t sim_buff_size;
+
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;
     boost::filesystem::path outputfile;

@@ -74,6 +74,7 @@ void Calculater::calculate()
 	filter();
 	calcu();
 	dump();
+	finish();
 }
 
 void Calculater::ready()
@@ -106,9 +107,17 @@ void Calculater::calcu()
 		const VaredProperList& plist_1 = it->second;
 		SimList& simlist = wslist.insert(std::pair<wordid_t, SimList>(it->first, SimList())).first->second;
 		WordProperMap::const_iterator iter = it;
+
 		while (++iter != wpmap.end())
 		{
 			recordCorr(iter->first, corr(plist_1, iter->second), simlist);
+		}
+
+		if (cur_sim_num >= Aside::config->sim_buff_size)
+		{
+			dump();
+			wslist.clear();
+			cur_sim_num = 0;
 		}
 	}
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
@@ -119,6 +128,7 @@ void Calculater::recordCorr(wordid_t wordid, decimal_t corr, SimList& simlist)
 	if (Aside::config->min_word_corr <= corr && corr <= Aside::config->max_word_corr)
 	{
 		simlist.push_back(Similarity(wordid, corr));
+		++cur_sim_num;
 	}
 }
 
@@ -305,8 +315,13 @@ void Calculater::check()
 
 void Calculater::dump()
 {
-	std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
-	ofile.imbue(std::locale(""));
+	static std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc | std::ios_base::app);
+	static bool inited = false;
+	if (!inited)
+	{
+		ofile.imbue(std::locale(""));
+		inited = true;
+	}
 	for (WordSimList::const_iterator it = wslist.begin(); it != wslist.end(); ++it)
 	{
 		const SimList& simlist = it->second;
@@ -315,8 +330,12 @@ void Calculater::dump()
 			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
 		}
 	}
-	ofile.close();
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped some to " << Aside::config->outputfile;
+}
+
+void Calculater::finish()
+{
+//	ofile.close();
 }
 
 } /* namespace rel */

@@ -208,6 +208,8 @@ protected:
 			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimAllocType;
 	typedef std::list<Similarity, SimAllocType> SimList;
 
+	uint64_t cur_sim_num;
+
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
 			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimListAllocType;
 	typedef boost::unordered_map<wordid_t, SimList, staging::BitsHash<(_JEBE_WORD_MAP_HASH_BITS - 3)>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
@@ -215,7 +217,9 @@ protected:
 	WordSimList wslist;
 
 public:
-	Calculater();
+	Calculater()
+		: cur_sim_num(0)
+	{}
 
 	void attachDoc(const Document& doc);
 
@@ -233,6 +237,8 @@ protected:
 	void calcu();
 
 	void dump();
+
+	void finish();
 
 private:
 	void filterByVarRate();
