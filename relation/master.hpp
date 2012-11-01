@@ -58,8 +58,8 @@ protected:
 		{
 			process(doc);
 		}
-		input->stop();
 		LOG_IF(INFO, Aside::config->loglevel > 0) << "finished inputing";
+		input->stop();
 	}
 
 	void process(Document* doc)
