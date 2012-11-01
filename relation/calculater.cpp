@@ -145,9 +145,9 @@ decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList&
 	decimal_t summary = 0;
 	bool used = false;
 	docnum_t k = 0;
-	for (ProperList::const_iterator i = (*plist_1)->begin(), j = (*plist_1)->begin(); i != (*plist_1)->end(); ++i)
+	for (ProperList::const_iterator i = (*plist_1)->begin(), j = (*plist_2)->begin(); i != (*plist_1)->end(); ++i)
 	{
-		for (; j != (*plist_1)->end(); ++j)
+		for (; j != (*plist_2)->end(); ++j)
 		{
 			if (j->id < i->id)
 			{
