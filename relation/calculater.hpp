@@ -47,16 +47,16 @@ public:
 		: length(0)
 	{}
 
-	SizedList(const SizedList& sized)
-		: list(sized.list), length(sized.length)
-	{}
-
-	SizedList& operator=(const SizedList& sized)
-	{
-		length = sized.length;
-		list = sized.list;
-		return *this;
-	}
+//	SizedList(const SizedList& sized)
+//		: list(sized.list), length(sized.length)
+//	{}
+//
+//	SizedList& operator=(const SizedList& sized)
+//	{
+//		length = sized.length;
+//		list = sized.list;
+//		return *this;
+//	}
 
 	void push_back(const T& item)
 	{
@@ -188,9 +188,6 @@ public:
 
 class Calculater
 {
-private:
-	static DListAllocType dlistAllocator;
-
 protected:
 	typedef boost::pool_allocator<DocCountList, boost::default_user_allocator_new_delete,
 		boost::details::pool::null_mutex, 1 << _JEBE_WORD_MAP_HASH_BITS> WDListAllocType;
