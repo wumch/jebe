@@ -205,14 +205,14 @@ protected:
 
 	typedef std::pair<wordid_t, decimal_t> Similarity;
 	typedef boost::fast_pool_allocator<std::list<Similarity>::value_type, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimAllocType;
+			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 5)> SimAllocType;
 	typedef std::list<Similarity, SimAllocType> SimList;
 
 	uint64_t cur_sim_num;
 
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimListAllocType;
-	typedef boost::unordered_map<wordid_t, SimList, staging::BitsHash<(_JEBE_WORD_MAP_HASH_BITS - 3)>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
+			boost::details::pool::null_mutex, 100> SimListAllocType;
+	typedef boost::unordered_map<wordid_t, SimList, staging::ModHash<100>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
 
 	WordSimList wslist;
 

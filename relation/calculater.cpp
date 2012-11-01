@@ -317,7 +317,7 @@ void Calculater::check()
 
 void Calculater::dump()
 {
-	static std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc | std::ios_base::app);
+	static std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
 	static bool inited = false;
 	if (!inited)
 	{
@@ -332,7 +332,7 @@ void Calculater::dump()
 			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped some to " << Aside::config->outputfile;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped " << cur_sim_num << " to " << Aside::config->outputfile;
 }
 
 void Calculater::finish()
