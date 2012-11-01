@@ -18,8 +18,7 @@ NetInput::NetInput()
 	  sock(context, ZMQ_REP),
 	  recv_buf(Config::getInstance()->receive_buffer_size),
 	  send_buf(Config::getInstance()->send_buffer_size)
-{
-}
+{}
 
 void NetInput::prepare()
 {
@@ -57,7 +56,6 @@ void NetInput::start()
 void NetInput::stop()
 {
 	sock.close();
-	context.~context_t();
 }
 
 Document* NetInput::next()

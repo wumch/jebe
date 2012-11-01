@@ -31,9 +31,58 @@ public:
 	{}
 };
 
+template<typename T, typename A>
+class SizedList
+{
+public:
+	typedef std::list<T, A> ListType;
+	typedef typename ListType::const_iterator const_iterator;
+	typedef typename ListType::iterator iterator;
+	typedef typename ListType::value_type value_type;
+
+	size_t length;
+	ListType list;
+
+	SizedList()
+		: length(0)
+	{}
+
+	void push_back(const T& item)
+	{
+		++length;
+		list.push_back(item);
+	}
+
+	ListType* operator->()
+	{
+		return &list;
+	}
+
+	const ListType* operator->() const
+	{
+		return &list;
+	}
+
+	size_t size() const
+	{
+		return length;
+	}
+
+	void resize(size_t new_size)
+	{
+		length = new_size;
+		list.resize(new_size);
+	}
+
+	bool empty() const
+	{
+		return length == 0;
+	}
+};
+
 typedef boost::fast_pool_allocator<DIdCount, boost::default_user_allocator_new_delete,
 	boost::details::pool::null_mutex, 8 << 20> DListAllocType;
-typedef std::list<DIdCount, DListAllocType> DocCountList;
+typedef SizedList<DIdCount, DListAllocType> DocCountList;
 
 typedef DIdCount Proper;
 typedef DocCountList ProperList;
@@ -53,7 +102,7 @@ protected:
 	decimal_t ex_c() const
 	{
 		decimal_t psum = .0;
-		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
+		for (ProperList::const_iterator it = plist->begin(); it != plist->end(); ++it)
 		{
 			psum += it->count;
 			LOG_IF(INFO, Aside::config->loglevel > 2) << "it->count:" << it->count;
@@ -65,7 +114,7 @@ protected:
 	decimal_t var_sqrt_c() const
 	{
 		decimal_t d = ex * ex * (Aside::totalDocNum - plist.size());
-		for (ProperList::const_iterator it = plist.begin(); it != plist.end(); ++it)
+		for (ProperList::const_iterator it = plist->begin(); it != plist->end(); ++it)
 		{
 			d += staging::square<decimal_t>(it->count - ex);
 		}
@@ -102,6 +151,16 @@ public:
 	const ProperList* operator->() const
 	{
 		return &plist;
+	}
+
+	ProperList& operator*()
+	{
+		return plist;
+	}
+
+	const ProperList& operator*() const
+	{
+		return plist;
 	}
 
 	void reCalculate()
