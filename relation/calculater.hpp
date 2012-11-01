@@ -137,7 +137,10 @@ protected:
 	WordProperMap wpmap;
 
 	typedef std::pair<wordid_t, decimal_t> Similarity;
-	typedef std::list<Similarity> SimList;
+	typedef boost::fast_pool_allocator<std::list<Similarity>::value_type, boost::default_user_allocator_new_delete,
+			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimAllocType;
+	typedef std::list<Similarity, SimAllocType> SimList;
+
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
 			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> SimListAllocType;
 	typedef boost::unordered_map<wordid_t, SimList, staging::BitsHash<(_JEBE_WORD_MAP_HASH_BITS - 3)>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
@@ -154,8 +157,6 @@ public:
 	void calculate();
 
 protected:
-	void attachWord(wordid_t wordid, docid_t docid, wnum_t wordnum);
-
 	void ready();
 
 	void check();
@@ -168,6 +169,8 @@ protected:
 
 private:
 	void filterByVarRate();
+
+	CS_FORCE_INLINE void attachWord(wordid_t wordid, docid_t docid, wnum_t wordnum);
 
 	CS_FORCE_INLINE size_t sum(const DocCountList& dlist) const;
 
@@ -183,6 +186,8 @@ private:
 	CS_FORCE_INLINE bool shouldSkipByVar(decimal_t var) const;
 
 	CS_FORCE_INLINE decimal_t getFilterVar(const VaredProperList& plist) const;
+
+	CS_FORCE_INLINE void recordCorr(wordid_t wordid, decimal_t corr, SimList& simlist);
 };
 
 } /* namespace rel */

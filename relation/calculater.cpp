@@ -54,7 +54,7 @@ void Calculater::attachDoc(const Document& doc)
 
 void Calculater::attachWord(wordid_t wordid, docid_t docid, wnum_t atimes)
 {
-	wdlist[wordid].push_back(DIdCount(docid, atimes));	// newer document is guaranteed to be greater than older.
+	wdlist[wordid].push_back(DIdCount(docid, CS_BLIKELY(atimes < 256) ? atimes : 255));	// newer document is guaranteed to be greater than older.
 }
 
 void Calculater::prepare()
@@ -100,25 +100,25 @@ void Calculater::ready()
 
 void Calculater::calcu()
 {
-	decimal_t c = .0;
 	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); ++it)
 	{
 		const VaredProperList& plist_1 = it->second;
 		SimList& simlist = wslist.insert(std::make_pair(it->first, SimList())).first->second;
-		for (WordProperMap::const_iterator iter = it; iter != wpmap.end(); ++iter)
+		WordProperMap::const_iterator iter = it;
+		while (++iter != wpmap.end())
 		{
-			if (CS_BLIKELY(iter != it))
-			{
-				c = corr(plist_1, iter->second);
-				LOG_IF(INFO, Aside::config->loglevel > 1) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
-				if (Aside::config->min_word_corr <= c && c <= Aside::config->max_word_corr)
-				{
-					simlist.push_back(Similarity(iter->first, c));
-				}
-			}
+			recordCorr(iter->first, corr(plist_1, iter->second), simlist);
 		}
 	}
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
+}
+
+void Calculater::recordCorr(wordid_t wordid, decimal_t corr, SimList& simlist)
+{
+	if (Aside::config->min_word_corr <= corr && corr <= Aside::config->max_word_corr)
+	{
+		simlist.push_back(Similarity(wordid, corr));
+	}
 }
 
 decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const
@@ -226,12 +226,14 @@ void Calculater::filter()
 
 void Calculater::filterByVarRate()
 {
-	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || staging::between(Aside::config->wd_var_top, .0, 1.0)));
+	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || staging::between_open(Aside::config->wd_var_top, .0, 1.0)));
 	CS_RETURN_IF(wpmap.empty());
+
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "starting filter by var-rate";
 
 	std::vector<decimal_t> varlist;
 	varlist.reserve(wpmap.size());
-	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); ++it)
+	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); ++it)
 	{
 		varlist.push_back(getFilterVar(it->second));
 	}
@@ -241,6 +243,7 @@ void Calculater::filterByVarRate()
 	decimal_t max_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * (1.0 - Aside::config->wd_var_top))];
 
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "will filter by var-rate not between [" << min_var << "," << max_var << "]";
+	CS_RETURN_IF(!(min_var < max_var));
 
 	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); )
 	{
