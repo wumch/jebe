@@ -217,9 +217,7 @@ protected:
 	WordSimList wslist;
 
 public:
-	Calculater()
-		: cur_sim_num(0)
-	{}
+	Calculater();
 
 	void attachDoc(const Document& doc);
 

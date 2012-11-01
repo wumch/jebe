@@ -42,7 +42,9 @@ public:
 
 ProperList VaredProperList::empty_plist;
 
-Calculater::Calculater() {}
+Calculater::Calculater()
+	: cur_sim_num(0)
+{}
 
 void Calculater::attachDoc(const Document& doc)
 {
