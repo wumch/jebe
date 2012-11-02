@@ -99,7 +99,7 @@ void Calculater::ready()
 		"doc-frequency: [" << Aside::config->df_quantile_bottom << ", " << (1 - Aside::config->df_quantile_top) << "] = [" << mindf << ", " << maxdf << "]" << CS_LINESEP <<
 		"word-doc-var: [" << Aside::config->min_wd_var << ", " << Aside::config->max_wd_var << "]" << CS_LINESEP <<
 		"word-doc-var-rate-range: [" << Aside::config->wd_var_bottom << ", " << (1.0 - Aside::config->wd_var_top) << "]" << CS_LINESEP <<
-		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]";
+		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]" << CS_LINESEP;
 }
 
 void Calculater::calcu()
@@ -122,7 +122,7 @@ void Calculater::calcu()
 			cur_sim_num = 0;
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated" << CS_LINESEP;
 }
 
 void Calculater::recordCorr(wordid_t wordid, decimal_t corr, SimList& simlist)
@@ -192,7 +192,7 @@ size_t Calculater::sum(const DocCountList& dlist) const
 
 void Calculater::filter()
 {
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size();
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size() << CS_LINESEP;
 	if (needFilterByVar())
 	{
 		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
@@ -216,7 +216,7 @@ void Calculater::filter()
 				wdlist[wordid].resize(0);
 			}
 		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size();
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size() << CS_LINESEP;
 	}
 	else
 	{
@@ -232,7 +232,7 @@ void Calculater::filter()
 				wdlist[wordid].resize(0);
 			}
 		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size();
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size() << CS_LINESEP;
 	}
 	filterByVarRate();
 }
@@ -332,7 +332,7 @@ void Calculater::dump()
 			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped " << cur_sim_num << " to " << Aside::config->outputfile;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped " << cur_sim_num << " to " << Aside::config->outputfile << CS_LINESEP;
 }
 
 void Calculater::finish()
