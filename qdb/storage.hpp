@@ -89,7 +89,9 @@ protected:
 		bool ok = false;
 		try
 		{
+			CS_SAY("will get " << key.ToString() << ": [" << (uint64_t)(&retrieve_buffer) << "]");
 			ok = db->Get(leveldb::ReadOptions(), key, &retrieve_buffer).ok();
+			CS_SAY("got " << key.ToString() << ": [" << (uint64_t)(&retrieve_buffer) << "]");
 		}
 		catch (const std::exception& e)
 		{
