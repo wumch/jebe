@@ -22,5 +22,15 @@ int main(int argc, char* argv[]) {
 	staging::mbswcs::code_convert("gbk", "utf-8", result, strlen(result), out, 10000);
 
     std::cout<<out<<std::endl;
+
+    /////
+    staging::mbswcs::code_convert("utf-8", "gbk", argv[2], strlen(argv[2]), in, 10000);
+	worker.ParagraphProcessing(in, result);
+
+//	char out[10000];
+	staging::mbswcs::code_convert("gbk", "utf-8", result, strlen(result), out, 10000);
+
+    std::cout<<out<<std::endl;
+
 	return 0;
 }
