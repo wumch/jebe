@@ -9,7 +9,7 @@
 #include "config.hpp"
 #include "filter.hpp"
 #include "handler.hpp"
-//#include "marve_handler.hpp"
+#include "marve_handler.hpp"
 //#include "split_handler.hpp"
 #include "count_handler.hpp"
 
@@ -69,7 +69,7 @@ protected:
 	void initHandlers()
 	{
 		Handler::initialize(Config::getInstance()->getInstance()->pattenfile.string());
-//		handlers[marve] = new MarveHandler;
+		handlers[marve] = new MarveHandler;
 //		handlers[split] = new SplitHandler;
 		handlers[count] = new CountHandler;
 //		handlers[compare];

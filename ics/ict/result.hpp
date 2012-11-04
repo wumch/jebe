@@ -23,6 +23,7 @@
 #include "segment.hpp"
 #include "span.hpp"
 #include "unknowword.hpp"
+#include "utility.hpp"
 #define _ICT_DEBUG 0
 
 class CResult;

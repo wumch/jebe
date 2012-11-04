@@ -4,6 +4,7 @@
 #include "predef.hpp"
 #include <utility>
 #include <boost/unordered_map.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include <msgpack.hpp>
 #include "handler.hpp"
 #include "node.hpp"
@@ -15,25 +16,25 @@
 namespace jebe {
 namespace ics {
 
-typedef msgpack::type::define<const Node*, atimes_t> CWordWeightPacker;
+typedef msgpack::type::define<const std::string*, atimes_t> CWordAtimePacker;
 
-class CWordWeight
-	: public CWordWeightPacker
+class CWordAtime
+	: public CWordAtimePacker
 {
 public:
-	const Node* node;
+	const std::string* word;
 	atimes_t atimes;
 
 public:
-	explicit CWordWeight(const Node* node_, atimes_t atimes_)
-		: CWordWeightPacker(node_, atimes_),
-		  node(node_), atimes(atimes_)
+	explicit CWordAtime(const std::string* node_, atimes_t atimes_)
+		: CWordAtimePacker(node_, atimes_),
+		  word(node_), atimes(atimes_)
 	{
 	}
 
-	CWordWeight& operator=(const CWordWeight& ww)
+	CWordAtime& operator=(const CWordAtime& ww)
 	{
-		node = ww.node;
+		word = ww.word;
 		atimes = ww.atimes;
 		a0 = ww.a0;
 		a1 = ww.a1;
@@ -44,7 +45,7 @@ public:
 	void msgpack_pack(Packer& pk) const
 	{
 		pk.pack_array(2);
-		pk.pack(node->str());
+		pk.pack(*word);
 		pk.pack(atimes);
 	}
 };
@@ -65,34 +66,55 @@ private:
 	};
 
 public:
-	typedef boost::unordered_map<const Node*, atimes_t, NodeHash> Words;
-	typedef std::vector<CWordWeight> OrderedWords;
-	Words words;
-	tsize_t words_atimes_total;
+	typedef boost::unordered_map<std::string, atimes_t> MapShadeType;
+	typedef boost::fast_pool_allocator<MapShadeType::value_type,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1024> WordsAllocType;
+	typedef boost::unordered_map<std::string, atimes_t, MapShadeType::hasher, MapShadeType::key_equal, WordsAllocType> Words;
 
-	std::pair<const Node*, atimes_t> word_atime;		// assit to avoid stack alloc.
-	CWordWeight word_weight;		// assit to avoid stack alloc.
+	typedef boost::fast_pool_allocator<CWordAtime,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1024> OrderedWordsAllocType;
+	typedef std::vector<CWordAtime> OrderedWords;
+
+	Words words;
+
+	static std::string empty_str;
+	std::pair<std::string, atimes_t> word_atime;		// assit to avoid stack alloc.
 
 	msgpack::sbuffer packerBuffer;
 	msgpack::packer<msgpack::sbuffer> packer;
 
 public:
 	explicit CountHolder():
-		words(128), words_atimes_total(0),
-		word_atime(NULL, 1), word_weight(NULL, .0),
+		words(128),
+		word_atime(empty_str, 1),
 		packer(packerBuffer)
 	{}
 
 	void operator()(char* word, size_t word_len, const WordPOS& type)
 	{
-		std::cout << std::string(word, word_len) << "/" << type.main << type.sub << " ";
-		++words_atimes_total;
+		weight_t weight = WordPOSCal::weight(type);
+		if (weight != 0)
+		{
+			word_atime.first = std::string(word, word_len);
+			Words::iterator it = words.find(std::string(word, word_len));
+			if (it == words.end())
+			{
+				word_atime.second = 1;
+				words.insert(word_atime);
+			}
+			else
+			{
+				++it->second;
+			}
+		}
 	}
 
 	class MarveCompare
 	{
 	public:
-		bool operator()(const CWordWeight& w1, const CWordWeight& w2) const
+		bool operator()(const CWordAtime& w1, const CWordAtime& w2) const
 		{
 			return w1.atimes > w2.atimes;
 		}
@@ -105,7 +127,7 @@ public:
 		ow->reserve(words.size());
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
-			ow->push_back(CWordWeight(it->first, it->second));
+			ow->push_back(CWordAtime(&it->first, it->second));
 		}
 		std::sort(ow->begin(), ow->end(), comparer);
 
@@ -117,7 +139,6 @@ public:
 	void reset()
 	{
 		words.clear();
-		words_atimes_total = 0;
 	}
 };
 

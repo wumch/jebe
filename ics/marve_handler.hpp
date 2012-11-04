@@ -4,33 +4,38 @@
 #include "predef.hpp"
 #include <utility>
 #include <boost/unordered_map.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include <msgpack.hpp>
 #include "handler.hpp"
 #include "node.hpp"
+#include "dictionary.hpp"
+#include "seger.hpp"
+#include "mbswcs.hpp"
+#include "config.hpp"
 
 namespace jebe {
 namespace ics {
 
-typedef msgpack::type::define<const Node*, weight_t> WordWeightPacker;
+typedef msgpack::type::define<const std::string*, atimes_t> CWordWeightPacker;
 
-class WordWeight
-	: public WordWeightPacker
+class CWordWeight
+	: public CWordWeightPacker
 {
 public:
-	const Node* node;
-	weight_t weight;
+	const std::string* word;
+	atimes_t atimes;
 
 public:
-	explicit WordWeight(const Node* node_, weight_t weight_)
-		: WordWeightPacker(node_, weight_),
-		  node(node_), weight(weight_)
+	explicit CWordWeight(const std::string* node_, atimes_t atimes_)
+		: CWordWeightPacker(node_, atimes_),
+		  word(node_), atimes(atimes_)
 	{
 	}
 
-	WordWeight& operator=(const WordWeight& ww)
+	CWordWeight& operator=(const CWordWeight& ww)
 	{
-		node = ww.node;
-		weight = ww.weight;
+		word = ww.word;
+		atimes = ww.atimes;
 		a0 = ww.a0;
 		a1 = ww.a1;
 		return *this;
@@ -40,66 +45,78 @@ public:
 	void msgpack_pack(Packer& pk) const
 	{
 		pk.pack_array(2);
-		pk.pack(node->str());
-		pk.pack(weight);
-	}
-};
-
-class NodeHash
-{
-private:
-	uint32_t mask;
-public:
-	uint32_t operator()(const Node* node) const
-	{
-		return (size_t)(node) & mask;
+		pk.pack(*word);
+		pk.pack(atimes);
 	}
 };
 
 // hold words for calculate the marvelously-score.
 class MarveHolder
 {
-public:
-	typedef boost::unordered_map<const Node*, atimes_t, NodeHash> Words;
-	typedef std::vector<WordWeight> OrderedWords;
-	Words words;
-	tsize_t words_atimes_total;
+private:
+	class NodeHash
+	{
+	private:
+		uint32_t mask;
+	public:
+		uint32_t operator()(const Node* node) const
+		{
+			return (size_t)(node) & mask;
+		}
+	};
 
-	std::pair<const Node*, atimes_t> word_atime;		// assit to avoid stack alloc.
-	WordWeight word_weight;		// assit to avoid stack alloc.
+public:
+	typedef boost::unordered_map<std::string, atimes_t> MapShadeType;
+	typedef boost::fast_pool_allocator<MapShadeType::value_type,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1024> WordsAllocType;
+	typedef boost::unordered_map<std::string, atimes_t, MapShadeType::hasher, MapShadeType::key_equal, WordsAllocType> Words;
+
+	typedef boost::fast_pool_allocator<CWordWeight,
+		boost::default_user_allocator_new_delete,
+		boost::details::pool::null_mutex, 1024> OrderedWordsAllocType;
+	typedef std::vector<CWordWeight> OrderedWords;
+
+	Words words;
+
+	static std::string empty_str;
+	std::pair<std::string, atimes_t> word_atime;		// assit to avoid stack alloc.
 
 	msgpack::sbuffer packerBuffer;
 	msgpack::packer<msgpack::sbuffer> packer;
 
 public:
 	explicit MarveHolder():
-		words(128), words_atimes_total(0),
-		word_atime(NULL, 1), word_weight(NULL, .0),
+		words(128),
+		word_atime(empty_str, 1),
 		packer(packerBuffer)
-	{
-	}
+	{}
 
-	void operator()(const Node* node)
+	void operator()(char* word, size_t word_len, const WordPOS& type)
 	{
-		Words::iterator it = words.find(node);
-		if (CS_BUNLIKELY(it == words.end()))
+		weight_t weight = WordPOSCal::weight(type);
+		if (weight != 0)
 		{
-			word_atime.first = node;
-			words.insert(word_atime);
+			word_atime.first = std::string(word, word_len);
+			Words::iterator it = words.find(std::string(word, word_len));
+			if (it == words.end())
+			{
+				word_atime.second = weight;
+				words.insert(word_atime);
+			}
+			else
+			{
+				it->second += weight;
+			}
 		}
-		else
-		{
-			it->second++;
-		}
-		++words_atimes_total;
 	}
 
 	class MarveCompare
 	{
 	public:
-		bool operator()(const WordWeight& w1, const WordWeight& w2) const
+		bool operator()(const CWordWeight& w1, const CWordWeight& w2) const
 		{
-			return w1.weight > w2.weight;
+			return w1.atimes > w2.atimes;
 		}
 	};
 	MarveCompare comparer;
@@ -110,7 +127,7 @@ public:
 		ow->reserve(words.size());
 		for (Words::const_iterator it = words.begin(); it != words.end(); ++it)
 		{
-			ow->push_back(WordWeight(it->first, (it->second * it->first->afreq() / words_atimes_total)));
+			ow->push_back(CWordWeight(&it->first, it->second));
 		}
 		std::sort(ow->begin(), ow->end(), comparer);
 
@@ -122,7 +139,6 @@ public:
 	void reset()
 	{
 		words.clear();
-		words_atimes_total = 0;
 	}
 };
 
@@ -132,25 +148,17 @@ class MarveHandler
 {
 private:
 	MarveHolder holder;
-	char* resbuf;
 
 public:
 	MarveHandler()
-		: holder()
-	{
-	}
+	{}
 
-	virtual HandleRes process(const byte_t* content, tsize_t len, zmq::message_t& rep)
+	virtual HandleRes process(char* content, tsize_t len, zmq::message_t& rep)
 	{
 		holder.reset();
-		filter->find(content, len, holder);
+		seger->process(content, len, holder);
 		holder.genRes(rep);
 		return success;
-	}
-
-	virtual ~MarveHandler()
-	{
-		delete resbuf;
 	}
 };
 

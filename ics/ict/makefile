@@ -44,7 +44,7 @@ LIBS :=
 #
 # 现在来改变任何你想改动的隐含规则中的变量，例如
 
-CFLAGS := -g -O3 -Wall
+CFLAGS := -O3 -Wall
 CXXFLAGS := $(CFLAGS)
 
 # The next bit checks to see whether rm is in your djgpp bin

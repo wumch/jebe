@@ -7,7 +7,7 @@ SOURCE_PATH = .
 EXE_NAME = ics
 OBJECT_PATH = objs
 EXE = $(OUTPUT_PATH)/$(EXE_NAME)
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -50,7 +50,7 @@ else
   LDFLAGS = /DEBUG
 endif
 
-OBJS = $(OBJECT_PATH)/seger.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/handler.o $(OBJECT_PATH)/count_handler.o \
+OBJS = $(OBJECT_PATH)/seger.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o $(OBJECT_PATH)/worker.o $(OBJECT_PATH)/handler.o $(OBJECT_PATH)/count_handler.o $(OBJECT_PATH)/marve_handler.o \
 $(OBJECT_PATH)/contextstat.o $(OBJECT_PATH)/dictionary.o $(OBJECT_PATH)/dynamicarray.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/nshortpath.o $(OBJECT_PATH)/queue.o $(OBJECT_PATH)/result.o $(OBJECT_PATH)/seggraph.o $(OBJECT_PATH)/segment.o $(OBJECT_PATH)/span.o $(OBJECT_PATH)/unknowword.o $(OBJECT_PATH)/utility.o
 
 all: $(OBJS)
@@ -95,6 +95,10 @@ $(OBJECT_PATH)/handler.o: $(SOURCE_PATH)/handler.cpp $(SOURCE_PATH)/handler.hpp
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/count_handler.o: $(SOURCE_PATH)/count_handler.cpp $(SOURCE_PATH)/count_handler.hpp
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/marve_handler.o: $(SOURCE_PATH)/marve_handler.cpp $(SOURCE_PATH)/marve_handler.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

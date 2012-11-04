@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) {
 	CResult worker;
-	int		outputFormat = 0;
+	int		outputFormat = 1;
 	int		operateType = 1;
 	char *content = argv[1];
 	char in[10000];

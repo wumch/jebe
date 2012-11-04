@@ -15,13 +15,6 @@ Seger::Seger()
 	}
 }
 
-void Seger::conv_in(char* content, size_t content_len)
-{
-	in_iconv_buf_cur = in_iconv_buf;
-	in_iconv_buf_pos = in_iconv_buf_size;
-	conv(in_iconv, &content, &content_len, &in_iconv_buf_cur, &in_iconv_buf_pos);
-}
-
 bool Seger::prepare()
 {
 	const Config* const config = Config::getInstance();
@@ -51,6 +44,7 @@ Seger::~Seger()
 
 WordPOS WordPOSCal::wpos[wpos_end_val];
 WordPOS WordPOSCal::empty_wpos;
+weight_t WordPOSCal::weights[USHRT_MAX];
 
 void WordPOSCal::init()
 {
@@ -60,6 +54,50 @@ void WordPOSCal::init()
 	{
 		wpos[nHandleSet[i]] = WordPOS(sPOSRelated[i][0], sPOSRelated[i][1]);
 	}
+	for (int i = 0; i < USHRT_MAX; ++i)
+	{
+		weights[i] = .0;
+	}
+	assignWeight('n', 3.0);				// 普通名词(n)
+	assignWeight('n', 't', .0);			// 时间名词(nt)
+	assignWeight('n', 'd', .0);			// 方位名词(nd)
+	assignWeight('n', 'l', .0);			// 处所名词(nl)
+	assignWeight('n', 'h', .0);			// 人名(nh)
+
+	assignWeight('n', 's', 3.0);		//	地名(ns)
+	assignWeight('n', 'n', 3.0);		//	族名(nn)
+	assignWeight('n', 'i', 3.0);		//	团体机构名(ni)
+	assignWeight('n', 'z', 3.0);		//	其他专有名词(nz)
+
+	assignWeight('v', 2.0);				//	动词v：
+	assignWeight('v', 'u', 1.0);		//	能愿动词(vu)
+	assignWeight('v', 'd', 1.0);		//	趋向动词(vd)
+	assignWeight('v', 'l', .0);			//	系动词(vl)
+
+	assignWeight('a', 1.0);
+	assignWeight('a', 'q', 1.0);		//	性质形容词(aq)
+	assignWeight('a', 's', 1.0);		//	状态形容词(as)
+
+	assignWeight('i', 1.0);				//	习用语(i)
+	assignWeight('i', 'n', 1.0);		//	名词性习用语(in)
+	assignWeight('i', 'v', 1.0);		//	动词性习用语(iv)
+	assignWeight('i', 'a', 1.0);		//	形容词性习用语 (ia)
+	assignWeight('i', 'c', 1.0);		//	连词性习用语(ic)
+
+	assignWeight('j', 1.0);				//	简称和略语j
+	assignWeight('j', 'n', 2.0);		//	名词性简称和略语 jn
+	assignWeight('j', 'v', 2.0);		//	动词性简称和略语 jv
+	assignWeight('j', 'a', 1.0);		//	形容词性简称和略语 ja
+}
+
+void WordPOSCal::assignWeight(uint8_t main, uint8_t sub, weight_t weight_)
+{
+	weights[(main << 8) + sub] = weight_;
+}
+
+void WordPOSCal::assignWeight(uint8_t main, weight_t weight_)
+{
+	weights[(main << 8)] = weight_;
 }
 
 } /* namespace ics */

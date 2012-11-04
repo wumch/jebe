@@ -587,84 +587,84 @@ bool CResult::ParagraphProcessing(char *sParagraph, unsigned int pLen, char *sRe
 	return true;
 }
 
-// copyed by frank
-template<typename Callback>
-bool CResult::ParagraphWalk(char *sParagraph, unsigned int pLen, Callback& callbak)
-{
-	char *sSentence,sChar[3];
-//	char *sSentenceResult;
-	unsigned int nLen=pLen+13;
-	sSentence=new char[nLen];//malloc buffer
-//	sSentenceResult=new char[nLen*3];//malloc buffer
-	sSentence[0]=0;
-	unsigned int nPosIndex=0,nParagraphLen=pLen,nSentenceIndex=0;
-	sChar[2]=0;
-//	sResult[0]=0;//Init the result
-	bool bFirstIgnore=true;
-	strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
-	while(nPosIndex<nParagraphLen)
-	{//Find a whole sentence which separated by ! . \n \r
-		sChar[0]=sParagraph[nPosIndex];//Get a char
-		sChar[1]=0;
-		if(sParagraph[nPosIndex]<0)
-		{//double byte char
-			nPosIndex+=1;
-			sChar[1]=sParagraph[nPosIndex];
-		}
-		nPosIndex+=1;
-/*
-#define  SEPERATOR_C_SENTENCE "¡££¡£¿£º£»¡­"
-#define  SEPERATOR_C_SUB_SENTENCE "¡¢£¬£¨£©¡°¡±¡®¡¯"
-#define  SEPERATOR_E_SENTENCE "!?:;"
-#define  SEPERATOR_E_SUB_SENTENCE ",()\042'"
-#define  SEPERATOR_LINK "\n\r ¡¡"
-*/
-		if(CC_Find(SEPERATOR_C_SENTENCE,sChar)||CC_Find(SEPERATOR_C_SUB_SENTENCE,sChar)||strstr(SEPERATOR_E_SENTENCE,sChar)||strstr(SEPERATOR_E_SUB_SENTENCE,sChar)||strstr(SEPERATOR_LINK,sChar))
-		{//Reach end of a sentence.Get a whole sentence
-			if(!strstr(SEPERATOR_LINK,sChar))//Not link seperator
-			{
-				strcat(sSentence,sChar);
-			}
-			if(sSentence[0]!=0&&strcmp(sSentence,SENTENCE_BEGIN)!=0)
-			{
-				if(!strstr(SEPERATOR_C_SUB_SENTENCE,sChar)&&!strstr(SEPERATOR_E_SUB_SENTENCE,sChar))
-					strcat(sSentence,SENTENCE_END);//Add sentence ending flag
-
-				Processing(sSentence,1);//Processing and output the result of current sentence.
-				callbak(m_pResult[0],bFirstIgnore);//Output to the imediate result
-				//bFirstIgnore=true;
-			}
-			if(strstr(SEPERATOR_LINK,sChar))//Link the result with the SEPERATOR_LINK
-			{
-//				strcat(sResult,sChar);
-				strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
-
-				//sSentence[0]=0;//New sentence, and begin new segmentation
-				//bFirstIgnore=false;
-			}
-			else if(strstr(SEPERATOR_C_SENTENCE,sChar)||strstr(SEPERATOR_E_SENTENCE,sChar))
-			{
-				strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
-				//sSentence[0]=0;//New sentence, and begin new segmentation
-				//bFirstIgnore=false;
-			}
-			else
-			{
-				strcpy(sSentence,sChar);//reset current sentence, and add the previous end at begin position
-			}
-		}
-		else //Other chars and store in the sentence buffer
-			strcat(sSentence,sChar);
-	}
-	if(sSentence[0]!=0&&strcmp(sSentence,SENTENCE_BEGIN)!=0)
-	{
-		strcat(sSentence,SENTENCE_END);//Add sentence ending flag
-		Processing(sSentence,1);//Processing and output the result of current sentence.
-		callbak(m_pResult[0],bFirstIgnore);//Output to the imediate result
-	}
-	delete []  sSentence;//FREE sentence buffer 	
-	return true;
-}
+//// copyed by frank
+//template<typename Callback>
+//bool CResult::ParagraphWalk(char *sParagraph, unsigned int pLen, Callback& callbak)
+//{
+//	char *sSentence,sChar[3];
+////	char *sSentenceResult;
+//	unsigned int nLen=pLen+13;
+//	sSentence=new char[nLen];//malloc buffer
+////	sSentenceResult=new char[nLen*3];//malloc buffer
+//	sSentence[0]=0;
+//	unsigned int nPosIndex=0,nParagraphLen=pLen,nSentenceIndex=0;
+//	sChar[2]=0;
+////	sResult[0]=0;//Init the result
+//	bool bFirstIgnore=true;
+//	strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
+//	while(nPosIndex<nParagraphLen)
+//	{//Find a whole sentence which separated by ! . \n \r
+//		sChar[0]=sParagraph[nPosIndex];//Get a char
+//		sChar[1]=0;
+//		if(sParagraph[nPosIndex]<0)
+//		{//double byte char
+//			nPosIndex+=1;
+//			sChar[1]=sParagraph[nPosIndex];
+//		}
+//		nPosIndex+=1;
+///*
+//#define  SEPERATOR_C_SENTENCE "¡££¡£¿£º£»¡­"
+//#define  SEPERATOR_C_SUB_SENTENCE "¡¢£¬£¨£©¡°¡±¡®¡¯"
+//#define  SEPERATOR_E_SENTENCE "!?:;"
+//#define  SEPERATOR_E_SUB_SENTENCE ",()\042'"
+//#define  SEPERATOR_LINK "\n\r ¡¡"
+//*/
+//		if(CC_Find(SEPERATOR_C_SENTENCE,sChar)||CC_Find(SEPERATOR_C_SUB_SENTENCE,sChar)||strstr(SEPERATOR_E_SENTENCE,sChar)||strstr(SEPERATOR_E_SUB_SENTENCE,sChar)||strstr(SEPERATOR_LINK,sChar))
+//		{//Reach end of a sentence.Get a whole sentence
+//			if(!strstr(SEPERATOR_LINK,sChar))//Not link seperator
+//			{
+//				strcat(sSentence,sChar);
+//			}
+//			if(sSentence[0]!=0&&strcmp(sSentence,SENTENCE_BEGIN)!=0)
+//			{
+//				if(!strstr(SEPERATOR_C_SUB_SENTENCE,sChar)&&!strstr(SEPERATOR_E_SUB_SENTENCE,sChar))
+//					strcat(sSentence,SENTENCE_END);//Add sentence ending flag
+//
+//				Processing(sSentence,1);//Processing and output the result of current sentence.
+//				callbak(m_pResult[0],bFirstIgnore);//Output to the imediate result
+//				//bFirstIgnore=true;
+//			}
+//			if(strstr(SEPERATOR_LINK,sChar))//Link the result with the SEPERATOR_LINK
+//			{
+////				strcat(sResult,sChar);
+//				strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
+//
+//				//sSentence[0]=0;//New sentence, and begin new segmentation
+//				//bFirstIgnore=false;
+//			}
+//			else if(strstr(SEPERATOR_C_SENTENCE,sChar)||strstr(SEPERATOR_E_SENTENCE,sChar))
+//			{
+//				strcpy(sSentence,SENTENCE_BEGIN);//Add a sentence begin flag
+//				//sSentence[0]=0;//New sentence, and begin new segmentation
+//				//bFirstIgnore=false;
+//			}
+//			else
+//			{
+//				strcpy(sSentence,sChar);//reset current sentence, and add the previous end at begin position
+//			}
+//		}
+//		else //Other chars and store in the sentence buffer
+//			strcat(sSentence,sChar);
+//	}
+//	if(sSentence[0]!=0&&strcmp(sSentence,SENTENCE_BEGIN)!=0)
+//	{
+//		strcat(sSentence,SENTENCE_END);//Add sentence ending flag
+//		Processing(sSentence,1);//Processing and output the result of current sentence.
+//		callbak(m_pResult[0],bFirstIgnore);//Output to the imediate result
+//	}
+//	delete []  sSentence;//FREE sentence buffer
+//	return true;
+//}
 
 bool CResult::FileProcessing(char *sSourceFile,char *sResultFile)
 {

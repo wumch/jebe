@@ -28,6 +28,7 @@ private:
 	static const int wpos_end_val = 31233;
 	static WordPOS wpos[wpos_end_val];
 	static WordPOS empty_wpos;
+	static weight_t weights[USHRT_MAX];
 
 public:
 	CS_FORCE_INLINE static const WordPOS& getWordPOS(uint16_t nHandle)
@@ -36,6 +37,14 @@ public:
 	}
 
 	static void init();
+
+	static void assignWeight(uint8_t main, uint8_t sub, weight_t weight_);
+	static void assignWeight(uint8_t main, weight_t weight_);
+
+	static weight_t weight(const WordPOS& wp)
+	{
+		return weights[static_cast<uint16_t>((wp.main << 8) + wp.sub)];
+	}
 };
 
 template<typename Callback>
@@ -111,7 +120,12 @@ public:
 protected:
 	bool prepare();
 
-	CS_FORCE_INLINE void conv_in(char* content, size_t content_len);
+	CS_FORCE_INLINE void conv_in(char* content, size_t content_len)
+	{
+		in_iconv_buf_cur = in_iconv_buf;
+		in_iconv_buf_pos = in_iconv_buf_size;
+		conv(in_iconv, &content, &content_len, &in_iconv_buf_cur, &in_iconv_buf_pos);
+	}
 };
 
 } /* namespace ics */
