@@ -27,8 +27,8 @@ void Config::init(int argc, char* argv[])
 	boost::program_options::options_description cmdDesc("allowed options");
 	cmdDesc.add_options()
 			("help", "show this help and exit.")
-			("config", boost::program_options::value<std::string>()->default_value("etc/cws.conf"),
-					"config file, defaults to etc/cws.conf.")
+			("config", boost::program_options::value<std::string>()->default_value("etc/ics.conf"),
+					"config file, defaults to etc/ics.conf.")
 	;
 
 	boost::filesystem::path program_path = argv[0];
@@ -62,13 +62,13 @@ void Config::init(int argc, char* argv[])
 
 void Config::initDesc()
 {
-	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10015");
+	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10021");
 	desc.add_options()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
-		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://cws"),
-				"internal communicate address, defaults to `inproc://cws`")
-		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/cws.pid"),
-				"pid file, defaults to /var/run/cws.pid")
+		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://ics"),
+				"internal communicate address, defaults to `inproc://ics`")
+		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value("/var/run/ics.pid"),
+				"pid file, defaults to /var/run/ics.pid")
 		("patten-file", boost::program_options::value<typeof(pattenfile)>()->default_value("etc/words.txt"),
 				"pid file, defaults to etc/words.txt")
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
@@ -86,7 +86,7 @@ void Config::initDesc()
 		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""))
 		("worker-count", boost::program_options::value<typeof(worker_count)>()->default_value(staging::getCpuNum() - 1))
 		("io-threads", boost::program_options::value<typeof(io_threads)>()->default_value(1))
-		("message-max-size", boost::program_options::value<typeof(msg_max_size)>()->default_value(100 << 20))
+		("message-max-size", boost::program_options::value<typeof(msg_max_size)>()->default_value(100))
 		("max-connections", boost::program_options::value<typeof(max_connections)>()->default_value(10000))
 
 		("max-open-files", boost::program_options::value<typeof(max_open_files)>()->default_value(staging::getRlimitCur(RLIMIT_NOFILE)))
@@ -94,6 +94,12 @@ void Config::initDesc()
 		("block-cache", boost::program_options::value<typeof(block_cache)>()->default_value(256))
 		("write-buffer-size", boost::program_options::value<typeof(write_buffer_size)>()->default_value(256))
 		("max-retrieve-elements", boost::program_options::value<typeof(max_retrieve_elements)>()->default_value(50))
+
+		("internal-charset", boost::program_options::value<typeof(internal_charset)>()->default_value("GBK"))
+		("external-charset", boost::program_options::value<typeof(external_charset)>()->default_value("UTF-8"))
+
+		("iconv-buffer-size", boost::program_options::value<typeof(iconv_buf_size)>()->default_value(2048))
+		("segment-buffer-size", boost::program_options::value<typeof(segment_buf_size)>()->default_value(2048))
 		;
 }
 
@@ -119,7 +125,7 @@ void Config::load(const std::string& config_file)
 	tcp_nodelay = options["tcp-nodelay"].as<typeof(tcp_nodelay)>();
 	worker_count = options["worker-count"].as<typeof(worker_count)>();
 	io_threads = options["io-threads"].as<typeof(io_threads)>();
-	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>();
+	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>() << 10;
 	max_connections = options["max-connections"].as<typeof(max_connections)>();
 
 	max_open_files = options["max-open-files"].as<typeof(max_open_files)>();
@@ -127,6 +133,12 @@ void Config::load(const std::string& config_file)
 	block_cache = options["block-cache"].as<typeof(block_cache)>() << 20;
 	write_buffer_size = options["write-buffer-size"].as<typeof(write_buffer_size)>() << 20;
 	max_retrieve_elements = options["max-retrieve-elements"].as<typeof(max_retrieve_elements)>();
+
+	internal_charset = options["internal-charset"].as<typeof(internal_charset)>();
+	external_charset = options["external-charset"].as<typeof(external_charset)>();
+
+	iconv_buf_size = options["iconv-buffer-size"].as<typeof(iconv_buf_size)>() << 10;
+	segment_buf_size = options["segment-buffer-size"].as<typeof(segment_buf_size)>() << 10;
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)

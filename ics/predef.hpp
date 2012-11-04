@@ -41,5 +41,25 @@ typedef uint32_t 		atimes_t;	// appear-times of word type.
 typedef std::string		Word;
 typedef double			weight_t;
 
+class WordPOS
+{
+public:
+	char main;
+	char sub;
+
+public:
+	WordPOS()
+		: main(0), sub(0)
+	{}
+
+	WordPOS(int nHandle)
+		: main(nHandle >> 8), sub(nHandle & 0xff)
+	{}
+
+	WordPOS(char main_, char sub_)
+		: main(main_), sub(sub_)
+	{}
+};
+
 }
 }

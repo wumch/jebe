@@ -7,6 +7,10 @@
 #include <msgpack.hpp>
 #include "handler.hpp"
 #include "node.hpp"
+#include "dictionary.hpp"
+#include "seger.hpp"
+#include "mbswcs.hpp"
+#include "config.hpp"
 
 namespace jebe {
 namespace ics {
@@ -79,18 +83,9 @@ public:
 		packer(packerBuffer)
 	{}
 
-	void operator()(const Node* node)
+	void operator()(char* word, size_t word_len, const WordPOS& type)
 	{
-		Words::iterator it = words.find(node);
-		if (CS_BUNLIKELY(it == words.end()))
-		{
-			word_atime.first = node;
-			words.insert(word_atime);
-		}
-		else
-		{
-			it->second++;
-		}
+		std::cout << std::string(word, word_len) << "/" << type.main << type.sub << " ";
 		++words_atimes_total;
 	}
 
@@ -137,10 +132,10 @@ public:
 	CountHandler()
 	{}
 
-	virtual HandleRes process(const byte_t* content, tsize_t len, zmq::message_t& rep)
+	virtual HandleRes process(char* content, tsize_t len, zmq::message_t& rep)
 	{
 		holder.reset();
-		filter->find(content, len, holder);
+		seger->process(content, len, holder);
 		holder.genRes(rep);
 		return success;
 	}

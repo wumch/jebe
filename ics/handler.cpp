@@ -4,7 +4,7 @@
 namespace jebe {
 namespace ics {
 
-const Filter* Handler::filter = NULL;
+Seger* Handler::seger = NULL;
 
 Handler::~Handler()
 {

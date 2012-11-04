@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[])
 {
-	using namespace jebe::cws;
+	using namespace jebe::ics;
 
 	Config::getInst()->init(argc, argv);
 	(new Master)->run();

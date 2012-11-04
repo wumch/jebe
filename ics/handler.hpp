@@ -4,7 +4,8 @@
 #include "predef.hpp"
 #include <iostream>
 #include <zmq.hpp>
-#include "filter.hpp"
+#include "math.hpp"
+#include "seger.hpp"
 
 namespace jebe {
 namespace ics {
@@ -15,12 +16,12 @@ public:
 	enum HandleRes {success, failed};
 
 protected:
-	static const Filter* filter;
+	static Seger* seger;
 
 public:
 	static void initialize(const std::string& pattenfile)
 	{
-		filter = new Filter(pattenfile);
+		seger = new Seger;
 	}
 
 public:
@@ -46,14 +47,14 @@ public:
 protected:
 	HandleRes handle_(zmq::message_t& req, zmq::message_t& rep)
 	{
-		return process(reinterpret_cast<byte_t*>(req.data()) + 1, req.size() - 1, rep);
+		return process(reinterpret_cast<char*>(req.data()) + 1, req.size() - 1, rep);
 	}
 
-	virtual HandleRes process(const byte_t* content, tsize_t len, zmq::message_t& rep) = 0;
+	virtual HandleRes process(char* content, tsize_t len, zmq::message_t& rep) = 0;
 
 	virtual bool validate(zmq::message_t& req) const
 	{
-		return req.size() > 0;
+		return staging::between_open(req.size(), 0ul, Config::getInstance()->msg_max_size);
 	}
 };
 

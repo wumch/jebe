@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include <boost/iterator/iterator_facade.hpp>
+#include <new>
 #include "autoincr.hpp"
 #include "document.hpp"
 

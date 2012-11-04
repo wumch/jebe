@@ -2,12 +2,12 @@
 #include <iostream>
 #include "utility.hpp"
 #include "result.hpp"
-#include "../staging/mbswcs.hpp"
+#include "../../staging/mbswcs.hpp"
 #include <string.h>
 
 int main(int argc, char* argv[]) {
 	CResult worker;
-	int		outputFormat = 1;
+	int		outputFormat = 0;
 	int		operateType = 1;
 	char *content = argv[1];
 	char in[10000];

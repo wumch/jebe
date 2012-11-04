@@ -13,6 +13,7 @@
 #include <zmq.hpp>
 #include "config.hpp"
 #include "worker.hpp"
+#include "seger.hpp"
 
 namespace jebe {
 namespace ics {
@@ -42,6 +43,7 @@ public:
 protected:
 	void init() const
 	{
+		WordPOSCal::init();
 		signal_init();
 	}
 
