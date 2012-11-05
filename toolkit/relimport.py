@@ -5,9 +5,10 @@ import pymongo
 
 class RelImporter(object):
 
-    def __init__(self, relfile):
+    def __init__(self, relfile, limit=None):
         self.relfile = relfile
         self._prepare()
+        self.limit = limit
 
     def _prepare(self):
         self.mongoCon = pymongo.Connection(host="192.168.88.8")
@@ -16,6 +17,7 @@ class RelImporter(object):
 
     def run(self):
         relsmap = {}
+        count = 0
         for line in self.fp:
             Wa, Wb, C = [f.strip() for f in line.split("\t")]
             rel = (Wb, float(C))
@@ -28,8 +30,10 @@ class RelImporter(object):
                 relsmap[Wb].append(rel2)
             else:
                 relsmap[Wb] = [rel2]
-        for word, rels in relsmap.iteritems():
-            self._sotre(word, rels)
+            count += 2
+        if self.limit is None or count <= self.limit:
+            for word, rels in relsmap.iteritems():
+                self._sotre(word, rels)
 
     def _sotre(self, Wa, rels):
         if not Wa or not rels:
@@ -47,4 +51,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "usage: %s <words-relation-file>" % sys.argv[0]
         sys.exit(1)
-    RelImporter(sys.argv[1]).run()
+    limit = None if len(sys.argv) < 3 else int(sys.argv[2])
+    RelImporter(sys.argv[1], limit=limit).run()
