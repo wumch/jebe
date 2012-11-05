@@ -211,8 +211,8 @@ protected:
 	uint64_t cur_sim_num;
 
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 100> SimListAllocType;
-	typedef boost::unordered_map<wordid_t, SimList, staging::ModHash<100>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
+			boost::details::pool::null_mutex, 10 << 10> SimListAllocType;
+	typedef boost::unordered_map<wordid_t, SimList, staging::HashTomasWang32<wordid_t>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
 
 	WordSimList wslist;
 

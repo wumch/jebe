@@ -127,6 +127,9 @@ void Calculater::calcu()
 			cur_sim_num = 0;
 		}
 	}
+	dump();
+	wslist.clear();
+	cur_sim_num = 0;
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated" << CS_LINESEP;
 }
 
