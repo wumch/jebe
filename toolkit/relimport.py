@@ -2,6 +2,7 @@
 #coding:utf-8
 
 import pymongo
+import time
 
 class RelImporter(object):
 
@@ -18,6 +19,7 @@ class RelImporter(object):
     def run(self):
         relsmap = {}
         count = 0
+        step = 0
         for line in self.fp:
             Wa, Wb, C = [f.strip() for f in line.split("\t")]
             rel = (Wb, float(C))
@@ -34,6 +36,9 @@ class RelImporter(object):
         if self.limit is None or count <= self.limit:
             for word, rels in relsmap.iteritems():
                 self._sotre(word, rels)
+        if (count // 10000) > step:
+            step = count // 10000
+            time.sleep(0.2)
 
     def _sotre(self, Wa, rels):
         if not Wa or not rels:
