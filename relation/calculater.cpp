@@ -110,6 +110,11 @@ void Calculater::calcu()
 		SimList& simlist = wslist.insert(std::pair<wordid_t, SimList>(it->first, SimList())).first->second;
 		WordProperMap::const_iterator iter = it;
 
+		for (ProperList::const_iterator i = (*plist_1)->begin(); i != (*plist_1)->end(); ++i)
+		{
+			CS_PREFETCH(&*i, 0, 3);
+		}
+
 		while (++iter != wpmap.end())
 		{
 			recordCorr(iter->first, corr(plist_1, iter->second), simlist);
@@ -145,6 +150,7 @@ decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList&
 	decimal_t summary = 0;
 	bool used = false;
 	docnum_t k = 0;
+
 	for (ProperList::const_iterator i = (*plist_1)->begin(), j = (*plist_2)->begin(); i != (*plist_1)->end(); ++i)
 	{
 		for (; j != (*plist_2)->end(); ++j)
