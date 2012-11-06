@@ -62,7 +62,7 @@ public:
 
 public:
 	WordMap()
-		: idGen(*WordIdGen::instance())
+		: idGen(*WordIdGen::instance()), map(1 << _JEBE_WORD_MAP_HASH_BITS)
 	{
 	}
 
