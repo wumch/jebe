@@ -99,7 +99,7 @@ void Calculater::ready()
 		"doc-frequency: [" << Aside::config->df_quantile_bottom << ", " << (1 - Aside::config->df_quantile_top) << "] = [" << mindf << ", " << maxdf << "]" << CS_LINESEP <<
 		"word-doc-var: [" << Aside::config->min_wd_var << ", " << Aside::config->max_wd_var << "]" << CS_LINESEP <<
 		"word-doc-var-rate-range: [" << Aside::config->wd_var_bottom << ", " << (1.0 - Aside::config->wd_var_top) << "]" << CS_LINESEP <<
-		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]" << CS_LINESEP;
+		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]" << std::endl;
 }
 
 void Calculater::calcu()
@@ -201,7 +201,7 @@ size_t Calculater::sum(const DocCountList& dlist) const
 
 void Calculater::filter()
 {
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size() << CS_LINESEP;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size() << std::endl;
 	if (needFilterByVar())
 	{
 		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
@@ -225,7 +225,7 @@ void Calculater::filter()
 				wdlist[wordid].resize(0);
 			}
 		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size() << CS_LINESEP;
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size() << std::endl;
 	}
 	else
 	{
@@ -241,7 +241,7 @@ void Calculater::filter()
 				wdlist[wordid].resize(0);
 			}
 		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size() << CS_LINESEP;
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size() << std::endl;
 	}
 	filterByVarRate();
 }
@@ -264,7 +264,7 @@ void Calculater::filterByVarRate()
 	decimal_t min_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * Aside::config->wd_var_bottom)];
 	decimal_t max_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * (1.0 - Aside::config->wd_var_top))];
 
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "will filter by var-rate not between [" << min_var << "," << max_var << "]";
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "will filter by var-rate not between [" << min_var << "," << max_var << "]" << std::endl;
 	CS_RETURN_IF(!(min_var < max_var));
 
 	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); )
@@ -280,7 +280,7 @@ void Calculater::filterByVarRate()
 			++it;
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by var-rate, remain words: " << wpmap.size();
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by var-rate, remain words: " << wpmap.size() << std::endl;
 }
 
 decimal_t Calculater::getFilterVar(const VaredProperList& plist) const
@@ -321,7 +321,7 @@ void Calculater::check()
 			}
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "checked, all of order are correct!";
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "checked, all of order are correct!" << std::endl;
 }
 
 void Calculater::dump()
@@ -341,7 +341,7 @@ void Calculater::dump()
 			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
 		}
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped " << cur_sim_num << " to " << Aside::config->outputfile << CS_LINESEP;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped " << cur_sim_num << " to " << Aside::config->outputfile << std::endl;
 }
 
 void Calculater::finish()
