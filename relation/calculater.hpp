@@ -200,7 +200,7 @@ protected:
 
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, VaredProperList>::value_type, boost::default_user_allocator_new_delete,
 			boost::details::pool::null_mutex, 1 << (_JEBE_WORD_MAP_HASH_BITS - 3)> ProperMapAllocType;
-	typedef boost::unordered_map<wordid_t, VaredProperList, staging::BitsHash<(_JEBE_WORD_MAP_HASH_BITS - 3)>, std::equal_to<wordid_t>, ProperMapAllocType> WordProperMap;
+	typedef boost::unordered_map<wordid_t, VaredProperList, staging::BitsHash<(_JEBE_WORD_MAP_HASH_BITS)>, std::equal_to<wordid_t>, ProperMapAllocType> WordProperMap;
 	WordProperMap wpmap;
 
 	typedef std::pair<wordid_t, decimal_t> Similarity;
@@ -211,7 +211,7 @@ protected:
 	uint64_t cur_sim_num;
 
 	typedef boost::fast_pool_allocator<boost::unordered_map<wordid_t, SimList>::value_type, boost::default_user_allocator_new_delete,
-			boost::details::pool::null_mutex, 10 << 10> SimListAllocType;
+			boost::details::pool::null_mutex, 50 << 10> SimListAllocType;
 	typedef boost::unordered_map<wordid_t, SimList, staging::HashTomasWang32<wordid_t>, std::equal_to<wordid_t>, SimListAllocType> WordSimList;
 
 	WordSimList wslist;
