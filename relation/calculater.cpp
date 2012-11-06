@@ -43,7 +43,7 @@ public:
 ProperList VaredProperList::empty_plist;
 
 Calculater::Calculater()
-	: cur_sim_num(0), wpmap(1 << _JEBE_WORD_MAP_HASH_BITS), wslist(100)
+	: wpmap(1 << _JEBE_WORD_MAP_HASH_BITS), cur_sim_num(0), wslist(100)
 {}
 
 void Calculater::attachDoc(const Document& doc)
