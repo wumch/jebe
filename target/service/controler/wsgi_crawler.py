@@ -5,7 +5,7 @@ import zlib
 from config import config, logger
 from wsgi_controler import WsgiControler
 from model.mpagestorer import PageStorer
-from base64 import decode
+from base64 import decodestring
 
 class WsgiCrawler(WsgiControler):
 
@@ -27,9 +27,7 @@ class WsgiCrawler(WsgiControler):
 #            logger.error("<%s(%d/%d)>[%s][%s]" % (type(self.postData), len(self.postData), int(self.env['CONTENT_LENGTH']), self.postData[:5], self.postData[-5:]))
 #            return 405
         try:
-            post = ""
-            decode(self.postData, post)
-            info = config.jsoner.decode(zlib.decompress(post))
+            info = config.jsoner.decode(zlib.decompress(decodestring(self.postData)))
             self._store(url=info['url'], title=info['title'], content=info['text'], links=info['links'])
             return True
         except Exception, e:
