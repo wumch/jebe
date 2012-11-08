@@ -18,11 +18,14 @@ headers = [
 ]
 status_ok = '200 OK'
 status_error = '500 Internal Err'
+status_wrong = '405 Invalid Request'
 
 def application(environ, start_response):
     global headers, status_ok, status_error
     res = WsgiCrawler(environ=environ, start_response=start_response).handle()
-    if res or isinstance(res, basestring):
+    if isinstance(res, int):
+        start_response(status_wrong, headers)
+    elif res or isinstance(res, basestring):
         start_response(status_ok, headers)
     else:
         start_response(status_error, headers)
