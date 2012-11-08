@@ -17,7 +17,7 @@ headers = [
 #    ('Pragma', 'no-cache'),
 ]
 status_ok = '200 OK'
-status_error = '500 Internal Error'
+status_error = '500 Internal Err'
 
 def application(environ, start_response):
     global headers, status_ok, status_error
