@@ -3,6 +3,7 @@
 
 import pymongo
 import time
+import math
 
 class RelImporter(object):
 
@@ -13,13 +14,36 @@ class RelImporter(object):
 
     def _prepare(self):
         self.mongoCon = pymongo.Connection(host="192.168.88.8")
-        self.mongo = self.mongoCon["words-rel"]["main"]
+        self.mongo = self.mongoCon["words-rel-new"]["main"]
         self.fp = open(self.relfile, "r")
 
     def run(self):
+        self._import_pair()
+
+    def _import_pair(self):
+        count = 0
+        step = 100000
+        straight = 100
+        docs = []
+        for line in self.fp:
+            Wa, Wb, C = [f.strip() for f in line.split("\t")]
+            C = float(C)
+            docs.append({'_id':Wa+'_'+Wb, 'w':C})
+            docs.append({'_id':Wb+'_'+Wa, 'w':C})
+            count += 2
+            if count >= straight:
+                self._sotre_pair(docs)
+                docs = []
+                straight = count + 100
+                print "imported", count
+        if count > step:
+            step = math.ceil(count / 100000.0) * 100000
+            time.sleep(0.2)
+
+    def _import_one_to_multi(self):
         relsmap = {}
         count = 0
-        step = 0
+        step = 100000
         for line in self.fp:
             Wa, Wb, C = [f.strip() for f in line.split("\t")]
             rel = (Wb, float(C))
@@ -36,9 +60,13 @@ class RelImporter(object):
         if self.limit is None or count <= self.limit:
             for word, rels in relsmap.iteritems():
                 self._sotre(word, rels)
-        if (count // 10000) > step:
-            step = count // 10000
+        if count > step:
+            step = math.ceil(count / 100000.0) * 100000
+            print "imported", count
             time.sleep(0.2)
+
+    def _sotre_pair(self, docs):
+        self.mongo.insert(docs)
 
     def _sotre(self, Wa, rels):
         if not Wa or not rels:
