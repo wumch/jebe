@@ -5,6 +5,7 @@ import zlib
 from config import config, logger
 from wsgi_controler import WsgiControler
 from model.mpagestorer import PageStorer
+from base64 import decode
 
 class WsgiCrawler(WsgiControler):
 
@@ -13,7 +14,6 @@ class WsgiCrawler(WsgiControler):
         if 'CONTENT_LENGTH' in self.env and 'wsgi.input' in self.env:
             self.postData = self.env.get('wsgi.input').read(int(self.env['CONTENT_LENGTH']))
         else:
-            logger.error("environ: " + str(self.env))
             self.postData = None
         self.pageStorer = PageStorer.instance()
 
@@ -27,7 +27,9 @@ class WsgiCrawler(WsgiControler):
 #            logger.error("<%s(%d/%d)>[%s][%s]" % (type(self.postData), len(self.postData), int(self.env['CONTENT_LENGTH']), self.postData[:5], self.postData[-5:]))
 #            return 405
         try:
-            info = config.jsoner.decode(zlib.decompress(self.postData))
+            post = ""
+            decode(self.postData, post)
+            info = config.jsoner.decode(zlib.decompress(post))
             self._store(url=info['url'], title=info['title'], content=info['text'], links=info['links'])
             return True
         except Exception, e:
