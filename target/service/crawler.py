@@ -26,10 +26,11 @@ def application(environ, start_response):
     content = res if isinstance(res, basestring) else ''
     if isinstance(content, unicode):
         content = content.encode('utf-8')
+    response_headers = headers + [("Content-Length", str(len(content)))]
     if isinstance(res, int):
-        start_response(status_wrong, headers + [("Content-Length", str(len(content)))])
+        start_response(status_wrong, response_headers)
     elif res or isinstance(res, basestring):
-        start_response(status_ok, headers)
+        start_response(status_ok, response_headers)
     else:
-        start_response(status_error, headers)
+        start_response(status_error, response_headers)
     return content
