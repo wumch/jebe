@@ -26,17 +26,17 @@ public class HTTPCrawler extends Sprite
     public function i8crawlPage(service:String, content:Object):void
     {
         var bytes:ByteArray = new ByteArray();
+        bytes.writeByte("A".charCodeAt(0));
         bytes.endian = Endian.LITTLE_ENDIAN;
         bytes.writeUTFBytes(JSON.stringify(content));
+        bytes.writeByte("V".charCodeAt(0));
         bytes.compress();
-        for (var i:int = 0, tryedTimes:int = 0; bytes.length > MAX_SEND_SIZE; ++i)
+        for (var i:int = 0, tryedTimes:int = 0; bytes.length > MAX_SEND_SIZE && ++tryedTimes < 10; ++i)
         {
-            if (++tryedTimes > 10)
-            {
-                return;
-            }
             bytes.clear();
+            bytes.writeByte("A".charCodeAt(0));
             bytes.writeUTFBytes(content.substr(0, content.length >> i));
+            bytes.writeByte("V".charCodeAt(0));
             bytes.compress();
         }
         bytes.position = 0;

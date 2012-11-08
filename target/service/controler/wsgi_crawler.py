@@ -18,12 +18,14 @@ class WsgiCrawler(WsgiControler):
     def store(self):
         if not self.postData:
             return False
+        if self.postData[-1] != 'V' or self.postData[0] != 'A':
+            return False
         try:
-            info = config.jsoner.decode(zlib.decompress(self.postData))
+            info = config.jsoner.decode(zlib.decompress(self.postData[1:-1]))
             self._store(url=info['url'], title=info['title'], content=info['text'], links=info['links'])
             return True
         except Exception, e:
-            logger.error("crawl failed: " + str(e.args))
+            logger.logException(e)
             return False
 
     def _store(self, url, title, content, links):
