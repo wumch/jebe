@@ -21,7 +21,7 @@ class WsgiCrawler(WsgiControler):
         if self.postData[-1] != 'V' or self.postData[0] != 'A':
             return 405
         try:
-            info = config.jsoner.decode(zlib.decompress(self.postData[1:-1]))
+            info = config.jsoner.decode(zlib.decompress(self.postData[2:-1]))
             self._store(url=info['url'], title=info['title'], content=info['text'], links=info['links'])
             return True
         except Exception, e:
