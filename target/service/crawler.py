@@ -23,10 +23,13 @@ status_wrong = '405 Invalid Request'
 def application(environ, start_response):
     global headers, status_ok, status_error
     res = WsgiCrawler(environ=environ, start_response=start_response).handle()
+    content = res if isinstance(res, basestring) else ''
+    if isinstance(content, unicode):
+        content = content.encode('utf-8')
     if isinstance(res, int):
-        start_response(status_wrong, headers)
+        start_response(status_wrong, headers + [("Content-Length", str(len(content)))])
     elif res or isinstance(res, basestring):
         start_response(status_ok, headers)
     else:
         start_response(status_error, headers)
-    return res if isinstance(res, basestring) else ''
+    return content
