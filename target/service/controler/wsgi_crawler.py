@@ -23,11 +23,11 @@ class WsgiCrawler(WsgiControler):
     def store(self):
         if not self.postData:
             return False
-        if self.postData[-1] != 'V' or self.postData[0] != 'A':
-            logger.error("<%s(%d/%d)>[%s][%s]" % (type(self.postData), len(self.postData), int(self.env['CONTENT_LENGTH']), self.postData[:5], self.postData[-5:]))
-            return 405
+#        if self.postData[-1] != 'V' or self.postData[0] != 'A':
+#            logger.error("<%s(%d/%d)>[%s][%s]" % (type(self.postData), len(self.postData), int(self.env['CONTENT_LENGTH']), self.postData[:5], self.postData[-5:]))
+#            return 405
         try:
-            info = config.jsoner.decode(zlib.decompress(self.postData[2:-1]))
+            info = config.jsoner.decode(zlib.decompress(self.postData))
             self._store(url=info['url'], title=info['title'], content=info['text'], links=info['links'])
             return True
         except Exception, e:
