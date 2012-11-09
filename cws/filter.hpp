@@ -36,9 +36,6 @@ private:
     void attach_word(std::string& word);
 
     Node* root;
-
-    uint64_t total_atimes;
-    uint64_t total_words;
 };
 
 class Filter

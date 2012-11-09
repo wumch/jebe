@@ -36,6 +36,7 @@ class RelImporter(object):
                 docs = []
                 straight = count + 100
                 print "imported", count
+        self._sotre_pair(docs)
         if count > step:
             step = math.ceil(count / 100000.0) * 100000
             time.sleep(0.2)
@@ -66,7 +67,8 @@ class RelImporter(object):
             time.sleep(0.2)
 
     def _sotre_pair(self, docs):
-        self.mongo.insert(docs)
+        if docs:
+            self.mongo.insert(docs)
 
     def _sotre(self, Wa, rels):
         if not Wa or not rels:

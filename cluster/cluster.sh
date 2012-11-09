@@ -4,7 +4,7 @@
 # rc-script for service `tcmd`
 #
 
-PROGRAM_NAME="cws"
+PROGRAM_NAME="fts"
 TCMD_EXEC="bin/${PROGRAM_NAME}"
 USER="$(whoami)"
 OUTLOG=/var/log/${PROGRAM_NAME}.output.log
@@ -69,7 +69,6 @@ zstop() {
 
 zrestart () {
     zstop
-    sleep 0.2
     zstart
     return $?
 }

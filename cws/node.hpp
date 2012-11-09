@@ -101,11 +101,10 @@ public:
     	children[to] = children[from];
     }
 
-    void endswith(const std::string& _patten, atimes_t _atimes, double freq_)
+    void endswith(const std::string& _patten, double freq_)
     {
         patten_end = true;
         patten = _patten;
-        atimes_ = _atimes;
         afreq_ = freq_;
     }
 
@@ -171,11 +170,6 @@ public:
     	return find_child(child_atom);
     }
 
-    CS_FORCE_INLINE atimes_t atimes() const
-    {
-    	return atimes_;
-    }
-
     CS_FORCE_INLINE double afreq() const
     {
     	return afreq_;
@@ -201,7 +195,6 @@ protected:	// sort declartion of data-fields for memory saving...
     Node** children;
 
     double afreq_;		// frequency of appear.
-    atimes_t atimes_;
 
     byte_t childrenum;
 
