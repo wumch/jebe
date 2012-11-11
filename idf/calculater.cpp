@@ -96,7 +96,7 @@ void Calculater::calcu()
 		}
 		else
 		{
-			ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == total_df) ? 0 : (-std::log10(dflist[i] / total_df))) << CS_LINESEP;
+			ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (-std::log10(dflist[i] / Aside::curDocNum))) << CS_LINESEP;
 		}
 	}
 	ofile.close();
@@ -148,7 +148,9 @@ bool Calculater::process(zmq::socket_t& sock, zmq::message_t& message)
 
 void Calculater::attachDoc(const char* doc, size_t len)
 {
+	CS_RETURN_IF(len < 1);
 	recorder.reset();
+	__sync_add_and_fetch(&Aside::curDocNum, 1);
 	filter->find(reinterpret_cast<const byte_t*>(doc), len, recorder);
 	const Recorder::NodeList& nodes = recorder.recordedNodes();
 	for (Recorder::NodeList::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
