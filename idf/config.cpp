@@ -158,6 +158,7 @@ void Config::load(const std::string& config_file)
 	mongo_collection = options["mongo-collection"].as<typeof(mongo_collection)>();
 	mongo_field = options["mongo-field"].as<typeof(mongo_field)>();
 	mongo_auto_reconnect = options["mongo-auto-reconnect"].as<typeof(mongo_auto_reconnect)>();
+	mongo_max_doc = options["mongo-max-documents"].as<typeof(mongo_max_doc)>();
 
 	chunk_size = options["chunk-size"].as<typeof(chunk_size)>() << 10;
 	chunk_num = options["chunk-num"].as<typeof(chunk_num)>();

@@ -18,6 +18,8 @@ MongoInput::MongoInput()
 
 const char* MongoInput::next()
 {
+	static size_t got_docs = 0;
+	CS_RETURN_IF(Aside::config->mongo_max_doc > 0 && __sync_add_and_fetch(&got_docs, 1) > Aside::config->mongo_max_doc, NULL);
 	return CS_BLIKELY(more()) ? cur->nextSafe().getStringField(field.c_str()) : NULL;
 }
 
