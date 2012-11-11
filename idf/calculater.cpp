@@ -88,6 +88,7 @@ void Calculater::calcu()
 	}
 
 	std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
+	long double base = Aside::curDocNum;
 	for (wordnum_t i = 0, end = Aside::wordsNum(); i < end; ++i)
 	{
 		if (dflist[i] == 0)
@@ -96,7 +97,7 @@ void Calculater::calcu()
 		}
 		else
 		{
-			ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (std::log10(Aside::curDocNum / dflist[i]))) << CS_LINESEP;
+			ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (std::log10<long double>(base / dflist[i]))) << CS_LINESEP;
 		}
 	}
 	ofile.close();
