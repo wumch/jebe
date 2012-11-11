@@ -130,10 +130,10 @@ int Collector::acquire_chunk()
 void Collector::prepare()
 {
 	chunks_mask = new char[chunk_num];
-	chunks = reinterpret_cast<char**>(std::malloc(sizeof(char*) * chunk_num));
+	chunks = reinterpret_cast<char**>(malloc(sizeof(char*) * chunk_num));
 	for (uint32_t i = 0; i < chunk_num; ++i)
 	{
-		chunks[i] = reinterpret_cast<char*>(std::malloc(chunk_size));
+		chunks[i] = reinterpret_cast<char*>(malloc(chunk_size));
 		chunks[i][0] = static_cast<uint8_t>(send_doc);
 	}
 
