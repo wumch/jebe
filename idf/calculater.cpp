@@ -1,6 +1,7 @@
 
 #include "calculater.hpp"
 #include <fstream>
+#include <cmath>
 #include <boost/lexical_cast.hpp>
 #include <zmq.hpp>
 #include <glog/logging.h>
