@@ -52,6 +52,10 @@ void Config::init(int argc, char* argv[])
 	}
 	boost::program_options::notify(cmdOptions);
 
+	if (cmdOptions.count("mongo-max-documents"))
+	{
+		mongo_max_doc = cmdOptions["mongo-max-documents"].as<typeof(mongo_max_doc)>();
+	}
 	if (cmdOptions.count("help"))
 	{
 		std::cout << cmdDesc << std::endl;
