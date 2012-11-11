@@ -43,7 +43,7 @@ void MongoInput::stop()
 	{
 		delete cur.release();
 	}
-	delete con.release();		// just close, and release the db-client-cursor
+	delete con.release();		// just close the connection, and release the db-client-cursor.
 }
 
 MongoInput::~MongoInput()

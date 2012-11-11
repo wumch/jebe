@@ -2,6 +2,7 @@
 #pragma once
 
 #include "predef.hpp"
+#include <vector>
 #include <memory>
 #include <zmq.hpp>
 #include "input.hpp"
@@ -12,7 +13,7 @@ namespace idf {
 class Collector
 {
 public:
-	Collector(zmq::context_t& context);
+	Collector(zmq::context_t& context, uint8_t id_);
 
 	void run();
 
@@ -23,22 +24,30 @@ public:
 private:
 	void work();
 
-	void process(zmq::socket_t& sock, const char* doc, uint32_t chunk_turn);
+	void process(const char* doc);
 
 	std::auto_ptr<BaseInput> create_input() const;
 
-	void recycle_chunk(char* chunk, char* turn);
+	void recycle_chunk(char* chunk, uint32_t turn);
 
 	static void recycle_chunk_(void* chunk, void* owner);
 
-	uint32_t get_chunk();
+	uint32_t getChunk();
 
 	int acquire_chunk();
 
 	void prepare();
 
-	zmq::context_t& context;
+private:
+	zmq::socket_t& getSock();
 
+	uint8_t id;
+
+	zmq::context_t& context;
+	typedef std::vector<zmq::socket_t*> Socks;
+	Socks socks;
+
+	int64_t recv_buf_size;
 	char* recv_buf_area;
 	zmq::message_t recv_buf;
 
@@ -47,6 +56,7 @@ private:
 
 	uint32_t chunk_size;
 	uint32_t chunk_num;
+	uint32_t next_sock;
 	char** chunks;
 	char* chunks_mask;
 };

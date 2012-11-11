@@ -86,7 +86,7 @@ public:
     {
     	children = reinterpret_cast<Node**>(realloc(children, (childrenum + 1) * sizeof(Node*)));
     	assert(children != NULL);
-    	for (int i = childrenum; i > index; --i)
+    	for (uint i = childrenum; i > index; --i)
     	{
     		move_child(i - 1, i);
     	}
@@ -97,7 +97,6 @@ public:
 
     void move_child(byte_t from, byte_t to)
     {
-    	CS_PREFETCH(children[from], 0, 1);
     	children[to] = children[from];
     }
 
@@ -138,7 +137,6 @@ public:
     		}
     		cur = (left + right) >> 1;
     	}
-		assert(right == left + 1);
 
 		if (children[right]->atom == _atom)
 		{

@@ -3,9 +3,10 @@
 
 #include "predef.hpp"
 #include <memory>
-#define BOOST_FILESYSTEM2_NARROW_ONLY
+#ifdef __linux
+#	define BOOST_FILESYSTEM2_NARROW_ONLY
+#endif
 #include <mongo/client/dbclient.h>
-#undef BOOST_FILESYSTEM2_NARROW_ONLY
 #include "input.hpp"
 
 namespace jebe {

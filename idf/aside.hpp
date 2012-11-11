@@ -14,7 +14,8 @@ class Filter;
 
 enum Action {
 	send_doc = 1,
-	thats_all = 10,
+	collected = 10,
+	calculated = 20,
 };
 
 // misc class that hold some global-variables.

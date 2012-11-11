@@ -45,6 +45,8 @@ void Aside::initWordList()
 		attachWord(Word(line, line_len));
 		last_pos = pfile.tellg();
 	}
+	filter->attachTree(ftree);
+	Calculater::init();
 }
 
 void Aside::initLogger()

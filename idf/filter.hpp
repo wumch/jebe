@@ -98,18 +98,18 @@ public:
     }
 
     template<typename CallbackType>
-    tsize_t find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const
+    void find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const
     {
 #if _JEBE_ENABLE_MAXMATCH
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree->root;
-    	int32_t offset = 0;
+    	int32_t offset = len - 1;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
 #if _JEBE_SCAN_FROM_RIGHT
-    	for (int32_t i = len - 1, offset = i - 1; i > -1; --i)
+    	for (int32_t i = len - 1; i > -1; )
     	{
 #else
 		for (tsize_t i = 0; i < len ; )
@@ -117,7 +117,11 @@ public:
 #endif
 			if (CS_LIKELY(node = node->cichildat(atoms[i])))
 			{
+#if _JEBE_SCAN_FROM_RIGHT
+				--i;
+#else
 				++i;
+#endif
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				if (CS_BUNLIKELY(begin_from_root))
 				{
@@ -152,13 +156,12 @@ public:
 			}
 			else
 			{
-				CS_SAY("atom [" << (int)atoms[i] << "] no match");
 				node = tree->root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				begin_from_root = true;
 #endif
 #if _JEBE_SCAN_FROM_RIGHT
-				i = offset--;
+				i = --offset;
 #else
 #	if defined(_JEBE_STEP_FWD_OPTI) && _JEBE_STEP_FWD_OPTI
 				i = (offset += charBytes(atoms[offset]));
@@ -168,11 +171,6 @@ public:
 #endif
 			}
 		}
-#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-		return std::min(offset, _JEBE_WORD_MAX_LEN);
-#else
-		return std::max(offset, static_cast<int32_t>(len > _JEBE_WORD_MAX_LEN ? len - _JEBE_WORD_MAX_LEN : len));
-#endif
 	}
 
 };

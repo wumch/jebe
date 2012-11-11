@@ -202,6 +202,7 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(listen)
 		_JEBE_OUT_CONFIG_PROPERTY(internal)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
+		_JEBE_OUT_CONFIG_PROPERTY(outputfile)
 		_JEBE_OUT_CONFIG_PROPERTY(io_threads)
 		_JEBE_OUT_CONFIG_PROPERTY(stack_size)
 		_JEBE_OUT_CONFIG_PROPERTY(reuse_address)
@@ -217,6 +218,9 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(block_cache)
 		_JEBE_OUT_CONFIG_PROPERTY(write_buffer_size)
 		_JEBE_OUT_CONFIG_PROPERTY(max_retrieve_elements)
+
+		_JEBE_OUT_CONFIG_PROPERTY(calculater_num)
+		_JEBE_OUT_CONFIG_PROPERTY(collector_num)
 	);
 }
 

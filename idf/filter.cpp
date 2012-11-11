@@ -17,12 +17,13 @@ void Ftree::attach_word(const char* const word, size_t wordlen, wordid_t patteni
     const byte_t* const patten = reinterpret_cast<const byte_t*>(word);
     Node* node = root;
 #if _JEBE_SCAN_FROM_RIGHT
-    for(int32_t i = wordlen - 1; 0 <= i; --i)
+    for(const byte_t* cur = patten + (wordlen - 1); cur != patten; --cur)
     {
-		node = node->attach_child(patten[i]);
+		node = node->attach_child(*cur);
     }
+    node = node->attach_child(*patten);
 #else
-    for (int i = 0, end = wordlen; i < end; ++i)
+    for (uint i = 0; i < wordlen; ++i)
     {
     	node = node->attach_child(patten[i]);
     }
