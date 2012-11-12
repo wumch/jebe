@@ -44,7 +44,7 @@ class PageStorer(object):
         md5_res = md5(url)
         time_stamp = int(time.time())
         # it's better to examine in "loc", but to scatter pressure...
-        entry = self.collections['text'].find_one(spec_or_id=md5_res, ['ts'])
+        entry = self.collections['loc'].find_one(md5_res, ['ts'])
 
         willUpdate = False
         if isinstance(entry, dict):
