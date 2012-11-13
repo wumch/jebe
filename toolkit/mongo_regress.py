@@ -41,13 +41,14 @@ class PageStorer(object):
 
     def run(self, skip=0):
         try:
+            nextSkip = skip
             if skip:
                 self.textCursor.skip(skip)
             for doc in self.textCursor:
                 self._store(doc)
                 self.curfinished += 1
                 if self.curfinished >= self.nextStop:
-                    logger.info("finished %d" % self.curfinished)
+                    logger.info("finished %d, nextskip:%d" % (self.curfinished, nextSkip + self.curfinished))
                     self.nextStop += 1000
                     time.sleep(0.1)
         except Exception, e:
