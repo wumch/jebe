@@ -40,8 +40,8 @@ class PageStorer(object):
         self.textCursor = self.collections['text'].find().sort("$natural", -1)
 
     def run(self, skip=0):
+        nextSkip = skip
         try:
-            nextSkip = skip
             if skip:
                 self.textCursor.skip(skip)
             for doc in self.textCursor:
@@ -52,8 +52,11 @@ class PageStorer(object):
 #                    time.sleep(0.1)
         except Exception, e:
             logger.logException(e)
+            return nextSkip
         except:
             logger.error("unknown-exception")
+            return nextSkip
+        return None
 
     def _store(self, doc):
         if not ('_id' in doc and 'url' in doc and 'loc' in doc and 'links' in doc and 'title' in doc and 'text' in doc and 'ts' in doc
@@ -79,5 +82,7 @@ class PageStorer(object):
         return self.tokenizer.marve(content=content)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        PageStorer.instance().run(skip=int(sys.argv[1]))
+    skip = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    nextSkip = PageStorer().run(skip=skip)
+    while nextSkip:
+        nextSkip = PageStorer().run(skip=nextSkip)
