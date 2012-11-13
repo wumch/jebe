@@ -39,8 +39,10 @@ class PageStorer(object):
             self.collections[dbtype] = self.dbs[dbtype][server['collection']]
         self.textCursor = self.collections['text'].find().sort("$natural", -1)
 
-    def run(self):
+    def run(self, skip=0):
         try:
+            if skip:
+                self.textCursor.skip(skip)
             for doc in self.textCursor:
                 self._store(doc)
                 self.curfinished += 1
@@ -68,4 +70,5 @@ class PageStorer(object):
         return self.tokenizer.marve(content=content)
 
 if __name__ == '__main__':
-    PageStorer.instance().run()
+    if len(sys.argv) > 1:
+        PageStorer.instance().run(skip=int(sys.argv[1]))
