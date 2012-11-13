@@ -73,7 +73,7 @@ class PageStorer(object):
             'title':title,
             'words':[ww[0] for ww in self._marve(title)],
         }
-        self.collections['paths'].inert(paths)
+        self.collections['paths'].insert(paths)
 
     def _parseContent(self, content):
         info = content.split("\t", 1)
