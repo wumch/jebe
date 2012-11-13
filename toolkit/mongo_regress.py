@@ -62,7 +62,7 @@ class PageStorer(object):
             return
         self.curfinished += 1
         wordsWeight = self._marve(doc['text'])
-        del doc['text'], doc['links'], doc['title'], doc['loc']
+        del doc['text'], doc['links'], doc['title'], doc['loc'], doc['url']
         doc['words'] = [ww[0] for ww in wordsWeight]
         doc['ts'] = self.curts
         self.collections['loc'].insert(doc)
