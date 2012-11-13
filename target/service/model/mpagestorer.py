@@ -68,11 +68,11 @@ class PageStorer(object):
             self.collections['loc'].insert(loc)
 
         paths = {
-            '_id': loc['_id'],
-            'url': loc['url'],
-            'title':loc['title'],
+            '_id': md5_res,
+            'url': url,
+            'title':title,
+            'words':[ww[0] for ww in self._marve(title)],
         }
-        paths['words'] = [ww[0] for ww in self._marve(paths['title'])]
         self.collections['paths'].inert(paths)
 
     def _parseContent(self, content):
