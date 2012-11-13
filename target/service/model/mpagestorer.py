@@ -26,7 +26,7 @@ class PageStorer(object):
         self.connections = {}
         self.dbs = {}
         self.collections = {}
-        for dbtype in ('loc', 'text'):
+        for dbtype in ('loc', 'text', 'paths'):
             server = config.getMongoDB(type=dbtype)
             # dbname is same as the collection name
             self.connections[dbtype] = pymongo.Connection(**server['param'])
@@ -66,6 +66,14 @@ class PageStorer(object):
             self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
         else:
             self.collections['loc'].insert(loc)
+
+        paths = {
+            '_id': loc['_id'],
+            'url': loc['url'],
+            'title':loc['title'],
+        }
+        paths['words'] = [ww[0] for ww in self._marve(paths['title'])]
+        self.collections['paths'].inert(paths)
 
     def _parseContent(self, content):
         info = content.split("\t", 1)

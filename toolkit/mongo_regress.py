@@ -31,7 +31,7 @@ class PageStorer(object):
         self.connections = {}
         self.dbs = {}
         self.collections = {}
-        for dbtype in ('loc', 'text'):
+        for dbtype in ('loc', 'text', 'paths'):
             server = config.getMongoDB(type=dbtype)
             # dbname is same as the collection name
             self.connections[dbtype] = pymongo.Connection(**server['param'])
@@ -49,7 +49,7 @@ class PageStorer(object):
                 if self.curfinished >= self.nextStop:
                     logger.info("finished %d, nextskip:%d" % (self.curfinished, nextSkip + self.curfinished))
                     self.nextStop += 1000
-                    time.sleep(0.1)
+#                    time.sleep(0.1)
         except Exception, e:
             logger.logException(e)
         except:
@@ -61,11 +61,19 @@ class PageStorer(object):
             logger.error("doc format wrong: [%s]" % (doc['_id'] if '_id' in doc else "no-doc-id"))
             return
         self.curfinished += 1
-        wordsWeight = self._marve(doc['text'])
+
+        paths = {
+            '_id': doc['_id'],
+            'url': doc['url'],
+            'title':doc['title'],
+        }
         del doc['text'], doc['links'], doc['title'], doc['loc'], doc['url']
-        doc['words'] = [ww[0] for ww in wordsWeight]
+        doc['words'] = [ww[0] for ww in self._marve(doc['text'])]
         doc['ts'] = self.curts
         self.collections['loc'].insert(doc)
+
+        paths['words'] = [ww[0] for ww in self._marve(paths['title'])]
+        self.collections['paths'].inert(paths)
 
     def _marve(self, content):
         return self.tokenizer.marve(content=content)
