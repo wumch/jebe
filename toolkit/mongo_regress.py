@@ -37,14 +37,14 @@ class PageStorer(object):
             self.connections[dbtype] = pymongo.Connection(**server['param'])
             self.dbs[dbtype] = self.connections[dbtype][server['db']]
             self.collections[dbtype] = self.dbs[dbtype][server['collection']]
-        self.textCursor = self.collections['text'].find().sort({"$natural":-1})
+        self.textCursor = self.collections['text'].find().sort("$natural", -1)
 
     def run(self):
         try:
             for doc in self.textCursor:
                 self._store(doc)
                 self.curfinished += 1
-                if self.curfinished > self.nextStop:
+                if self.curfinished >= self.nextStop:
                     logger.info("finished %d" % self.curfinished)
                     self.nextStop += 1000
                     time.sleep(0.1)
@@ -62,7 +62,7 @@ class PageStorer(object):
         del doc['text'], doc['links']
         doc['words'] = [ww[0] for ww in wordsWeight]
         doc['ts'] = self.curts
-        self.collections['loc'].insert(doc)
+        self.collections['loc'].update(doc['_id'], doc, upsert=True)
 
     def _marve(self, content):
         return self.tokenizer.marve(content=content)
