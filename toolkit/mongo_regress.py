@@ -73,7 +73,7 @@ class PageStorer(object):
         self.collections['loc'].insert(doc)
 
         paths['words'] = [ww[0] for ww in self._marve(paths['title'])]
-        self.collections['paths'].inert(paths)
+        self.collections['paths'].insert(paths)
 
     def _marve(self, content):
         return self.tokenizer.marve(content=content)
