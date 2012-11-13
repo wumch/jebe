@@ -60,7 +60,7 @@ class PageStorer(object):
         else:
             self.collections['text'].insert(text)
 
-        loc = self._genLocData(url=url, title=title, content=content, path=path, md5_res=md5_res, time_stamp=time_stamp)
+        loc = self._genLocData(content=content, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
             del loc['_id']
             self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
@@ -92,14 +92,11 @@ class PageStorer(object):
             'links' : linksDict,
         }
 
-    def _genLocData(self, url, content, path, title, md5_res=None, time_stamp=None):
+    def _genLocData(self, content, md5_res=None, time_stamp=None):
         wordsWeight = self._marve(content)
         return {
-            '_id' : md5_res or md5(url),
+            '_id' : md5_res,
             'ts' : int(time.time()) or time_stamp,
-            'url' : url,
-            'loc' : path,
-            'title' : title,
             'words' : [ww[0] for ww in wordsWeight],
 #            'weight' : [ww[1] for ww in wordsWeight],
         }

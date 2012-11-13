@@ -46,7 +46,6 @@ class PageStorer(object):
                 self.textCursor.skip(skip)
             for doc in self.textCursor:
                 self._store(doc)
-                self.curfinished += 1
                 if self.curfinished >= self.nextStop:
                     logger.info("finished %d, nextskip:%d" % (self.curfinished, nextSkip + self.curfinished))
                     self.nextStop += 1000
@@ -61,11 +60,12 @@ class PageStorer(object):
             and doc['ts'] >= self.mints):
             logger.error("doc format wrong: [%s]" % (doc['_id'] if '_id' in doc else "no-doc-id"))
             return
+        self.curfinished += 1
         wordsWeight = self._marve(doc['text'])
-        del doc['text'], doc['links']
+        del doc['text'], doc['links'], doc['title'], doc['loc']
         doc['words'] = [ww[0] for ww in wordsWeight]
         doc['ts'] = self.curts
-        self.collections['loc'].update({'_id':doc['_id']}, doc, upsert=True)
+        self.collections['loc'].insert(doc)
 
     def _marve(self, content):
         return self.tokenizer.marve(content=content)
