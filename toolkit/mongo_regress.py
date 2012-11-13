@@ -64,7 +64,7 @@ class PageStorer(object):
         del doc['text'], doc['links']
         doc['words'] = [ww[0] for ww in wordsWeight]
         doc['ts'] = self.curts
-        self.collections['loc'].update(doc['_id'], doc, upsert=True)
+        self.collections['loc'].update({'_id':doc['_id']}, doc, upsert=True)
 
     def _marve(self, content):
         return self.tokenizer.marve(content=content)
