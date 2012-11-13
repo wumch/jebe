@@ -10,7 +10,7 @@
 #include "numcast.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class SendBuff
 	: boost::noncopyable

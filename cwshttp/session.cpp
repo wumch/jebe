@@ -7,7 +7,7 @@
 #include "numcast.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 _JEBE_MAKE_HEADER(200, Session);
 _JEBE_MAKE_HEADER(400, Session);

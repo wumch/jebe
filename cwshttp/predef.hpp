@@ -39,7 +39,7 @@ extern "C" {
 #define _JEBE_HTTP_SEP 				_JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 typedef unsigned char 	byte_t;
 typedef uint32_t 		tsize_t;	// text-size type.

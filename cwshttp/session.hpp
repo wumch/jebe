@@ -29,7 +29,7 @@
 #define _JEBE_DECLARE_HEADER(status)		static const byte_t _JEBE_HEADER_NAME(status)[CS_CONST_STRLEN(_JEBE_HEADER_STRING(status)) + 1]
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Session:
     public boost::enable_shared_from_this<Session>,

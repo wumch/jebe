@@ -13,7 +13,7 @@
 #include <boost/thread.hpp>
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Worker
 {

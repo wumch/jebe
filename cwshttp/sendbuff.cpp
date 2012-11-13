@@ -2,7 +2,7 @@
 #include "sendbuff.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 tsize_t SendBuff::chunkSize;
 tsize_t SendBuff::chunkRate;

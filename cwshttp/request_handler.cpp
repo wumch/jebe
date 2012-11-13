@@ -2,7 +2,7 @@
 #include "request_handler.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 const Filter* RequestHandler::filter;
 std::size_t RequestHandler::chunkSize;

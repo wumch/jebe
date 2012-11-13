@@ -14,7 +14,7 @@ extern "C" {
 }
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 void Config::init(int argc, char* argv[])
 {

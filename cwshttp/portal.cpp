@@ -6,7 +6,7 @@
 #include "portal.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 Portal::Portal()
 {

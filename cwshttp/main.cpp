@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[])
 {
-	using namespace jebe::cws;
+	using namespace jebe::cwshttp;
 
 	Config::getInst()->init(argc, argv);
 	(new Portal)->run();

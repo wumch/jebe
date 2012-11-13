@@ -10,7 +10,7 @@
 #include "holders.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 enum Action {
 	split = 0,

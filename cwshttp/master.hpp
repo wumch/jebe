@@ -16,7 +16,7 @@
 #include "session.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Master
 {

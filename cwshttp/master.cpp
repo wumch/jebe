@@ -13,7 +13,7 @@
 #include "sendbuff.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 Master::Master(std::size_t worker_count_)
     : worker_count(worker_count_), sess_count(0)

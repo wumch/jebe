@@ -10,7 +10,7 @@
 extern int main(int, char*[]);
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Config
 {

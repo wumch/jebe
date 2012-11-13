@@ -1,6 +1,6 @@
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 }
 }

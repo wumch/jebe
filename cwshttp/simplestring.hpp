@@ -2,7 +2,7 @@
 #pragma once
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 template<typename char_type_,typename size_type_>
 class SimpleString

@@ -9,7 +9,7 @@
 #include "sendbuff.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Ftree
 {

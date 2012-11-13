@@ -7,7 +7,7 @@
 #include <boost/array.hpp>
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 class Node
 {

@@ -5,7 +5,7 @@
 #include "numcast.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 void Ftree::build(const std::string& fname)
 {

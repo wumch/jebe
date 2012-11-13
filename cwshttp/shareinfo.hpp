@@ -6,7 +6,7 @@
 #include "config.hpp"
 
 namespace jebe {
-namespace cws {
+namespace cwshttp {
 
 #define _JEBE_HTTP_LINE_SEP "\r\n"
 #define _JEBE_HTTP_SEP _JEBE_HTTP_LINE_SEP _JEBE_HTTP_LINE_SEP
