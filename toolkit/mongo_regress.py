@@ -21,7 +21,7 @@ class PageStorer(object):
 
     def __init__(self):
         self.maxts = 1352304000     # 2012-11-08 00:00:00
-        self.mints = 1352304000 - (86400 * 7)    # one week ago
+        self.mints = self.maxts - (86400 * 7)    # one week ago
         self.curts = 1352736000     # 2012-11-13 00:00:00
         self.curfinished = 0
         self.nextStop = 1000
@@ -41,23 +41,24 @@ class PageStorer(object):
         self.textCursor = self.collections['text'].find().sort("$natural", -1)
 
     def run(self, skip=0):
-        nextSkip = skip
+        curscaned = skip
         try:
             if skip:
                 self.textCursor.skip(skip)
             for doc in self.textCursor:
                 self._store(doc)
+                curscaned += 1
                 if self.curfinished >= self.nextStop:
-                    logger.info("finished %d, nextskip:%d" % (self.curfinished, nextSkip + self.curfinished))
+                    logger.info("finished %d, total scaned: %d" % (self.curfinished, curscaned))
                     self.nextStop += 1000
 #                    time.sleep(0.1)
-            return nextSkip
+            return curscaned
         except Exception, e:
             logger.logException(e)
-            return nextSkip
+            return curscaned
         except:
             logger.error("unknown-exception")
-            return nextSkip
+            return curscaned
 
     def _store(self, doc):
         if not ('_id' in doc and 'url' in doc and 'loc' in doc and 'links' in doc and 'title' in doc and 'text' in doc and 'ts' in doc):
@@ -84,7 +85,6 @@ class PageStorer(object):
         return self.tokenizer.marve(content=content)
 
 if __name__ == '__main__':
-    skip = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    nextSkip = PageStorer().run(skip=skip)
-    while nextSkip:
+    nextSkip = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    while nextSkip is not None:
         nextSkip = PageStorer().run(skip=nextSkip)
