@@ -34,9 +34,6 @@ void Worker::run()
 		sock.connect(config->internal.c_str());
 		sock.setsockopt(ZMQ_SNDBUF, &config->send_buffer_size, sizeof(config->send_buffer_size));
 		sock.setsockopt(ZMQ_RCVBUF, &config->receive_buffer_size, sizeof(config->receive_buffer_size));
-		// TODO: to optimize.
-		int64_t nonblock = 0;
-		sock.setsockopt(ZMQ_NOBLOCK, &nonblock, sizeof(nonblock));
 	}
 
 	msgpack::sbuffer buffer_false;
