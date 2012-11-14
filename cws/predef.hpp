@@ -26,7 +26,8 @@ extern "C" {
 #define _JEBE_SCAN_FROM_RIGHT		0
 #define _JEBE_USE_TIMER				0
 #define _JEBE_ENABLE_MAXMATCH		0
-#define _JEBE_STEP_FWD_OPTI			1
+#define _JEBE_ENABLE_NOMISS			1
+#define _JEBE_STEP_FWD_OPTI			0
 
 #define _JEBE_WORD_MAX_LEN			(8U*3)
 
@@ -40,6 +41,16 @@ typedef uint32_t 		atimes_t;	// appear-times of word type.
 
 typedef std::string		Word;
 typedef double			weight_t;
+
+enum Action {
+	// reserve 0-9 for system.
+	marve = 11,
+	split = 12,
+	count = 13,
+	compare = 14,
+
+	unknown,
+};
 
 }
 }

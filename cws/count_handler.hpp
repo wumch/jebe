@@ -5,6 +5,7 @@
 #include <utility>
 #include <boost/unordered_map.hpp>
 #include <msgpack.hpp>
+#include "hash.hpp"
 #include "handler.hpp"
 #include "node.hpp"
 
@@ -52,11 +53,11 @@ private:
 	class NodeHash
 	{
 	private:
-		uint32_t mask;
+		const staging::Hash64to32 hasher;
 	public:
-		uint32_t operator()(const Node* node) const
+		CS_FORCE_INLINE uint32_t operator()(const Node* node) const
 		{
-			return (size_t)(node) & mask;
+			return hasher((size_t)(node));
 		}
 	};
 

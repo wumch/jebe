@@ -4,7 +4,7 @@
 #include "predef.hpp"
 #include <boost/unordered_map.hpp>
 #include <vector>
-#include <auto_ptr.h>
+#include <memory>
 #include "node.hpp"
 
 namespace jebe {

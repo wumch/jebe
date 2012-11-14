@@ -12,15 +12,6 @@
 namespace jebe {
 namespace cws {
 
-enum Action {
-	split = 0,
-	count,
-	compare,
-	marve,
-
-	unknown,
-};
-
 class RequestHandler
 {
 protected:
@@ -66,7 +57,7 @@ public:
     		switch (action)
     		{
     		case split:
-    			if (CS_BLIKELY(!spliter))
+    			if (CS_BUNLIKELY(!spliter))
 				{
     				spliter = new SplitHolder(buff);
 				}
@@ -74,7 +65,7 @@ public:
     			solved_flag = true;
     			break;
     		case count:
-    			if (CS_BLIKELY(!counter))
+    			if (CS_BUNLIKELY(!counter))
 				{
     				counter = new CountHolder(buff);
 				}
@@ -82,7 +73,7 @@ public:
     			solved_flag = true;
     			break;
     		case compare:
-    			if (CS_BLIKELY(!comparer))
+    			if (CS_BUNLIKELY(!comparer))
 				{
     				comparer = new CompareHolder(buff);
 				}
@@ -90,7 +81,7 @@ public:
     			solved_flag = true;
     			break;
     		case marve:
-    			if (CS_BLIKELY(!marver))
+    			if (CS_BUNLIKELY(!marver))
 				{
     				marver = new MarveHolder(buff);
 				}

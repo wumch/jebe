@@ -14,7 +14,7 @@ class Ftree
 public:
     friend class Filter;
     explicit Ftree(const std::string& fname)
-        : root(make_node(0, 0))
+        : root(make_node(0))
     {
         build(fname);
     }
@@ -33,9 +33,12 @@ private:
 
     void attach_word(const char* word);
 
-    void attach_word(std::string& word);
-
     Node* root;
+
+private:
+    void optimize();
+
+    void cache_children(const Node* node);
 };
 
 class Filter
@@ -105,21 +108,25 @@ public:
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree.root;
-    	int32_t offset = 0;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
 #if _JEBE_SCAN_FROM_RIGHT
-    	for (int32_t i = len - 1, offset = i - 1; i > -1; --i)
+    	int32_t offset = len - 1;
+    	for (int32_t i = len - 1; i >= 0; )
     	{
-    		CS_PREFETCH(node->children, 0, 2);
 #else
+		tsize_t offset = 0;
 		for (tsize_t i = 0; i < len ; )
 		{
 #endif
-			if (CS_LIKELY(node = node->cichildat(atoms[i])))
+			if ((node = node->cichildat(atoms[i])))
 			{
+#if _JEBE_SCAN_FROM_RIGHT
+				--i;
+#else
 				++i;
+#endif
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				if (CS_BUNLIKELY(begin_from_root))
 				{
@@ -131,9 +138,10 @@ public:
 #	endif
 				}
 #endif
-				if (CS_BUNLIKELY(node->patten_end))
+				if (node->patten_end)
 				{
 					callback(node);
+					CS_SAY("matched: [" << node->patten << "]");
 					if (CS_BLIKELY(node->is_leaf))
 					{
 #if _JEBE_ENABLE_MAXMATCH
@@ -146,21 +154,30 @@ public:
 						}
 #endif
 						node = tree.root;
-#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-						begin_from_root = true;
+#if !_JEBE_ENABLE_NOMISS
+#	if _JEBE_SCAN_FROM_RIGHT
+						offset = i;
+#	else
+						offset = i;
+#	endif
+#else
+#	if _JEBE_SCAN_FROM_RIGHT
+						i = --offset;
+#	else
+						i = ++offset;
+#	endif
 #endif
 					}
 				}
 			}
 			else
 			{
-				CS_SAY("atom [" << (int)atoms[i] << "] no match");
 				node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				begin_from_root = true;
 #endif
 #if _JEBE_SCAN_FROM_RIGHT
-				i = offset--;
+				i = --offset;
 #else
 #	if defined(_JEBE_STEP_FWD_OPTI) && _JEBE_STEP_FWD_OPTI
 				i = (offset += charBytes(atoms[offset]));
@@ -170,10 +187,10 @@ public:
 #endif
 			}
 		}
-#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-		return std::min(offset, _JEBE_WORD_MAX_LEN);
+#if _JEBE_SCAN_FROM_RIGHT
+		return std::min<int32_t>(offset, _JEBE_WORD_MAX_LEN);
 #else
-		return std::max(offset, static_cast<int32_t>(len > _JEBE_WORD_MAX_LEN ? len - _JEBE_WORD_MAX_LEN : len));
+		return std::min<int32_t>(len - offset, _JEBE_WORD_MAX_LEN);
 #endif
 	}
 

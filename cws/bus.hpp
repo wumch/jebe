@@ -16,14 +16,6 @@
 namespace jebe {
 namespace cws {
 
-enum Action {
-	// reserve 0-9 for system.
-	marve = 11,
-	split = 12,
-	count = 13,
-	compare = 14,
-};
-
 // route received message.
 class Bus
 	: private boost::noncopyable
