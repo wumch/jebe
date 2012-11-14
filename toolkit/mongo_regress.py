@@ -20,7 +20,8 @@ class PageStorer(object):
         return cls._instance
 
     def __init__(self):
-        self.mints = 1352304000     # 2012-11-08 00:00:00
+        self.maxts = 1352304000     # 2012-11-08 00:00:00
+        self.mints = 1352304000 - (86400 * 7)    # 2012-11-08 00:00:00
         self.curts = 1352736000     # 2012-11-13 00:00:00
         self.curfinished = 0
         self.nextStop = 1000
@@ -59,9 +60,10 @@ class PageStorer(object):
             return nextSkip
 
     def _store(self, doc):
-        if not ('_id' in doc and 'url' in doc and 'loc' in doc and 'links' in doc and 'title' in doc and 'text' in doc and 'ts' in doc
-            and doc['ts'] >= self.mints):
+        if not ('_id' in doc and 'url' in doc and 'loc' in doc and 'links' in doc and 'title' in doc and 'text' in doc and 'ts' in doc):
             logger.error("doc format wrong: [%s]" % (doc['_id'] if '_id' in doc else "no-doc-id"))
+            return
+        if not (self.maxts >= doc['ts'] >= self.mints):
             return
         self.curfinished += 1
 
