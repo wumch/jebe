@@ -104,14 +104,15 @@ public:
     	tsize_t matched = 0;
 #endif
     	const Node* node = tree->root;
-    	int32_t offset = len - 1;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
 #if _JEBE_SCAN_FROM_RIGHT
-    	for (int32_t i = len - 1; i > -1; )
+    	int32_t offset = len - 1;
+    	for (int32_t i = len - 1; i >= 0; )
     	{
 #else
+		tsize_t offset = 0;
 		for (tsize_t i = 0; i < len ; )
 		{
 #endif
@@ -148,8 +149,18 @@ public:
 						}
 #endif
 						node = tree->root;
-#if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
-						begin_from_root = true;
+#if !_JEBE_ENABLE_NOMISS
+#	if _JEBE_SCAN_FROM_RIGHT
+						offset = i;
+#	else
+						offset = i;
+#	endif
+#else
+#	if _JEBE_SCAN_FROM_RIGHT
+						i = --offset;
+#	else
+						i = ++offset;
+#	endif
 #endif
 					}
 				}

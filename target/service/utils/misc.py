@@ -30,6 +30,12 @@ def strenc(string):
     return intenc(int(md5(string)[::2], 16))
 
 def export(var, endl=True):
+    if isinstance(var, unicode):
+        if endl:
+            print var.encode('utf-8')
+        else:
+            print var.encode('utf-8'),
+        return
     if isinstance(var, basestring):
         if endl:
             print(var)
