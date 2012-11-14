@@ -21,7 +21,7 @@ class PageStorer(object):
 
     def __init__(self):
         self.maxts = 1352304000     # 2012-11-08 00:00:00
-        self.mints = 1352304000 - (86400 * 7)    # 2012-11-08 00:00:00
+        self.mints = 1352304000 - (86400 * 7)    # one week ago
         self.curts = 1352736000     # 2012-11-13 00:00:00
         self.curfinished = 0
         self.nextStop = 1000
