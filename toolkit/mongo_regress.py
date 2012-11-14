@@ -50,13 +50,13 @@ class PageStorer(object):
                     logger.info("finished %d, nextskip:%d" % (self.curfinished, nextSkip + self.curfinished))
                     self.nextStop += 1000
 #                    time.sleep(0.1)
+            return nextSkip
         except Exception, e:
             logger.logException(e)
             return nextSkip
         except:
             logger.error("unknown-exception")
             return nextSkip
-        return None
 
     def _store(self, doc):
         if not ('_id' in doc and 'url' in doc and 'loc' in doc and 'links' in doc and 'title' in doc and 'text' in doc and 'ts' in doc
