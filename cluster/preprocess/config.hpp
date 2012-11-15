@@ -2,16 +2,15 @@
 #pragma once
 
 #include "predef.hpp"
-#include <string>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/dynamic_bitset.hpp>
 #include "singleton.hpp"
+#include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 extern int main(int, char*[]);
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
 class Config
 {
@@ -24,17 +23,8 @@ public:
 	}
 
 public:
-	decimal_t df_quantile_bottom;		// = 0.6
-	decimal_t df_quantile_top;			// = 0.9
-
-	decimal_t min_word_corr;		// min coefficient-of-correlation of a pair of related-words.
-	decimal_t max_word_corr;
-
-	decimal_t min_wd_var;
-	decimal_t max_wd_var;
-
-	decimal_t wd_var_bottom;
-	decimal_t wd_var_top;
+    std::string listen;
+    std::string internal;
 
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;
@@ -43,24 +33,45 @@ public:
 
     int loglevel;
 
-    uint32_t io_threads;
-    uint32_t worker_count;
-    std::string listen;
-    std::string internal;
-
-    uint64_t send_buffer_size;
-    uint64_t receive_buffer_size;
-
-    uint64_t sim_buff_size;
-
-    typedef std::vector<std::string> FileList;
-    FileList inputfiles;
-    boost::filesystem::path extension;
-
     const char* argv_first;
     std::string program_name;
+    std::size_t io_threads;
+    std::size_t collector_num;
+    std::size_t calculater_num;
     std::size_t stack_size;
+
+    bool reuse_address;
+    std::size_t max_connections;
+    bool tcp_nodelay;
+    std::size_t receive_buffer_size;
+    std::size_t send_buffer_size;
+    std::size_t timeout;
+
+    std::size_t msg_max_size;
+
+    std::size_t max_tmp_match;
+    std::size_t max_match;
+
+    std::size_t max_open_files;
+    std::size_t block_size;
+    std::size_t block_cache;
+    std::size_t write_buffer_size;
+
+    std::size_t max_retrieve_elements;
+
+    std::string mongo_server;
+    std::string mongo_collection;
+    std::string mongo_field;
+    bool mongo_auto_reconnect;
+
+    docnum_t mongo_max_doc;
+
+    uint32_t chunk_size;
+    uint32_t chunk_num;
+
     bool memlock;
+    boost::dynamic_bitset<> cpuaffinity;
+    bool record_on_cache;
 
     boost::program_options::variables_map options;
     boost::program_options::options_description desc;
@@ -75,22 +86,9 @@ protected:
 
     void init(int argc, char* argv[]);
 
-    Config(): argv_first(NULL), desc("allowed config options") {}
+    Config(): desc("allowed config options") {}
 
     void load(const std::string& config_file);
-
-private:
-    void checkAddInputFile(const boost::filesystem::path& path)
-    {
-    	if (boost::filesystem::is_regular_file(path))
-		{
-			if (extension.empty() || path.extension() == extension)
-			{
-				inputfiles.push_back(path.string());
-				CS_SAY("inputfile: " << path);
-			}
-		}
-    }
 };
 
 }

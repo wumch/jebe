@@ -2,40 +2,49 @@
 #pragma once
 
 #include "predef.hpp"
-#include <iostream>
-#include <fstream>
-#include <boost/unordered_map.hpp>
-#include "datetime.hpp"
-#include "wordmap.hpp"
+#include <vector>
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
 class Calculater;
 class Config;
+class Ftree;
+class Filter;
+
+enum Action {
+	send_doc = 1,
+	collected = 10,
+	calculated = 20,
+};
 
 // misc class that hold some global-variables.
 class Aside
 {
 public:
-	static WordMap wordmap;
+	typedef std::vector<Word> WordList;
+	static WordList wordList;
+
+	static Ftree* const ftree;
+	static Filter* const filter;
 
 	static const Config* const config;
 
 	static docnum_t totalDocNum;
 	static docnum_t curDocNum;		// current analysised document count.
 
-	static Calculater* const caler;
-
 	static void init();
 
 protected:
 	static void initLogger();
 
-	static void initWordMap();
+	static void initWordList();
 
-	static void initCalculater();
+public:
+	static wordnum_t wordsNum();
+
+	static wordid_t attachWord(const Word& word);
 };
 
-} /* namespace cluster */
+} /* namespace rel */
 } /* namespace jebe */

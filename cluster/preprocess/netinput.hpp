@@ -6,7 +6,7 @@
 #include "input.hpp"
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
 class NetInput
 	: public BaseInput

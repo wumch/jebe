@@ -8,7 +8,7 @@
 #include "input.hpp"
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
-} /* namespace cluster */
+} /* namespace rel */
 } /* namespace jebe */

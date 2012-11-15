@@ -1,319 +1,240 @@
 
 #include "calculater.hpp"
-#include <exception>
 #include <fstream>
-#include <iostream>
-#include <clocale>
+#include <cmath>
 #include <boost/lexical_cast.hpp>
+#include <zmq.hpp>
 #include <glog/logging.h>
-#include "math.hpp"
 #include "aside.hpp"
-#include "config.hpp"
-#include "document.hpp"
+#include "filter.hpp"
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
-class DocDuplicated
-	: public std::exception
+const int Calculater::mainid = 0;
+Calculater::DFList Calculater::dflist;
+
+Calculater::Calculater(zmq::context_t& context_, int id_)
+	: id(id_), filter(Aside::filter), context(context_),
+	  sock(context, ZMQ_REP), response(response_data, 1, NULL, NULL),
+	  collector_finished(Aside::config->collector_num, 0),
+	  calculater_finished(Aside::config->calculater_num, 0)
 {
-private:
-	wordid_t wordid;
-	docid_t docid;
-	mutable std::string reason;
+	listen();
+}
 
-public:
-	DocDuplicated(wordid_t wordid_, docid_t docid_)
-		: wordid(wordid_), docid(docid_)
-	{}
+void Calculater::run()
+{
+	prepare();
+	work();
+	finish();
+}
 
-	virtual const char* what() const throw()
+void Calculater::work()
+{
+	// since mongo is sloooower than idf-calcualter, it's better to perform memory-copy for making sending faster.
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "start inputing";
+	char* const msgbuf = new char[Aside::config->msg_max_size];
+	zmq::message_t message(msgbuf, Aside::config->msg_max_size, NULL, NULL);
+	while (sock.recv(&message, 0))
 	{
-		if (reason.empty())
+		if (CS_BUNLIKELY(!process(sock, message)))
 		{
-			reason += "word(" + boost::lexical_cast<std::string>(wordid) + ") & document(" + boost::lexical_cast<std::string>(docid) + ") duplicated";
+			break;
 		}
-		return reason.c_str();
+		message.rebuild(msgbuf, Aside::config->msg_max_size, NULL, NULL);
 	}
-
-	virtual ~DocDuplicated() throw() {}
-};
-
-ProperList VaredProperList::empty_plist;
-
-Calculater::Calculater() {}
-
-void Calculater::attachDoc(const Document& doc)
-{
-	for (Document::WordList::const_iterator it = doc.words.begin(); it != doc.words.end(); ++it)
+	if (isMain())
 	{
-		attachWord(Aside::wordmap[it->word], doc.id, it->count);
+		calculate();
 	}
-	++Aside::curDocNum;
-}
-
-void Calculater::attachWord(wordid_t wordid, docid_t docid, wnum_t atimes)
-{
-	wdlist[wordid].push_back(DIdCount(docid, atimes));	// newer document is guaranteed to be greater than older.
-}
-
-void Calculater::prepare()
-{
-	CS_DUMP(wdlist.size());
-	wdlist.assign(Aside::wordmap.map.size(), DocCountList());
-	CS_DUMP(wdlist.size());
 }
 
 void Calculater::calculate()
 {
 	ready();
-#if CS_DEBUG
-	check();
-#endif
-	filter();
+	filte();
 	calcu();
-	dump();
 }
 
 void Calculater::ready()
 {
-	Aside::totalDocNum = Aside::curDocNum;
-	std::vector<wnum_t> worddf;
-	worddf.reserve(wdlist.size());
-	for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
-	{
-		if (!wdlist[wordid].empty())
-		{
-			worddf.push_back(wdlist[wordid].size());
-		}
-	}
-	std::sort(worddf.begin(), worddf.end());
-	maxdf = worddf[static_cast<wordid_t>((1.0 - Aside::config->df_quantile_top) * (worddf.size() - 1))];
-	mindf = std::max(2u, worddf[static_cast<wordid_t>(Aside::config->df_quantile_bottom * (worddf.size() - 1))]);
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "statistics:" << CS_LINESEP <<
-		"total-documents: " << Aside::totalDocNum << CS_LINESEP <<
-		"doc-frequency: [" << mindf << ", " << maxdf << "]" << CS_LINESEP <<
-		"word-doc-var: [" << Aside::config->min_wd_var << ", " << Aside::config->max_wd_var << "]" << CS_LINESEP <<
-		"word-doc-var-rate-range: [" << Aside::config->wd_var_bottom << ", " << (1.0 - Aside::config->wd_var_top) << "]" << CS_LINESEP <<
-		"required corr: [" << Aside::config->min_word_corr << ", " << Aside::config->max_word_corr << "]";
+
+}
+
+void Calculater::filte()
+{
+
+}
+
+void Calculater::finish()
+{
+	stop();
 }
 
 void Calculater::calcu()
 {
-	decimal_t c = .0;
-	for (WordProperMap::const_iterator it = wpmap.begin(); it != wpmap.end(); ++it)
+	uint64_t total_df = 0;
+	for (DFList::const_iterator it = dflist.begin(); it != dflist.end(); ++it)
 	{
-		const VaredProperList& plist_1 = it->second;
-		SimList& simlist = wslist.insert(std::make_pair(it->first, SimList())).first->second;
-		for (WordProperMap::const_iterator iter = it; iter != wpmap.end(); ++iter)
-		{
-			if (CS_BLIKELY(iter != it))
-			{
-				c = corr(plist_1, iter->second);
-				LOG_IF(INFO, Aside::config->loglevel > 1) << "corr(" << Aside::wordmap.getWordById(it->first) << "," << Aside::wordmap.getWordById(iter->first) << ") = " << c;
-				if (Aside::config->min_word_corr <= c && c <= Aside::config->max_word_corr)
-				{
-					simlist.push_back(Similarity(iter->first, c));
-				}
-			}
-		}
+		total_df += *it;
 	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculated";
-}
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "total document-frequency: " << total_df;
 
-decimal_t Calculater::corr(const VaredProperList& plist_1, const VaredProperList& plist_2) const
-{
-	return CS_BUNLIKELY(plist_1.var_sqrt == 0 || plist_2.var_sqrt == 0) ? .0 : (cov(plist_1, plist_2) / (plist_1.var_sqrt * plist_2.var_sqrt));
-}
-
-// cov(X,Y) = (X - Ex)*(Y - Ey)
-decimal_t Calculater::cov(const VaredProperList& plist_1, const VaredProperList& plist_2) const
-{
-	decimal_t summary = 0;
-	bool used = false;
-	docnum_t k = 0;
-	for (ProperList::const_iterator i = plist_1->begin(), j = plist_2->begin(); i != plist_1->end(); ++i)
+	if (CS_BUNLIKELY(total_df == 0 || Aside::curDocNum == 0))
 	{
-		for (; j != plist_2->end(); ++j)
-		{
-			if (j->id < i->id)
-			{
-				summary -= plist_1.ex * (j->count - plist_2.ex);
-				++k;
-			}
-			else if (j->id == i->id)
-			{
-				summary += (i->count - plist_1.ex) * (j->count - plist_2.ex);
-				++j;
-				++k;
-				used = true;
-				break;
-			}
-			else
-			{
-				break;
-			}
-		}
-		if (CS_BLIKELY(!used))
-		{
-			summary -= (i->count - plist_1.ex) * plist_2.ex;
-			++k;
-		}
-		else
-		{
-			used = false;
-		}
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "total document-frequency or Aside::curDocNum is zero, so that no need of dump";
+		return;
 	}
-	return (summary + (Aside::totalDocNum - k) * plist_1.ex * plist_2.ex) / Aside::totalDocNum;
-}
 
-size_t Calculater::sum(const DocCountList& dlist) const
-{
-	size_t res = 0;
-	for (DocCountList::const_iterator it = dlist.begin(); it != dlist.end(); ++it)
-	{
-		res += it->count;
-	}
-	return res;
-}
-
-void Calculater::filter()
-{
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "before filter, total words: " << wdlist.size();
-	if (needFilterByVar())
-	{
-		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
-		{
-			if (!shouldSkip(wdlist[wordid]))
-			{
-				VaredProperList plist(wdlist[wordid]);
-				if (!shouldSkipByVar(plist))
-				{
-					wpmap.insert(std::make_pair(wordid, plist));
-				}
-				else
-				{
-					LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[wordid] << "] filtered by var = " << plist.var_sqrt << "/" << plist.ex;
-					wdlist[wordid].resize(0);
-				}
-			}
-			else
-			{
-				LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[wordid] << "] filtered by df = " << wdlist[wordid].size();
-				wdlist[wordid].resize(0);
-			}
-		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df and non-rate-var, remain words: " << wpmap.size();
-	}
-	else
-	{
-		for (wordid_t wordid = 0; wordid < wdlist.size(); ++wordid)
-		{
-			if (!shouldSkip(wdlist[wordid]))
-			{
-				wpmap.insert(std::make_pair(wordid, VaredProperList(wdlist[wordid])));
-			}
-			else
-			{
-				LOG_IF(INFO, Aside::config->loglevel > 2) << Aside::wordmap[wordid] << "filtered by df = " << wdlist[wordid].size();
-				wdlist[wordid].resize(0);
-			}
-		}
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by df, remain words: " << wpmap.size();
-	}
-	filterByVarRate();
-}
-
-void Calculater::filterByVarRate()
-{
-	CS_RETURN_IF(!(Aside::config->wd_var_bottom > 0 || staging::between(Aside::config->wd_var_top, .0, 1.0)));
-	CS_RETURN_IF(wpmap.empty());
-
-	std::vector<decimal_t> varlist;
-	varlist.reserve(wpmap.size());
-	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); ++it)
-	{
-		varlist.push_back(getFilterVar(it->second));
-	}
-	std::sort(varlist.begin(), varlist.end());
-
-	decimal_t min_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * Aside::config->wd_var_bottom)];
-	decimal_t max_var = varlist[static_cast<wordid_t>((varlist.size() - 1) * (1.0 - Aside::config->wd_var_top))];
-
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "will filter by var-rate not between [" << min_var << "," << max_var << "]";
-
-	for (WordProperMap::iterator it = wpmap.begin(); it != wpmap.end(); )
-	{
-		if (!staging::between(getFilterVar(it->second), min_var, max_var))
-		{
-			LOG_IF(INFO, Aside::config->loglevel > 2) << "[" << Aside::wordmap[it->first] << "] filtered by var-rate = " << it->second.var_sqrt << "/" << it->second.ex;
-			wdlist[it->first].resize(0);
-			it = wpmap.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "filtered by var-rate, remain words: " << wpmap.size();
-}
-
-decimal_t Calculater::getFilterVar(const VaredProperList& plist) const
-{
-	return plist.var_sqrt / plist.ex;
-}
-
-bool Calculater::shouldSkip(const DocCountList& dlist) const
-{
-	return dlist.empty() || dlist.size() < mindf || maxdf < dlist.size();
-}
-
-bool Calculater::needFilterByVar() const
-{
-	return Aside::config->min_wd_var > 0 || Aside::config->max_wd_var > 0;
-}
-
-bool Calculater::shouldSkipByVar(const VaredProperList& plist) const
-{
-	return shouldSkipByVar(plist.var_sqrt / plist.ex);
-}
-
-bool Calculater::shouldSkipByVar(decimal_t var) const
-{
-	return Aside::config->min_wd_var > var || var < Aside::config->max_wd_var;
-}
-
-void Calculater::check()
-{
-	for (wordid_t wid = 0; wid < wdlist.size(); ++wid)
-	{
-		const DocCountList& dlist = wdlist[wid];
-		for (DocCountList::const_iterator i = dlist.begin(), prev = i++; i != dlist.end(); ++i)
-		{
-			if (CS_BUNLIKELY(!(prev->id < i->id)))
-			{
-				CS_DIE("kid, the order of [{document-id,word-appear-times}...][] of some word is wrong!");
-			}
-		}
-	}
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "checked, all of order are correct!";
-}
-
-void Calculater::dump()
-{
 	std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
-	ofile.imbue(std::locale(""));
-	for (WordSimList::const_iterator it = wslist.begin(); it != wslist.end(); ++it)
+	long double base = Aside::curDocNum;
+	for (wordnum_t i = 0, end = Aside::wordsNum(); i < end; ++i)
 	{
-		const SimList& simlist = it->second;
-		for (SimList::const_iterator iter = simlist.begin(); iter != simlist.end(); ++iter)
+		if (dflist[i] == 0)
 		{
-			ofile << Aside::wordmap[it->first] << '\t' << Aside::wordmap[iter->first] << '\t' << iter->second << CS_LINESEP;
+			ofile << Aside::wordList[i] << '\t' << 0 << CS_LINESEP;
+		}
+		else
+		{
+			ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (std::log10<long double>(base / dflist[i]))) << CS_LINESEP;
 		}
 	}
 	ofile.close();
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile.string();
 }
 
-} /* namespace cluster */
+void Calculater::prepare()
+{
+	response_data[0] = 1;		// anyway response "1".
+}
+
+void Calculater::init()
+{
+	dflist.resize(Aside::wordsNum(), 0);
+
+	if (Aside::config->record_on_cache)
+	{
+		for (DFList::const_iterator it = dflist.begin(); it != dflist.end(); ++it)
+		{
+			CS_PREFETCH(&*it, 1, 3);
+		}
+	}
+}
+
+// true: continue with receiving, false: stop receiveing.
+bool Calculater::process(zmq::socket_t& sock, zmq::message_t& message)
+{
+	reply(sock);
+	CS_RETURN_IF(message.size() < 1, true);
+	Action act = static_cast<Action>(*static_cast<uint8_t*>(message.data()));
+	if (CS_BLIKELY(act == send_doc))
+	{
+		attachDoc(static_cast<char*>(message.data()) + 1, message.size() - 1);
+		return true;
+	}
+	else if (act == collected)
+	{
+		return handleCollected(*(static_cast<uint8_t*>(message.data()) + 1));
+	}
+	else if (act == calculated)
+	{
+		return handleCalculated(*(static_cast<uint8_t*>(message.data()) + 1));
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void Calculater::attachDoc(const char* doc, size_t len)
+{
+	CS_RETURN_IF(len < 1);
+	recorder.reset();
+	__sync_add_and_fetch(&Aside::curDocNum, 1);
+	filter->find(reinterpret_cast<const byte_t*>(doc), len, recorder);
+	const Recorder::NodeList& nodes = recorder.recordedNodes();
+	for (Recorder::NodeList::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+	{
+		__sync_fetch_and_add(&dflist[(*it)->pattenid], 1);
+	}
+}
+
+void Calculater::listen()
+{
+	static const int64_t send_buf_size = 32;
+	sock.setsockopt(ZMQ_SNDBUF, &send_buf_size, sizeof(send_buf_size));
+	sock.setsockopt(ZMQ_RCVBUF, &Aside::config->receive_buffer_size, sizeof(Aside::config->receive_buffer_size));
+	sock.bind((Aside::config->internal + "-" + boost::lexical_cast<std::string>(id)).c_str());
+}
+
+bool Calculater::handleCollected(uint8_t collector_id)
+{
+	collector_finished.set(collector_id, true);
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "collector<" << static_cast<int>(collector_id) << "> finished. (" << collector_finished.count() << "/" << Aside::config->collector_num << ")";
+	if (collector_finished.count() == Aside::config->collector_num)
+	{
+		return notifyMain();
+	}
+	else
+	{
+		return true;
+	}
+}
+bool Calculater::notifyMain()
+{
+	if (isMain())
+	{
+		return handleCalculated(id);
+	}
+	else
+	{
+		zmq::socket_t sock(context, ZMQ_REQ);
+		sock.connect((Aside::config->internal + "-" + boost::lexical_cast<std::string>(mainid)).c_str());
+		char note[2] = {static_cast<uint8_t>(calculated), static_cast<uint8_t>(id)};
+		zmq::message_t notice(note, 2, NULL, NULL);
+		sock.send(notice, ZMQ_NOBLOCK);
+		zmq::message_t response;
+		sock.recv(&response, 0);
+		sock.close();
+		return false;
+	}
+}
+
+bool Calculater::handleCalculated(uint8_t calculater_id)
+{
+	CS_RETURN_IF(!isMain(), false);
+	calculater_finished.set(calculater_id, true);
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "calculater<" << static_cast<int>(calculater_id) << "> finished. (" << calculater_finished.count() << "/" << Aside::config->calculater_num << ")";
+	if (calculater_finished.count() == Aside::config->calculater_num)
+	{
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "all were calculated";
+		sock.close();
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool Calculater::isMain()
+{
+	return id == mainid;
+}
+
+void Calculater::reply(zmq::socket_t& sock)
+{
+	response.rebuild(response_data, 1, NULL, NULL);
+	sock.send(response, ZMQ_NOBLOCK);
+}
+
+void Calculater::stop()
+{
+}
+
+Calculater::~Calculater()
+{}
+
+} /* namespace idf */
 } /* namespace jebe */

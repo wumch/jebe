@@ -11,7 +11,7 @@
 #include "autoincr.hpp"
 
 namespace jebe {
-namespace cluster {
+namespace idf {
 
 class WordNonExists
 	: public std::exception
@@ -62,9 +62,8 @@ public:
 
 public:
 	WordMap()
-		: idGen(*WordIdGen::instance())
-	{
-	}
+		: idGen(*WordIdGen::instance()), map(1 << _JEBE_WORD_MAP_HASH_BITS)
+	{}
 
 	bool wordExists(const Word& word) const
 	{
@@ -105,5 +104,5 @@ public:
 	}
 };
 
-} /* namespace cluster */
+} /* namespace rel */
 } /* namespace jebe */
