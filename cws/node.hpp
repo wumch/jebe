@@ -48,8 +48,8 @@ public:
 			return children[0];
 		}
 
-		uint left = 0, right = childrenum - 1;
-		uint cur = (left + right) >> 1;
+		int left = 0, right = childrenum - 1;
+		int cur = (left + right) >> 1;
 
 		// avoid from loop if only two atoms.
 		while (left < cur && cur < right)
@@ -60,11 +60,11 @@ public:
 			}
 			else if (children[cur]->atom < _atom)
 			{
-				left = cur;
+				left = cur + 1;
 			}
 			else
 			{
-				right = cur;
+				right = cur - 1;
 			}
 			cur = (left + right) >> 1;
 		}
@@ -108,20 +108,20 @@ public:
 
     Node* find_child(byte_t _atom) const
     {
-    	if (CS_BUNLIKELY(childrenum == 0))
-    	{
-    		return NULL;
-    	}
+//    	if (CS_BUNLIKELY(childrenum == 0))
+//    	{
+//    		return NULL;
+//    	}
+//
+//    	// hopefully avoid from loop.
+//    	if (CS_BUNLIKELY(children[0]->atom == _atom))
+//    	{
+//    		return children[0];
+//    	}
 
-    	// hopefully avoid from loop.
-    	if (CS_BUNLIKELY(children[0]->atom == _atom))
-    	{
-    		return children[0];
-    	}
-
-    	uint left = 0, right = childrenum - 1;
-    	uint cur = (left + right) >> 1;
-    	while (left < cur && cur < right)
+    	int left = 0, right = childrenum - 1;
+    	int cur = (left + right) >> 1;
+    	while (left <= right)
     	{
     		if (children[cur]->atom == _atom)
     		{
@@ -129,23 +129,23 @@ public:
     		}
     		if (children[cur]->atom < _atom)
     		{
-    			left = cur;
+    			left = cur + 1;
     		}
     		else
     		{
-    			right = cur;
+    			right = cur - 1;
     		}
     		cur = (left + right) >> 1;
     	}
 
-		if (children[right]->atom == _atom)
-		{
-			return children[right];
-		}
-		else if (children[left]->atom == _atom)
-		{
-			return children[left];
-		}
+//		if (children[left]->atom == _atom)
+//		{
+//			return children[left];
+//		}
+//		else if (children[left]->atom == _atom)
+//		{
+//			return children[left];
+//		}
 		return NULL;
     }
 
