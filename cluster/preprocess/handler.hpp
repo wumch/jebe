@@ -7,7 +7,8 @@
 #include "filter.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Handler
 {
@@ -57,5 +58,6 @@ protected:
 	}
 };
 
-} /* namespace qdb */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

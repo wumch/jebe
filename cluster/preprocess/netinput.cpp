@@ -11,7 +11,8 @@
 #include "calculater.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 NetInput::NetInput()
 	: context(Config::getInstance()->io_threads),
@@ -126,5 +127,6 @@ NetInput::~NetInput()
 	delete cur;
 }
 
-} /* namespace fts */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

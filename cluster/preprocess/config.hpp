@@ -10,7 +10,8 @@
 extern int main(int, char*[]);
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Config
 {
@@ -48,6 +49,7 @@ public:
     std::size_t timeout;
 
     std::size_t msg_max_size;
+    std::size_t doc_packer_buf_size;
 
     std::size_t max_tmp_match;
     std::size_t max_match;
@@ -91,5 +93,6 @@ protected:
     void load(const std::string& config_file);
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

@@ -1,13 +1,13 @@
 
 #include "mongoinput.hpp"
-#include <glog/logging.h>
-#include <mongo/client/dbclient.h>
 #include <cassert>
 #include "aside.hpp"
 #include "config.hpp"
+#include "document.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 MongoInput::MongoInput()
 	: con(NULL),
@@ -16,11 +16,58 @@ MongoInput::MongoInput()
 	  field(Aside::config->mongo_field)
 {}
 
-const char* MongoInput::next()
+bool MongoInput::next(char* heap)
+{
+	mongo::BSONObj bson(nextBSON());
+	if (CS_BLIKELY(!bson.isEmpty()))
+	{
+		mongo::BSONElement _id = bson.getField(std::string("_id"));
+		mongo::BSONElement url = bson.getField(std::string("url"));
+		mongo::BSONElement text = bson.getField(std::string("text"));
+		if (CS_BLIKELY(_id.type() == mongo::String || url.type() == mongo::String || text.type() == mongo::String))
+		{
+			new (heap) InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
+			return true;
+		}
+	}
+	return false;
+}
+
+InDocument MongoInput::nextDoc()
+{
+	mongo::BSONObj bson(nextBSON());
+	if (CS_BLIKELY(!bson.isEmpty()))
+	{
+		mongo::BSONElement _id = bson.getField(std::string("_id"));
+		mongo::BSONElement url = bson.getField(std::string("url"));
+		mongo::BSONElement text = bson.getField(std::string("text"));
+		if (CS_BLIKELY(_id.type() == mongo::String || url.type() == mongo::String || text.type() == mongo::String))
+		{
+			return InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
+		}
+	}
+	return empty_indoc;
+}
+
+mongo::BSONObj MongoInput::nextBSON()
 {
 	static size_t got_docs = 0;
-	CS_RETURN_IF(Aside::config->mongo_max_doc > 0 && __sync_add_and_fetch(&got_docs, 1) > Aside::config->mongo_max_doc, NULL);
-	return CS_BLIKELY(more()) ? cur->nextSafe().getStringField(field.c_str()) : NULL;
+	CS_RETURN_IF(Aside::config->mongo_max_doc > 0 && got_docs > Aside::config->mongo_max_doc, empty_bson);
+	__sync_add_and_fetch(&got_docs, 1);
+
+	if (CS_BLIKELY(more()))
+	{
+		return cur->nextSafe();
+	}
+	else
+	{
+		return empty_bson;
+	}
+}
+
+InDocument MongoInput::next()
+{
+	return nextDoc();
 }
 
 void MongoInput::start()
@@ -31,7 +78,8 @@ void MongoInput::start()
 	{
 		LOG_IF(ERROR, Aside::config->loglevel > 0) << "connect to mongodb-server [" << server << "] faield: " << error;
 	}
-	cur = con->query(collection, mongo::Query().sort("$natural", -1));
+	mongo::BSONObj fields(BSON("_id" << 1 << "text" << 1 << "url" << 1));
+	cur = con->query(collection, mongo::Query().sort("$natural", -1), 0, 0, &fields);
 }
 
 bool MongoInput::more()
@@ -53,5 +101,6 @@ MongoInput::~MongoInput()
 	stop();
 }
 
-} /* namespace idf */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

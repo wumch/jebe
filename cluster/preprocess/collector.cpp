@@ -13,7 +13,8 @@
 #include "mongoinput.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 Collector::Collector(zmq::context_t& context_, uint8_t id_)
 	: id(id_), context(context_),
@@ -21,7 +22,9 @@ Collector::Collector(zmq::context_t& context_, uint8_t id_)
 	  recv_buf(recv_buf_area, recv_buf_size, NULL, NULL),
 	  send_buf_area(new char[Aside::config->send_buffer_size]),
 	  send_buf(send_buf_area, Aside::config->send_buffer_size, NULL, NULL),
-	  chunk_size(Aside::config->chunk_size), chunk_num(Aside::config->chunk_num), next_sock(0)
+	  chunk_size(Aside::config->chunk_size), chunk_num(Aside::config->chunk_num), next_sock(0),
+	  in_chunks_mask(chunk_num, true), out_chunks_mask(chunk_num, true),
+	  packer_buffer(0)
 {
 	if (Aside::config->send_buffer_size < 16)
 	{
@@ -38,11 +41,12 @@ void Collector::run()
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "collector<" << static_cast<int>(id) << "> start inputing";
 	std::auto_ptr<BaseInput> input = create_input();
 	input->start();
-	const char* doc;
-	while ((doc = input->next()) &&
-		((Aside::curDocNum < Aside::totalDocNum) || (Aside::totalDocNum == 0)))
+	char* chunk;
+	while ((Aside::curDocNum < Aside::totalDocNum) || (Aside::totalDocNum == 0))
 	{
-		process(doc);
+		chunk = in_chunks[get_in_chunk()];
+		input->next(chunk);
+		process(reinterpret_cast<InDocument*>(chunk));
 	}
 
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "collector<" << static_cast<int>(id) << "> finishing inputing";
@@ -58,21 +62,38 @@ void Collector::run()
 	stop();
 }
 
-void Collector::process(const char* doc)
+OutDocument* Collector::convert(const InDocument* doc)
 {
-	char* const chunk = chunks[getChunk()];
-	size_t len = std::min<size_t>(chunk_size - 1, strlen(doc));
-	memcpy(chunk + 1, doc, len);
+	return new OutDocument;		// TODO
+}
 
-	zmq::socket_t& sock = getSock();
-	zmq::message_t message(chunk, len, &Collector::recycle_chunk_, this);
+void Collector::process(const InDocument* indoc)
+{
+	CS_RETURN_IF(!*indoc);
+
+	OutDocument* outdoc = convert(indoc);
+	char* chunk = out_chunks[get_out_chunk()];
+	size_t msg_size = pack_out_doc(*outdoc, chunk);
+
+	zmq::socket_t& sock = get_sock();
+	zmq::message_t message(chunk, msg_size, &Collector::recycle_out_chunk_, this);
 	sock.send(message, ZMQ_NOBLOCK);
 
 	recv_buf.rebuild(recv_buf_area, recv_buf_size, NULL, NULL);
 	sock.recv(&recv_buf, 0);
 }
 
-zmq::socket_t& Collector::getSock()
+size_t Collector::pack_out_doc(const OutDocument& outdoc, char* zone)
+{
+	packer_buffer.clear();
+//	packer_buffer.base::data = zone;
+//	packer_buffer.base::alloc = chunk_size;
+	msgpack::packer<msgpack::sbuffer> packer(packer_buffer);
+	packer.pack(outdoc);
+	return packer_buffer.size();
+}
+
+zmq::socket_t& Collector::get_sock()
 {
 	if (++next_sock >= socks.size())
 	{
@@ -86,55 +107,105 @@ std::auto_ptr<BaseInput> Collector::create_input() const
 	return std::auto_ptr<BaseInput>(dynamic_cast<BaseInput*>(new MongoInput));
 }
 
-void Collector::recycle_chunk_(void* chunk, void* owner)
+void Collector::recycle_in_chunk_(void* chunk, void* owner)
 {
 	Collector* self = reinterpret_cast<Collector*>(owner);
 	for (uint32_t i = 0; i < self->chunk_num; ++i)
 	{
-		if (self->chunks[i] == chunk)
+		if (self->in_chunks[i] == chunk)
 		{
-			self->recycle_chunk(static_cast<char*>(chunk), i);
+			self->recycle_in_chunk(static_cast<char*>(chunk), i);
 		}
 	}
 }
 
-void Collector::recycle_chunk(char* chunk, uint32_t turn)
+void Collector::recycle_in_chunk(char* chunk, uint32_t turn)
 {
-	chunks_mask[turn] = 0;
+	in_chunks_mask.set(turn, true);
 }
 
-uint32_t Collector::getChunk()
+uint32_t Collector::get_in_chunk()
 {
-	int turn = acquire_chunk();
+	int turn = acquire_in_chunk();
 	while (turn == -1)
 	{
 		usleep(10);
-		turn = acquire_chunk();
+		turn = acquire_in_chunk();
 	}
 	return turn;
 }
 
-int Collector::acquire_chunk()
+int Collector::acquire_in_chunk()
 {
-	for (uint32_t i = 0; i < chunk_num; ++i)
+	size_t idle = in_chunks_mask.find_first();
+	if (CS_BLIKELY(idle != in_chunks_mask.npos))
 	{
-		if (chunks_mask[i] == 0)
+		in_chunks_mask.set(idle, false);
+		return idle;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+// out-chunk
+void Collector::recycle_out_chunk_(void* chunk, void* owner)
+{
+	Collector* self = reinterpret_cast<Collector*>(owner);
+	for (uint32_t i = 0; i < self->chunk_num; ++i)
+	{
+		if (self->out_chunks[i] == chunk)
 		{
-			chunks_mask[i] = 1;
-			return i;
+			self->recycle_out_chunk(static_cast<char*>(chunk), i);
 		}
 	}
-	return -1;		// failed
+}
+
+void Collector::recycle_out_chunk(char* chunk, uint32_t turn)
+{
+	out_chunks_mask.set(turn, true);
+}
+
+uint32_t Collector::get_out_chunk()
+{
+	int turn = acquire_out_chunk();
+	while (turn == -1)
+	{
+		usleep(10);
+		turn = acquire_out_chunk();
+	}
+	return turn;
+}
+
+int Collector::acquire_out_chunk()
+{
+	size_t idle = out_chunks_mask.find_first();
+	if (CS_BLIKELY(idle != out_chunks_mask.npos))
+	{
+		out_chunks_mask.set(idle, false);
+		return idle;
+	}
+	else
+	{
+		return -1;
+	}
 }
 
 void Collector::prepare()
 {
-	chunks_mask = new char[chunk_num];
-	chunks = reinterpret_cast<char**>(malloc(sizeof(char*) * chunk_num));
+	in_chunks = reinterpret_cast<char**>(malloc(sizeof(char*) * chunk_num));
 	for (uint32_t i = 0; i < chunk_num; ++i)
 	{
-		chunks[i] = reinterpret_cast<char*>(malloc(chunk_size));
-		chunks[i][0] = static_cast<uint8_t>(send_doc);
+		in_chunks[i] = reinterpret_cast<char*>(malloc(chunk_size));
+		in_chunks[i][0] = static_cast<uint8_t>(send_doc);
+	}
+
+	out_chunks = reinterpret_cast<char**>(malloc(sizeof(char*) * chunk_num));
+	for (uint32_t i = 0; i < chunk_num; ++i)
+	{
+		out_chunks[i] = reinterpret_cast<char*>(malloc(chunk_size));
+		out_chunks[i][0] = static_cast<uint8_t>(send_doc);
 	}
 
 	socks.reserve(Aside::config->calculater_num);
@@ -161,14 +232,21 @@ Collector::~Collector()
 {
 	for (uint32_t i = 0; i < chunk_num; ++i)
 	{
-		std::free(chunks[i]);
-		chunks[i] = NULL;
+		std::free(in_chunks[i]);
+		in_chunks[i] = NULL;
 	}
-	std::free(chunks);
-	chunks = NULL;
-	delete chunks_mask;
-	chunks_mask = NULL;
+	std::free(in_chunks);
+	in_chunks = NULL;
+
+	for (uint32_t i = 0; i < chunk_num; ++i)
+	{
+		std::free(out_chunks[i]);
+		out_chunks[i] = NULL;
+	}
+	std::free(out_chunks);
+	out_chunks = NULL;
 }
 
-} /* namespace qdb */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

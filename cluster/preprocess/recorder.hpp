@@ -7,7 +7,8 @@
 #include "node.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 // record words appear in a certain document, for calculate the df.
 class Recorder
@@ -50,5 +51,6 @@ public:
 	}
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

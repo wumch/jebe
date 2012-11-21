@@ -6,7 +6,8 @@
 #include "input.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class NetInput
 	: public BaseInput
@@ -53,5 +54,6 @@ private:
 	zmq::message_t failed_response;
 };
 
-} /* namespace fts */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

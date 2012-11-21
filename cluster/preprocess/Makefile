@@ -5,9 +5,9 @@ C = cpp
 OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
-EXE_NAME=idf
+EXE_NAME=preprocess
 EXE = $(OUTPUT_PATH)/$(EXE_NAME)
-DEBUG = 0
+DEBUG = 1
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)
@@ -19,7 +19,7 @@ ifeq ($(COMPILER), G++)
   COPT = -DCS_DEBUG=1 -O0 -g3 -pipe -Wall -fstack-protector
   LDOPT = -Wl,-O0 -g3 -rdynamic
   else
-# -fno-rtti is no useable since boost::program_options...
+# -fno-rtti is not useable since boost::program_options...
   COPT = -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
   LDOPT = -Wl,-O3 $(COPT)
   endif
@@ -27,7 +27,7 @@ ifeq ($(COMPILER), G++)
   OBJFLAG = -o
   EXEFLAG = -o
  INCLUDES = 
-  INCLUDES = -I../staging
+  INCLUDES = -I../../staging
 # LIBS = -lgc
 #  LIBS = -lluaplus -lboost_system -lboost_thread
   LIBS = -lzmq -lmsgpack -lboost_system -lboost_thread -lboost_program_options -lboost_filesystem -lmongoclient -lglog
@@ -51,7 +51,8 @@ else
 endif
 
 OBJS = $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o \
-$(OBJECT_PATH)/aside.o $(OBJECT_PATH)/collector.o $(OBJECT_PATH)/calculater.o $(OBJECT_PATH)/mongoinput.o
+$(OBJECT_PATH)/aside.o $(OBJECT_PATH)/collector.o $(OBJECT_PATH)/calculater.o $(OBJECT_PATH)/mongoinput.o \
+$(OBJECT_PATH)/document.o
 
 all: $(OBJS)
 	@echo Linking...
@@ -99,6 +100,10 @@ $(OBJECT_PATH)/mongoinput.o: $(SOURCE_PATH)/mongoinput.cpp $(SOURCE_PATH)/mongoi
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/aside.o: $(SOURCE_PATH)/aside.cpp $(SOURCE_PATH)/aside.hpp
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/document.o: $(SOURCE_PATH)/document.cpp $(SOURCE_PATH)/document.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

@@ -2,7 +2,9 @@
 #include "master.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
-} /* namespace fts */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

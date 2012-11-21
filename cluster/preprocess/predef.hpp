@@ -21,6 +21,14 @@ extern "C" {
 #include <limits.h>
 }
 #include "unit.hpp"
+#ifdef LOG_IF
+#	undef LOG_IF
+#endif
+#ifdef LOG
+#	error "macro LOG is already defined, before glog/logging.h included."
+#	undef LOG
+#endif
+#include <glog/logging.h>
 
 #define _JEBE_NO_REWIND_OPTI		0
 #define _JEBE_SCAN_FROM_RIGHT		0
@@ -33,7 +41,8 @@ extern "C" {
 #define _JEBE_WORD_MAP_HASH_BITS	19
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 typedef unsigned char 	byte_t;
 typedef uint32_t 		tsize_t;	// text-size type.
@@ -41,12 +50,16 @@ typedef uint8_t 		wsize_t;	// word-size type.
 typedef uint32_t 		atimes_t;	// appear-times of word type.
 
 typedef std::string		Word;
-typedef double			weight_t;
 
 typedef uint32_t		wordid_t;
 typedef uint32_t		wordnum_t;
 
+typedef uint32_t		docid_t;
 typedef uint32_t		docnum_t;
 
-}
-}
+typedef double			decimal_t;
+typedef decimal_t		weight_t;
+
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

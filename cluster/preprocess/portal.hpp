@@ -6,7 +6,8 @@
 #include "master.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Portal
 {
@@ -37,5 +38,6 @@ private:
     boost::shared_ptr<boost::asio::ip::tcp::endpoint> ep;
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

@@ -7,7 +7,8 @@
 #include "config.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Ftree
 {
@@ -186,5 +187,6 @@ public:
 
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

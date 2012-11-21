@@ -5,7 +5,8 @@
 #include <vector>
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Calculater;
 class Config;
@@ -46,5 +47,6 @@ public:
 	static wordid_t attachWord(const Word& word);
 };
 
-} /* namespace rel */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

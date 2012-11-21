@@ -10,7 +10,8 @@
 #include "aside.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Node;
 static Node* make_node(byte_t _atom);
@@ -190,5 +191,6 @@ static Node* make_node(byte_t _atom)
 	return new (NodePool::malloc()) Node(_atom);
 }
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

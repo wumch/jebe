@@ -8,7 +8,8 @@
 #include "node.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Node;
 
@@ -281,5 +282,6 @@ public:
 	}
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

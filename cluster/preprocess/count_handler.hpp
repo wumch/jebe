@@ -9,7 +9,8 @@
 #include "node.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 typedef msgpack::type::define<const Node*, atimes_t> CWordWeightPacker;
 
@@ -142,5 +143,6 @@ public:
 	}
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

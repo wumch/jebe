@@ -2,7 +2,9 @@
 #include "wordmap.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
-} /* namespace rel */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

@@ -8,7 +8,8 @@
 #include "recorder.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Calculater
 {
@@ -80,5 +81,6 @@ private:
 	void finish();
 };
 
-} /* namespace idf */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

@@ -11,7 +11,8 @@
 #include "autoincr.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class WordNonExists
 	: public std::exception
@@ -104,5 +105,6 @@ public:
 	}
 };
 
-} /* namespace rel */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

@@ -4,11 +4,15 @@
 #include "predef.hpp"
 #include <vector>
 #include <memory>
+#include <boost/dynamic_bitset.hpp>
 #include <zmq.hpp>
+#include <msgpack.hpp>
 #include "input.hpp"
+#include "document.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Collector
 {
@@ -24,22 +28,34 @@ public:
 private:
 	void work();
 
-	void process(const char* doc);
+	void process(const InDocument* doc);
+
+	OutDocument* convert(const InDocument* doc);
+
+	size_t pack_out_doc(const OutDocument& outdoc, char* zone);
 
 	std::auto_ptr<BaseInput> create_input() const;
 
-	void recycle_chunk(char* chunk, uint32_t turn);
+	void recycle_in_chunk(char* chunk, uint32_t turn);
 
-	static void recycle_chunk_(void* chunk, void* owner);
+	static void recycle_in_chunk_(void* chunk, void* owner);
 
-	uint32_t getChunk();
+	uint32_t get_in_chunk();
 
-	int acquire_chunk();
+	int acquire_in_chunk();
+
+	void recycle_out_chunk(char* chunk, uint32_t turn);
+
+	static void recycle_out_chunk_(void* chunk, void* owner);
+
+	uint32_t get_out_chunk();
+
+	int acquire_out_chunk();
 
 	void prepare();
 
 private:
-	zmq::socket_t& getSock();
+	zmq::socket_t& get_sock();
 
 	uint8_t id;
 
@@ -57,9 +73,17 @@ private:
 	uint32_t chunk_size;
 	uint32_t chunk_num;
 	uint32_t next_sock;
-	char** chunks;
-	char* chunks_mask;
+
+	char** in_chunks;
+	boost::dynamic_bitset<uint64_t> in_chunks_mask;
+
+	char** out_chunks;
+	boost::dynamic_bitset<uint64_t> out_chunks_mask;
+
+	msgpack::sbuffer packer_buffer;
+
 };
 
-} /* namespace qdb */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

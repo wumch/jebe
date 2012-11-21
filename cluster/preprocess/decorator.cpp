@@ -1,15 +1,14 @@
-/*
- * input.cpp
- *
- *  Created on: 2012-10-18
- *      Author: root
- */
 
-#include "input.hpp"
+#include "decorator.hpp"
 
 namespace jebe {
 namespace cluster {
 namespace preprocess {
+
+void Decorator::decorate() const
+{
+
+}
 
 } /* namespace preprocess */
 } /* namespace cluster */

@@ -6,7 +6,8 @@
 #include "portal.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 Portal::Portal()
 {
@@ -82,5 +83,6 @@ Portal::~Portal()
     clean_pid();
 }
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

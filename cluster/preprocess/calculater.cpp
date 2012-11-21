@@ -9,7 +9,8 @@
 #include "filter.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 const int Calculater::mainid = 0;
 Calculater::DFList Calculater::dflist;
@@ -236,5 +237,6 @@ void Calculater::stop()
 Calculater::~Calculater()
 {}
 
-} /* namespace idf */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */

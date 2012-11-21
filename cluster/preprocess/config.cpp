@@ -20,7 +20,8 @@ extern "C" {
 #define _JEBE_OUT_CONFIG_PROPERTY(property)		<< #property << ":\t\t" << property << std::endl
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 void Config::init(int argc, char* argv[])
 {
@@ -28,8 +29,8 @@ void Config::init(int argc, char* argv[])
 	boost::program_options::options_description cmdDesc("allowed options");
 	cmdDesc.add_options()
 			("help,h", "show this help and exit.")
-			("config,c", boost::program_options::value<std::string>()->default_value("etc/idf.conf"),
-				"config file, defaults to etc/idf.conf.")
+			("config,c", boost::program_options::value<std::string>()->default_value("etc/preprocess.conf"),
+				"config file, defaults to etc/preprocess.conf.")
 			("mongo-max-documents,m", boost::program_options::value<typeof(mongo_max_doc)>()->default_value(0),
 				"max-documents should be processed.")
 	;
@@ -74,13 +75,13 @@ void Config::initDesc()
 	boost::filesystem::path default_logfile(std::string("/var/log/") + program_name + ".log");
 	desc.add_options()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
-		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://idf"),
-				"internal communicate address, defaults to `inproc://idf`")
+		("internal", boost::program_options::value<typeof(listen)>()->default_value("inproc://preprocess"),
+				"internal communicate address, defaults to `inproc://preprocess`")
 		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value(default_pidfile),
 				(std::string("pid file, defaults to ") + default_pidfile.string()).c_str())
 		("patten-file", boost::program_options::value<typeof(pattenfile)>()->default_value("etc/patten.txt"),
 				"pid file, defaults to etc/patten.txt")
-		("output-file", boost::program_options::value<typeof(outputfile)>()->default_value("etc/patten.idf.txt"))
+		("output-file", boost::program_options::value<typeof(outputfile)>()->default_value("etc/patten.preprocess.txt"))
 		("log-file", boost::program_options::value<typeof(logfile)>()->default_value(default_logfile))
 		("log-level", boost::program_options::value<typeof(loglevel)>()->default_value(0))
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true),
@@ -228,7 +229,8 @@ void Config::load(const std::string& config_file)
 	);
 }
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */
 
 #undef _JEBE_OUT_CONFIG_PROPERTY

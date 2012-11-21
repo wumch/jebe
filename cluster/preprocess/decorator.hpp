@@ -1,15 +1,15 @@
-/*
- * input.cpp
- *
- *  Created on: 2012-10-18
- *      Author: root
- */
 
-#include "input.hpp"
+#pragma once
 
 namespace jebe {
 namespace cluster {
 namespace preprocess {
+
+class Decorator
+{
+public:
+	void decorate() const;
+};
 
 } /* namespace preprocess */
 } /* namespace cluster */

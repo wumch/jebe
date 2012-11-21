@@ -2,16 +2,15 @@
 #include "aside.hpp"
 #include <fstream>
 #include <iostream>
-#include <boost/date_time/local_time/local_time.hpp>
 #include <glog/logging.h>
-#include "datetime.hpp"
 #include "config.hpp"
 #include "calculater.hpp"
 
 #define __JEBE_PATTEN_LINE_SIZE_MAX	256
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 Aside::WordList Aside::wordList;
 Ftree* const Aside::ftree = new Ftree;
@@ -67,7 +66,8 @@ wordnum_t Aside::wordsNum()
 	return wordList.size();
 }
 
-} /* namespace rel */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */
 
 #undef __JEBE_PATTEN_LINE_SIZE_MAX

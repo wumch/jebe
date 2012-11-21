@@ -18,7 +18,8 @@
 #include "collector.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class Master
 {
@@ -79,5 +80,6 @@ private:
 	Threads threads;
 };
 
-}
-}
+} /* namespace preprocess */
+} /* namespace cluster */
+} /* namespace jebe */

@@ -2,9 +2,11 @@
 #pragma once
 
 #include "predef.hpp"
+#include "document.hpp"
 
 namespace jebe {
-namespace idf {
+namespace cluster {
+namespace preprocess {
 
 class BaseInput
 {
@@ -15,10 +17,13 @@ public:
 
 	virtual void start() = 0;
 
-	virtual const char* next() = 0;
+	virtual InDocument next() = 0;
+
+	virtual bool next(char* heap) = 0;
 
 	virtual void stop() {}
 };
 
-} /* namespace rel */
+} /* namespace preprocess */
+} /* namespace cluster */
 } /* namespace jebe */
