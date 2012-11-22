@@ -67,6 +67,9 @@ class PageStorer(object):
         else:
             self.collections['loc'].insert(loc)
 
+        url_path = self.urlParser.toPath(url)
+        if not url_path:
+            return
         paths = {
             'url': url,
             'title':title,
@@ -75,7 +78,7 @@ class PageStorer(object):
         if willUpdate:
             self.collections['paths'].update(spec={'_id':md5_res}, document=paths, upsert=False)
         else:
-            paths['_id'] = md5_res
+            paths['_id'] = url_path + '_' + md5_res
             self.collections['paths'].insert(paths)
 
     def _parseContent(self, content):
