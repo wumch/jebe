@@ -62,10 +62,14 @@ class Regressor(object):
             return
         self.curfinished += 1
 
+        path = self.urlParser.toPath(doc['url'])
+        if not path:
+            return
         paths = {
-            '_id': self.urlParser.toPath(doc['url']) + '_' + doc['_id'],
+            '_id': path + '_' + doc['_id'],
             'url': doc['url'],
             'title':doc['title'],
+            'words':doc['words'],
         }
         self.collections['paths'].insert(paths)
 
