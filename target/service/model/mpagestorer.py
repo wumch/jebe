@@ -75,10 +75,11 @@ class PageStorer(object):
             'title':title,
             'words':[ww[0] for ww in self._marve(title)],
         }
+        paths_id = url_path + '_' + md5_res
         if willUpdate:
-            self.collections['paths'].update(spec={'_id':md5_res}, document=paths, upsert=False)
+            self.collections['paths'].update(spec={'_id':paths_id}, document=paths, upsert=False)
         else:
-            paths['_id'] = url_path + '_' + md5_res
+            paths['_id'] = paths_id
             self.collections['paths'].insert(paths)
 
     def _parseContent(self, content):
