@@ -118,6 +118,7 @@ class Config(object):
         mongodbs = {
             'text' : {'db':'text', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
             'loc' : {'db':'loc', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+            'paths_old' : {'db':'paths_old', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
             'paths' : {'db':'paths', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
         }
         iothreads = 1

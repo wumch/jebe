@@ -8,7 +8,6 @@ if src_path not in sys.path:
 import zmq, struct
 import pymongo
 from config import config, sysconfig
-from utils.natip import natip
 from driversync.tokenizer import Tokenizer
 
 class RelInput(object):
