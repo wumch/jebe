@@ -58,7 +58,7 @@ class Regressor(object):
             return curscaned
 
     def _store(self, doc):
-        if '/' not in doc['_id']:
+        if '/' in doc['_id']:
             return
         self.curfinished += 1
 
