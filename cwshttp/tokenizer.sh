@@ -3,8 +3,8 @@
 #
 # rc-script for service `tcmd`
 #
-
-PROGRAM_NAME="tokenizer"
+pname=$(basename $0)
+PROGRAM_NAME="${pname%%.sh}"
 USER="$(whoami)"
 OUTLOG=/var/log/${PROGRAM_NAME}.output.log
 ERRLOG=/var/log/${PROGRAM_NAME}.error.log

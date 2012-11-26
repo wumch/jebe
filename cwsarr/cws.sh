@@ -3,7 +3,8 @@
 #
 # rc-script for service `tcmd`
 #
-
+pname=$(basename $0)
+PROGRAM_NAME="${pname%%.sh}"
 PROGRAM_NAME="cws"
 TCMD_EXEC="bin/${PROGRAM_NAME}"
 USER="$(whoami)"

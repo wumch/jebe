@@ -3,8 +3,8 @@
 #
 # rc-script for service `tcmd`
 #
-
-PROGRAM_NAME="cws"
+pname=$(basename $0)
+PROGRAM_NAME="${pname%%.sh}"
 TCMD_EXEC="bin/${PROGRAM_NAME}"
 USER="$(whoami)"
 OUTLOG=/var/log/${PROGRAM_NAME}.output.log
