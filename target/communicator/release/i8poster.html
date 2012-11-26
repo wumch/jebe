@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>I8Poster</title>
+</head>
+<body>
+
+<script type="text/javascript">
+window.i8vars = {
+    msie:false,
+    cmtorid:"i8poster_swf",
+    eldest:document.body.firstChild
+};
+var I8Poster = {
+    installed:false,
+    installI8Poster : function(callback)
+    {
+        var initrc = 'i8_initrc';
+        window[initrc]= function()
+        {
+            try{
+                var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
+                if (!cmtor) return;
+                if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8post ? cmtor[0] : cmtor[1]);}
+                if (!cmtor.i8post) return;
+                i8vars.cmtor = cmtor;
+                I8Poster.installed = true;
+                callback();
+            } catch (e) {}
+        };
+        var swf= 'http://10.10.11.42/i8poster/i8poster.swf?initrc=' + initrc;
+        var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
+                'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
+                'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
+                '<param name=movie value="' + swf + '">'					+
+                '<param name=allowScriptAccess value="always">'		   +
+                '<param name=quality value="low">'						  +
+                '<embed src="' + swf + '" allowscriptaccess="always" quality="low" width="1" height="1" name="' +
+                    i8vars.cmtorid + '" id="' + i8vars.cmtorid + '" type="application/x-shockwave-flash"></embed>' +
+            '</object>';
+
+        var div= document.createElement('div');
+            div.style.cssText= 'position:absolute; left:0px; top:0px; width:1px; height:1px; overflow:hidden;';
+            div.innerHTML= html;
+        document.body.insertBefore(div, i8vars.eldest);
+    },
+    post: function(url, content, _onResponse, _compress, _headers)
+    {
+        var onResponse = (arguments.length > 2 && _onResponse) ? _onResponse : "";
+        var compress = (arguments.length > 3) ? !!_compress : false;
+        var headers = (arguments.length > 4 && _headers) ? _headers : {};
+        var send = function()
+        {
+            i8vars.cmtor.i8post(url, content, onResponse, compress, headers);
+        };
+        if (!I8Poster.installed)
+        {
+            I8Poster.installI8Poster(send);
+        }
+        else
+        {
+            send();
+        }
+    }
+};
+var callbackName = 'onI8PostComplete';
+window[callbackName] = function(data)
+{
+    alert(typeof(data) + ":" + data);
+};
+I8Poster.post("http://10.10.11.42/i8poster/i8poster.php", {key:"value"}, callbackName, true);
+</script>
+
+</body>
+</html>
