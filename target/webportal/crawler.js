@@ -20,7 +20,7 @@
                 var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
                 if (!cmtor) return;
                 if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
-                if (!cmtor.i8crawlPage) return;
+                if (!cmtor.i8post) return;
                 i8vars.cmtor = cmtor;
                 setTimeout(askPageExists, 10);
             } catch (e) {}
