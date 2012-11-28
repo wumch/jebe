@@ -29,7 +29,10 @@ private:
 public:
 	CenterPicker(const VecList& vecs_, vnum_t k_);
 
-	CS_FORCE_INLINE bool more() const;
+	CS_FORCE_INLINE bool more() const
+	{
+		return got < k;
+	}
 
 	const Vector* next();
 

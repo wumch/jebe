@@ -14,11 +14,6 @@ CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_)
 	prepare();
 }
 
-bool CenterPicker::more() const
-{
-	return got < k;
-}
-
 const Vector* CenterPicker::next()
 {
 	return &vecs[got++];

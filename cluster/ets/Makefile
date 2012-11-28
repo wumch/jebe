@@ -7,7 +7,7 @@ SOURCE_PATH = .
 OBJECT_PATH = objs
 EXE_NAME = ets
 EXE = $(OUTPUT_PATH)/$(EXE_NAME)
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(COMPILER), G++)
   ifeq ($(OS),Windows_NT)

@@ -3,9 +3,11 @@
 
 #include "predef.hpp"
 #include <vector>
+#include <cmath>
 #include <boost/numeric/ublas/vector_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include "hash.hpp"
+#include "math.hpp"
 #include "aside.hpp"
 #include "../document.hpp"
 
@@ -77,27 +79,26 @@ public:
 public:
 	CS_FORCE_INLINE RawVector* operator->()
 	{
-		return rv;
+		return &rv;
 	}
 	CS_FORCE_INLINE const RawVector* operator->() const
 	{
-		return rv;
+		return &rv;
 	}
 
 	CS_FORCE_INLINE RawVector& operator*()
 	{
-		return &rv;
+		return rv;
 	}
 	CS_FORCE_INLINE const RawVector& operator*() const
-	{
-		return &rv;
-	}
-
-	CS_FORCE_INLINE operator RawVector()
 	{
 		return rv;
 	}
 
+	CS_FORCE_INLINE operator RawVector() const
+	{
+		return rv;
+	}
 
 private:
 	void init_from_iv(const InputVector& vec)
@@ -106,14 +107,7 @@ private:
 	}
 
 private:
-	void copy_from_iv(const InputVector& vec)
-	{
-		decimal_t mod_reci = 1 / mod(vec);		// no need of checking for division by zero.
-		for (InputVector::const_iterator it = vec.begin(); it != vec.end(); ++it)
-		{
-			rv.insert_element(it->fid, mod_reci * it->fval);
-		}
-	}
+	void copy_from_iv(const InputVector& vec);
 };
 
 class VecFactory
