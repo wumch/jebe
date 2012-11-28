@@ -53,6 +53,7 @@ Document* NetInput::handleAction(Action act)
 	}
 	else if (CS_BUNLIKELY(act == thats_all))
 	{
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "finished inputing, received " << Aside::curVecNum << " vectors";
 		handleThatSAll();
 		return NULL;
 	}
@@ -87,7 +88,7 @@ void NetInput::handleDoc()
 
 void NetInput::handleThatSAll()
 {
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "finished inputing";
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "finished inputing, received " << Aside::curVecNum << " vectors";
 	send_buf.copy(&success_response);
 	sock.send(send_buf);
 	stop();
