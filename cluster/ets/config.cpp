@@ -81,6 +81,7 @@ void Config::initDesc()
 		("patten-file", boost::program_options::value<typeof(pattenfile)>()->default_value("etc/patten.txt"))
 		("wordid-output-file", boost::program_options::value<typeof(wordid_outputfile)>()->default_value("etc/word-id-idf.txt"))
 		("docid-output-file", boost::program_options::value<typeof(docid_outputfile)>()->default_value("etc/docid.txt"))
+		("output-delimiter", boost::program_options::value<typeof(output_delimiter)>()->default_value("\t"))
 		("log-file", boost::program_options::value<typeof(logfile)>()->default_value(default_logfile))
 		("log-level", boost::program_options::value<typeof(loglevel)>()->default_value(0))
 		("reuse-address", boost::program_options::value<typeof(reuse_address)>()->default_value(true))
@@ -146,6 +147,7 @@ void Config::load(const std::string& config_file)
 	pattenfile = options["patten-file"].as<typeof(pattenfile)>();
 	wordid_outputfile = options["wordid-output-file"].as<typeof(wordid_outputfile)>();
 	docid_outputfile = options["docid-output-file"].as<typeof(docid_outputfile)>();
+	output_delimiter = options["output-delimiter"].as<typeof(output_delimiter)>();
 	logfile = options["log-file"].as<typeof(logfile)>();
 	loglevel = options["log-level"].as<typeof(loglevel)>();
 	reuse_address = options["reuse-address"].as<typeof(reuse_address)>();
