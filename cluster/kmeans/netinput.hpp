@@ -51,7 +51,9 @@ private:
 	zmq::context_t context;
 	zmq::socket_t sock;
 
+	char* recv_buf_area;
 	zmq::message_t recv_buf;
+	char* send_buf_area;
 	zmq::message_t send_buf;
 
 	zmq::message_t success_response;

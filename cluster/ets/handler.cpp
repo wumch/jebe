@@ -3,7 +3,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 const Filter* Handler::filter = NULL;
 
@@ -12,6 +12,6 @@ Handler::~Handler()
 
 }
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

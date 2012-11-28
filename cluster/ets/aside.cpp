@@ -1,51 +1,58 @@
 
 #include "aside.hpp"
-#include <fstream>
-#include <iostream>
+#include <string>
+#include <string.h>
+#include <stdio.h>
+#include <boost/lexical_cast.hpp>
 #include <glog/logging.h>
+#include "misc.hpp"
 #include "config.hpp"
-#include "calculater.hpp"
-
-#define __JEBE_PATTEN_LINE_SIZE_MAX	256
+#include "wordmap.hpp"
+#include "filter.hpp"
+#include "transfer.hpp"
+#include "../rconfig.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
-Aside::WordList Aside::wordList;
+WordMap* const Aside::wordmap = new WordMap;
 Ftree* const Aside::ftree = new Ftree;
 Filter* const Aside::filter = new Filter;
-
 const Config* const Aside::config = Config::getInstance();
+RConfig* const Aside::rconfig = RConfig::getInstance();
+Transfer* const Aside::transfer = new Transfer;
 
 docnum_t Aside::curDocNum = 0;
 docnum_t Aside::totalDocNum = 0;
 
-void Aside::init()
+void Aside::init(int argc, char* argv[])
 {
+	initConfig(argc, argv);
 	initLogger();
 	initWordList();
 }
 
+void Aside::initConfig(int argc, char* argv[])
+{
+	Config::getInst()->init(argc, argv);
+}
+
 void Aside::initWordList()
 {
-	std::ifstream pfile(config->pattenfile.string().c_str());
-	std::ifstream::pos_type last_pos = 0;
-	size_t line_len;
+	wordmap->build_synonym_map(Aside::config->synonymfile.string());
+	FILE* pfile = fopen(config->pattenfile.string().c_str(), "r");
+	weight_t idf;
 	char line[__JEBE_PATTEN_LINE_SIZE_MAX];
-	while (pfile.good() && static_cast<int>(pfile.peek()) != -1)
+	while (!feof(pfile))
 	{
-		pfile.getline(line, __JEBE_PATTEN_LINE_SIZE_MAX);
-		line_len = pfile.tellg() - last_pos - 1;
-		if (CS_BUNLIKELY(line_len >= __JEBE_PATTEN_LINE_SIZE_MAX))
-		{
-			CS_DIE("pattenfile.getline() not really reach line end.");
-		}
-		attachWord(Word(line, line_len));
-		last_pos = pfile.tellg();
+		memset(line, 0, __JEBE_PATTEN_LINE_SIZE_MAX);
+		fscanf(pfile, "%s\t%lf\n", line, &idf);
+		attachWord(Word(line), idf);
 	}
 	filter->attachTree(ftree);
-	Calculater::init();
+	LOG_IF(INFO, config->loglevel > 0) << config->prelog.str();
+	wordmap->build_finished();
 }
 
 void Aside::initLogger()
@@ -54,19 +61,19 @@ void Aside::initLogger()
 	google::SetLogDestination(google::INFO, config->logfile.string().c_str());
 }
 
-wordid_t Aside::attachWord(const Word& word)
+wordid_t Aside::attachWord(const Word& word, weight_t idf)
 {
-	wordList.push_back(word);
-	ftree->attach_word(word, wordList.size() - 1);
-	return wordList.size() - 1;
+	wordid_t wordid = wordmap->attachWord(word, idf);
+	ftree->attach_word(word, wordid);
+	return wordid;
 }
 
 wordnum_t Aside::wordsNum()
 {
-	return wordList.size();
+	return wordmap->size();
 }
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */
 

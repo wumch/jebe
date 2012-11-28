@@ -9,9 +9,9 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
-class Calculater
+class Transformer
 {
 public:
 	typedef std::vector<docnum_t> DFList;
@@ -36,9 +36,9 @@ private:
 	boost::dynamic_bitset<uint32_t> calculater_finished;
 
 public:
-	Calculater(zmq::context_t& context, int id_);
+	Transformer(zmq::context_t& context, int id_);
 
-	~Calculater();
+	~Transformer();
 
 	static void init();
 
@@ -81,6 +81,6 @@ private:
 	void finish();
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

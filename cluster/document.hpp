@@ -32,6 +32,8 @@ public:
 	MSGPACK_DEFINE(fid, fval);
 };
 
+typedef std::vector<Feature> FeatureList;
+
 class Document
 	: private boost::noncopyable
 {
@@ -41,12 +43,14 @@ private:
 	static msgpack::zone mzone;
 
 public:
-	typedef std::vector<Feature> FeatureList;
-
 	vid_t id;
 	FeatureList flist;
 
 public:
+	explicit Document(vid_t id_)
+		: id(id_)
+	{}
+
 	explicit Document(vid_t id_, const FeatureList& words_)
 		: id(id_), flist(words_)
 	{}
@@ -62,7 +66,7 @@ public:
 		}
 		else
 		{
-			CS_DIE("kid, unpack <Document(" << id << ")> from " << len << " bytes failed!");
+			CS_DIE("kid, unpack <Document> from " << len << " bytes failed!");
 		}
 	}
 

@@ -11,7 +11,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Node;
 static Node* make_node(byte_t _atom);
@@ -109,20 +109,9 @@ public:
 
     Node* find_child(byte_t _atom) const
     {
-    	if (CS_BUNLIKELY(childrenum == 0))
-    	{
-    		return NULL;
-    	}
-
-    	// hopefully avoid from loop.
-    	if (children[0]->atom == _atom)
-    	{
-    		return children[0];
-    	}
-
-    	uint left = 0, right = childrenum - 1;
-    	uint cur = (left + right) >> 1;
-    	while (left < cur && cur < right)
+    	int left = 0, right = childrenum - 1;
+    	int cur = (left + right) >> 1;
+    	while (left <= right)
     	{
     		if (children[cur]->atom == _atom)
     		{
@@ -130,29 +119,15 @@ public:
     		}
     		if (children[cur]->atom < _atom)
     		{
-    			left = cur;
+    			left = cur + 1;
     		}
     		else
     		{
-    			right = cur;
+    			right = cur - 1;
     		}
     		cur = (left + right) >> 1;
     	}
-
-		if (children[right]->atom == _atom)
-		{
-			return children[right];
-		}
-		else if (children[left]->atom == _atom)
-		{
-			return children[left];
-		}
-		return NULL;
-    }
-
-    CS_FORCE_INLINE const std::string& str() const
-    {
-    	return Aside::wordList[pattenid];
+    	return NULL;
     }
 
     CS_FORCE_INLINE const Node* const cichildat(byte_t child_atom) const
@@ -191,6 +166,6 @@ static Node* make_node(byte_t _atom)
 	return new (NodePool::malloc()) Node(_atom);
 }
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

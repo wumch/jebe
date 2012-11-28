@@ -32,7 +32,7 @@ void Calculater::pass()
 {
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "entering pass: " << iter_times << std::endl;
 	deliver();
-	recalc_centers();
+	rebuild_clses_calcu_centers();
 	regen_bound();
 	optimize();
 	++iter_times;
@@ -40,10 +40,6 @@ void Calculater::pass()
 
 void Calculater::deliver()
 {
-	for (ClsList::iterator it = clses.begin(); it != clses.end(); ++it)
-	{
-		it->clear_members();
-	}
 	any_change = false;
 	for (VecList::const_iterator it = vecs.begin(); it != vecs.end(); ++it)
 	{
@@ -54,7 +50,7 @@ void Calculater::deliver()
 // TODO: parallel
 void Calculater::deliver(const Vector& vec)
 {
-	dcur.min_disp = 2.0;
+	dcur.min_disp = 3.0;
 	for (uint32_t i = 0; i < clses.size(); ++i)
 	{
 		dcur.cur_disp = disparity(vec, clses[i]);
@@ -89,13 +85,22 @@ bool Calculater::enough()
 	return !any_change;
 }
 
-void Calculater::recalc_centers()
+void Calculater::rebuild_clses_calcu_centers()
 {
+	for (ClsList::iterator it = clses.begin(); it != clses.end(); ++it)
+	{
+		it->clear_members();
+	}
+
 	for(VecList::const_iterator it = vecs.cbegin(); it != vecs.cend(); ++it)
 	{
 		get_cls_by_id(it->belong_cls).attach(&*it);
 	}
+	recalcu_centers();
+}
 
+void Calculater::recalcu_centers()
+{
 	// TODO: parallel
 	for (ClsList::iterator it = clses.begin(); it != clses.end(); ++it)
 	{
@@ -151,7 +156,7 @@ void Calculater::optimize()
 			++it;
 		}
 	}
-	recalc_centers();
+	recalcu_centers();
 }
 
 bool Calculater::should_optimize()
@@ -203,6 +208,12 @@ void Calculater::decompose(Cluster::MemberList& members)
 	{
 		deliver(**it);
 	}
+
+	for (Cluster::MemberList::iterator it = members.begin(); it != members.end(); ++it)
+	{
+		get_cls_by_id((*it)->belong_cls).attach(*it);
+	}
+	recalcu_centers();
 }
 
 Calculater::ClsList::iterator Calculater::separate(ClsList::iterator cls_iter)
@@ -254,7 +265,7 @@ void Calculater::dump()
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)
 		{
 			LOG_IF(INFO, Aside::config->loglevel > 1) << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
-			cls_vecs_out << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP_STR;
+			fprintf(cls_vecs_out, "%u\t%u\t%u\n", (*iter)->id, (*iter)->belong_cls, level);
 		}
 	}
 }
@@ -262,17 +273,16 @@ void Calculater::dump()
 Calculater::~Calculater()
 {
 	fclose(centers_out);
-	cls_vecs_out.close();
+	fclose(centers_out);
 }
 
 Calculater::Calculater()
 	: cls_id_gen(ClsIdGen::instance()), vecs(Aside::vecs), level(0), supposed_k(Aside::config->supposed_lowest_k),
 	  k(supposed_k * Aside::config->supposed_k_before_decompose),
-	  iter_times(0), cls_idx_offset(cls_id_gen->next()), any_change(true),
-	  cls_vecs_out(Aside::config->cls_vecs_outputfile.string().c_str())
+	  iter_times(0), cls_idx_offset(cls_id_gen->next()), any_change(true)
 {
-	centers_out = fopen(Aside::config->centers_outputfile.string().c_str(), "wb"),
-	cls_vecs_out.imbue(std::locale(""));
+	centers_out = fopen(Aside::config->centers_outputfile.string().c_str(), "wb");
+	cls_vecs_out = fopen(Aside::config->cls_vecs_outputfile.string().c_str(), "w");
 }
 
 void Calculater::reset_supposed_k(clsnum_t sk_)

@@ -71,7 +71,7 @@ void Config::init(int argc, char* argv[])
 void Config::initDesc()
 {
 	boost::filesystem::path default_pidfile(std::string("/var/run/") + program_name + ".pid");
-	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10024");
+	std::string default_listen(std::string("tcp://") + staging::getLanIP() + ":10025");
 	boost::filesystem::path default_logfile(std::string("/var/log/") + program_name + ".log");
 	desc.add_options()
 		("listen", boost::program_options::value<typeof(listen)>()->default_value(default_listen))
@@ -105,12 +105,6 @@ void Config::initDesc()
 
 		("message-max-size", boost::program_options::value<typeof(msg_max_size)>()->default_value(100 << 20))
 		("max-connections", boost::program_options::value<typeof(max_connections)>()->default_value(10000))
-
-		("max-open-files", boost::program_options::value<typeof(max_open_files)>()->default_value(staging::getRlimitCur(RLIMIT_NOFILE)))
-		("block-size", boost::program_options::value<typeof(block_size)>()->default_value(32))
-		("block-cache", boost::program_options::value<typeof(block_cache)>()->default_value(256))
-		("write-buffer-size", boost::program_options::value<typeof(write_buffer_size)>()->default_value(256))
-		("max-retrieve-elements", boost::program_options::value<typeof(max_retrieve_elements)>()->default_value(50))
 
 		("mongo-server", boost::program_options::value<typeof(mongo_server)>()->default_value("localhost"))
 		("mongo-collection", boost::program_options::value<typeof(mongo_collection)>()->default_value(""))
@@ -165,12 +159,6 @@ void Config::load(const std::string& config_file)
 	collector_num = options["collector-num"].as<typeof(collector_num)>();
 
 	max_connections = options["max-connections"].as<typeof(max_connections)>();
-
-	max_open_files = options["max-open-files"].as<typeof(max_open_files)>();
-	block_size = options["block-size"].as<typeof(block_size)>() << 10;
-	block_cache = options["block-cache"].as<typeof(block_cache)>() << 20;
-	write_buffer_size = options["write-buffer-size"].as<typeof(write_buffer_size)>() << 20;
-	max_retrieve_elements = options["max-retrieve-elements"].as<typeof(max_retrieve_elements)>();
 
 	mongo_server = options["mongo-server"].as<typeof(mongo_server)>();
 	mongo_collection = options["mongo-collection"].as<typeof(mongo_collection)>();
@@ -242,12 +230,6 @@ void Config::load(const std::string& config_file)
 		_JEBE_OUT_CONFIG_PROPERTY(tcp_nodelay)
 		_JEBE_OUT_CONFIG_PROPERTY(msg_max_size)
 		_JEBE_OUT_CONFIG_PROPERTY(max_connections)
-
-		_JEBE_OUT_CONFIG_PROPERTY(max_open_files)
-		_JEBE_OUT_CONFIG_PROPERTY(block_size)
-		_JEBE_OUT_CONFIG_PROPERTY(block_cache)
-		_JEBE_OUT_CONFIG_PROPERTY(write_buffer_size)
-		_JEBE_OUT_CONFIG_PROPERTY(max_retrieve_elements)
 
 		_JEBE_OUT_CONFIG_PROPERTY(calculater_num)
 		_JEBE_OUT_CONFIG_PROPERTY(collector_num)

@@ -60,7 +60,7 @@ all: $(OBJS)
 
 clean:
 	-rm -f $(EXE)
-	-find $(OBJECT_PATH) -name "*.$(OBJ)" | xargs rm -f
+	-rm -f $(OBJS)
 
 .PHONY: .preany
 

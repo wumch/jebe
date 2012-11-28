@@ -5,7 +5,7 @@ C = cpp
 OUTPUT_PATH = bin
 SOURCE_PATH = .
 OBJECT_PATH = objs
-EXE_NAME=preprocess
+EXE_NAME = ets
 EXE = $(OUTPUT_PATH)/$(EXE_NAME)
 DEBUG = 1
 
@@ -16,7 +16,7 @@ ifeq ($(COMPILER), G++)
     OBJ = o
   endif
   ifeq ($(DEBUG), 1)
-  COPT = -DCS_DEBUG=1 -O0 -g3 -pipe -Wall -fstack-protector
+  COPT = -DCS_DEBUG=2 -O0 -g3 -pipe -Wall -fstack-protector
   LDOPT = -Wl,-O0 -g3 -rdynamic
   else
 # -fno-rtti is not useable since boost::program_options...
@@ -51,8 +51,8 @@ else
 endif
 
 OBJS = $(OBJECT_PATH)/filter.o $(OBJECT_PATH)/master.o $(OBJECT_PATH)/main.o $(OBJECT_PATH)/config.o \
-$(OBJECT_PATH)/aside.o $(OBJECT_PATH)/collector.o $(OBJECT_PATH)/calculater.o $(OBJECT_PATH)/mongoinput.o \
-$(OBJECT_PATH)/document.o
+$(OBJECT_PATH)/aside.o $(OBJECT_PATH)/collector.o $(OBJECT_PATH)/transfer.o $(OBJECT_PATH)/mongoinput.o \
+$(OBJECT_PATH)/input_document.o $(OBJECT_PATH)/wordmap.o ../objs/document.o
 
 all: $(OBJS)
 	@echo Linking...
@@ -61,7 +61,7 @@ all: $(OBJS)
 
 clean:
 	-rm -f $(EXE)
-	-find $(OBJECT_PATH) -name "*.$(OBJ)" | xargs rm -f
+	-rm -f $(OBJS)
 
 .PHONY: .preany
 
@@ -91,7 +91,7 @@ $(OBJECT_PATH)/collector.o: $(SOURCE_PATH)/collector.cpp $(SOURCE_PATH)/collecto
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
-$(OBJECT_PATH)/calculater.o: $(SOURCE_PATH)/calculater.cpp $(SOURCE_PATH)/calculater.hpp
+$(OBJECT_PATH)/transfer.o: $(SOURCE_PATH)/transfer.cpp $(SOURCE_PATH)/transfer.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
@@ -103,7 +103,15 @@ $(OBJECT_PATH)/aside.o: $(SOURCE_PATH)/aside.cpp $(SOURCE_PATH)/aside.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
-$(OBJECT_PATH)/document.o: $(SOURCE_PATH)/document.cpp $(SOURCE_PATH)/document.hpp
+../objs/document.o: ../document.cpp ../document.hpp $(GLOBAL_DEPEND)
+	@echo compiling ../document.cpp
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) ../document.cpp $(OBJFLAG) ../objs/document.o
+
+$(OBJECT_PATH)/input_document.o: $(SOURCE_PATH)/input_document.cpp $(SOURCE_PATH)/input_document.hpp
+	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+
+$(OBJECT_PATH)/wordmap.o: $(SOURCE_PATH)/wordmap.cpp $(SOURCE_PATH)/wordmap.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 

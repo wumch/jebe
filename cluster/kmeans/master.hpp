@@ -51,13 +51,13 @@ protected:
 
 	void work()
 	{
-		LOG_IF(INFO, Aside::config->loglevel > 0) << "start inputing";
+		LOG_IF(INFO, Aside::config->loglevel > 0) << "waiting for inputing";
 		BaseInput* input = create_input();
 		input->prepare();
 		input->start();
 		Document* doc;
 		while ((doc = input->next()) &&
-			((Aside::totalVecNum != 0) && (Aside::curVecNum < Aside::totalVecNum)))
+			((Aside::totalVecNum == 0) || (Aside::curVecNum < Aside::totalVecNum)))
 		{
 			process(doc);
 		}
@@ -67,6 +67,7 @@ protected:
 	void process(Document* doc)
 	{
 		Aside::vecs.push_back(VecFactory::create(*doc));
+		__sync_add_and_fetch(&Aside::curVecNum, 1);
 	}
 
 	BaseInput* create_input()

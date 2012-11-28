@@ -7,7 +7,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Portal
 {
@@ -38,6 +38,6 @@ private:
     boost::shared_ptr<boost::asio::ip::tcp::endpoint> ep;
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

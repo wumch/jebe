@@ -6,7 +6,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 void Ftree::attach_word(const Word& word, wordid_t pattenid_)
 {
@@ -52,6 +52,6 @@ void Ftree::cache_children(const Node* node)
 
 uint8_t Filter::char_bytes_table[char_bytes_talbe_size];
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

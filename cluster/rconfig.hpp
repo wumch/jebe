@@ -8,7 +8,6 @@
 
 namespace jebe {
 namespace cluster {
-namespace kmeans {
 
 #define _JEBE_OUT_RCONFIG_PROPERTY(property)		<< #property << ":\t\t" << property << std::endl
 
@@ -24,6 +23,7 @@ class RConfig
 {
 public:
 	template<typename T> friend T* staging::getInstance();
+
 public:
 	CS_FORCE_INLINE static RConfig* getInstance()
 	{
@@ -52,6 +52,5 @@ public:
 	MSGPACK_DEFINE(total_fnum, total_vnum, supposed_lowest_k, reserve_fnum);
 };
 
-} /* namespace kmeans */
 } /* namespace cluster */
 } /* namespace jebe */

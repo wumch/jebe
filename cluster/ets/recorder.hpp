@@ -8,7 +8,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 // record words appear in a certain document, for calculate the df.
 class Recorder
@@ -51,6 +51,6 @@ public:
 	}
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

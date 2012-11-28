@@ -12,7 +12,7 @@
 
 #define CS_USE_WCS					0
 
-#define BOOST_EXCEPTION_DIABLE		// no guy should throw exceptions to me!
+#define BOOST_EXCEPTION_DIABLE		// no guy can throw exceptions to me!
 
 #include "meta.hpp"
 #include <string>
@@ -43,6 +43,16 @@ typedef decimal_t		fval_t;		// feature-value type. real-number is assumed.
 
 typedef uint32_t		clsid_t;	// cluster-id type.
 typedef uint32_t		clsnum_t;	// cluster-count type.
+
+enum Action {
+	wrong = 0,
+	tell_config = 1,
+	tell_total = 2,
+	send_doc = 10,
+	collected = 11,
+	calculated = 12,
+	thats_all = 3,
+};
 
 } /* namespace cluster */
 } /* namespace jebe */

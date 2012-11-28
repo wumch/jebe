@@ -3,7 +3,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Decorator
 {
@@ -11,6 +11,6 @@ public:
 	void decorate() const;
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

@@ -9,6 +9,15 @@ namespace jebe {
 namespace cluster {
 namespace kmeans {
 
+class FeatureComparer
+{
+public:
+	bool operator()(const Feature& f1, const Feature& f2) const
+	{
+		return f1.fid < f2.fid;
+	}
+};
+
 Vector::Vector()
 	: rv(Aside::totalFeatureNum, Aside::config->reserve_fnum)
 {}

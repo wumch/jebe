@@ -2,20 +2,25 @@
 #pragma once
 
 #include "predef.hpp"
-#include "singleton.hpp"
+#include <string>
+#include <sstream>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include "singleton.hpp"
 
 extern int main(int, char*[]);
 
+typedef std::vector<std::string> CalculaterList;
+
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Config
 {
 	friend int ::main(int, char*[]);
+	friend class Aside;
 	template<typename T> friend T* staging::getInstance();
 public:
 	CS_FORCE_INLINE static const Config* getInstance()
@@ -25,12 +30,16 @@ public:
 
 public:
     std::string listen;
-    std::string internal;
+    CalculaterList calculaters;
 
     boost::filesystem::path pidfile;
     boost::filesystem::path pattenfile;
-    boost::filesystem::path outputfile;
+    boost::filesystem::path synonymfile;
+    boost::filesystem::path wordid_outputfile;
+    boost::filesystem::path docid_outputfile;
     boost::filesystem::path logfile;
+
+    std::string output_delimiter;
 
     int loglevel;
 
@@ -38,7 +47,6 @@ public:
     std::string program_name;
     std::size_t io_threads;
     std::size_t collector_num;
-    std::size_t calculater_num;
     std::size_t stack_size;
 
     bool reuse_address;
@@ -71,12 +79,33 @@ public:
     uint32_t chunk_size;
     uint32_t chunk_num;
 
+    // for performance
+    fnum_t reserve_fnum;		// 缺省预留特征数（内存预分配）
+
+    decimal_t min_members_by_avg;		// cluster.min-members / avg-members, suggestion: 0.05
+    decimal_t max_members_by_avg;		//         max									  20
+    decimal_t max_decompose;
+    decimal_t max_separate;
+
+    vnum_t auto_recalc_threshold;		// threshold (count of member) of auto recalculate the center of a cluster..
+
+    clsnum_t supposed_lowest_k;		// 最底层 类别数
+    decimal_t level_k_rate;			// 上层类别数 / 下层类别数
+    uint32_t supposed_levels;		// 期望层次数
+    decimal_t supposed_k_before_decompose;	// 执行分解前的k / 期望的k
+
+    uint32_t max_iter_times;		// 每个level最大迭代次数
+
+    uint32_t top_level_min_clses;
+
     bool memlock;
     boost::dynamic_bitset<> cpuaffinity;
     bool record_on_cache;
 
     boost::program_options::variables_map options;
     boost::program_options::options_description desc;
+
+    std::stringstream prelog;
 
     void initDesc();
 
@@ -93,6 +122,6 @@ protected:
     void load(const std::string& config_file);
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

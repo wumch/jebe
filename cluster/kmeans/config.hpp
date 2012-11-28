@@ -58,13 +58,6 @@ public:
     std::size_t max_tmp_match;
     std::size_t max_match;
 
-    std::size_t max_open_files;
-    std::size_t block_size;
-    std::size_t block_cache;
-    std::size_t write_buffer_size;
-
-    std::size_t max_retrieve_elements;
-
     std::string mongo_server;
     std::string mongo_collection;
     std::string mongo_field;

@@ -8,11 +8,11 @@
 #endif
 #include <mongo/client/dbclient.h>
 #include "input.hpp"
-#include "document.hpp"
+#include "input_document.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class MongoInput
 	: public BaseInput
@@ -26,7 +26,7 @@ private:
 	std::string collection;
 	std::string field;
 
-	InDocument empty_indoc;
+	InDocument* empty_indoc;
 	mongo::BSONObj empty_bson;
 
 public:
@@ -36,20 +36,20 @@ public:
 
 	void start();
 
-	bool more();
+	bool more() const;
 
-	InDocument next();
+	InDocument* next();
 
 	bool next(char* heap);
 
 	void stop();
 
 private:
-	InDocument nextDoc();
+	InDocument* nextDoc();
 
 	mongo::BSONObj nextBSON();
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

@@ -7,7 +7,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class NetInput
 	: public BaseInput
@@ -54,6 +54,6 @@ private:
 	zmq::message_t failed_response;
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

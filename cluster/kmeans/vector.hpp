@@ -13,7 +13,7 @@ namespace jebe {
 namespace cluster {
 namespace kmeans {
 
-typedef Document::FeatureList InputVector;
+typedef FeatureList InputVector;
 
 typedef boost::numeric::ublas::map_array<fid_t, fval_t> FeatureArray;
 typedef boost::numeric::ublas::mapped_vector<fval_t, FeatureArray> RawVector;

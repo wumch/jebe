@@ -47,7 +47,7 @@ private:
 	bool any_change;
 
 	FILE* centers_out;
-	std::ofstream cls_vecs_out;
+	FILE* cls_vecs_out;
 
 public:
 	Calculater();
@@ -70,7 +70,8 @@ private:
 
 	Cluster& get_cls_by_id(clsid_t clsid);
 
-	void recalc_centers();
+	void rebuild_clses_calcu_centers();
+	void recalcu_centers();
 
 private:
 	bool should_optimize();

@@ -10,7 +10,7 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 typedef msgpack::type::define<const Node*, atimes_t> CWordWeightPacker;
 
@@ -143,6 +143,6 @@ public:
 	}
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

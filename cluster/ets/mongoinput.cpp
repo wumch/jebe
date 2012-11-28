@@ -3,17 +3,18 @@
 #include <cassert>
 #include "aside.hpp"
 #include "config.hpp"
-#include "document.hpp"
+#include "input_document.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 MongoInput::MongoInput()
 	: con(NULL),
 	  server(Aside::config->mongo_server),
 	  collection(Aside::config->mongo_collection),
-	  field(Aside::config->mongo_field)
+	  field(Aside::config->mongo_field),
+	  empty_indoc(NULL)
 {}
 
 bool MongoInput::next(char* heap)
@@ -24,7 +25,7 @@ bool MongoInput::next(char* heap)
 		mongo::BSONElement _id = bson.getField(std::string("_id"));
 		mongo::BSONElement url = bson.getField(std::string("url"));
 		mongo::BSONElement text = bson.getField(std::string("text"));
-		if (CS_BLIKELY(_id.type() == mongo::String || url.type() == mongo::String || text.type() == mongo::String))
+		if (CS_BLIKELY(_id.type() == mongo::String && url.type() == mongo::String && text.type() == mongo::String))
 		{
 			new (heap) InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
 			return true;
@@ -33,7 +34,7 @@ bool MongoInput::next(char* heap)
 	return false;
 }
 
-InDocument MongoInput::nextDoc()
+InDocument* MongoInput::nextDoc()
 {
 	mongo::BSONObj bson(nextBSON());
 	if (CS_BLIKELY(!bson.isEmpty()))
@@ -41,9 +42,9 @@ InDocument MongoInput::nextDoc()
 		mongo::BSONElement _id = bson.getField(std::string("_id"));
 		mongo::BSONElement url = bson.getField(std::string("url"));
 		mongo::BSONElement text = bson.getField(std::string("text"));
-		if (CS_BLIKELY(_id.type() == mongo::String || url.type() == mongo::String || text.type() == mongo::String))
+		if (CS_BLIKELY(_id.type() == mongo::String && url.type() == mongo::String && text.type() == mongo::String))
 		{
-			return InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
+			return new InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
 		}
 	}
 	return empty_indoc;
@@ -53,10 +54,10 @@ mongo::BSONObj MongoInput::nextBSON()
 {
 	static size_t got_docs = 0;
 	CS_RETURN_IF(Aside::config->mongo_max_doc > 0 && got_docs > Aside::config->mongo_max_doc, empty_bson);
-	__sync_add_and_fetch(&got_docs, 1);
 
 	if (CS_BLIKELY(more()))
 	{
+		__sync_add_and_fetch(&got_docs, 1);
 		return cur->nextSafe();
 	}
 	else
@@ -65,7 +66,7 @@ mongo::BSONObj MongoInput::nextBSON()
 	}
 }
 
-InDocument MongoInput::next()
+InDocument* MongoInput::next()
 {
 	return nextDoc();
 }
@@ -82,7 +83,7 @@ void MongoInput::start()
 	cur = con->query(collection, mongo::Query().sort("$natural", -1), 0, 0, &fields);
 }
 
-bool MongoInput::more()
+bool MongoInput::more() const
 {
 	return cur->more();
 }
@@ -101,6 +102,6 @@ MongoInput::~MongoInput()
 	stop();
 }
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

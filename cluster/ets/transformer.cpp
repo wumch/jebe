@@ -1,5 +1,5 @@
 
-#include "calculater.hpp"
+#include "transformer.hpp"
 #include <fstream>
 #include <cmath>
 #include <boost/lexical_cast.hpp>
@@ -10,12 +10,12 @@
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
-const int Calculater::mainid = 0;
-Calculater::DFList Calculater::dflist;
+const int Transformer::mainid = 0;
+Transformer::DFList Transformer::dflist;
 
-Calculater::Calculater(zmq::context_t& context_, int id_)
+Transformer::Transformer(zmq::context_t& context_, int id_)
 	: id(id_), filter(Aside::filter), context(context_),
 	  sock(context, ZMQ_REP), response(response_data, 1, NULL, NULL),
 	  collector_finished(Aside::config->collector_num, 0),
@@ -24,14 +24,14 @@ Calculater::Calculater(zmq::context_t& context_, int id_)
 	listen();
 }
 
-void Calculater::run()
+void Transformer::run()
 {
 	prepare();
 	work();
 	finish();
 }
 
-void Calculater::work()
+void Transformer::work()
 {
 	// since mongo is sloooower than idf-calcualter, it's better to perform memory-copy for making sending faster.
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "start inputing";
@@ -51,29 +51,29 @@ void Calculater::work()
 	}
 }
 
-void Calculater::calculate()
+void Transformer::calculate()
 {
 	ready();
 	filte();
 	calcu();
 }
 
-void Calculater::ready()
+void Transformer::ready()
 {
 
 }
 
-void Calculater::filte()
+void Transformer::filte()
 {
 
 }
 
-void Calculater::finish()
+void Transformer::finish()
 {
 	stop();
 }
 
-void Calculater::calcu()
+void Transformer::calcu()
 {
 	uint64_t total_df = 0;
 	for (DFList::const_iterator it = dflist.begin(); it != dflist.end(); ++it)
@@ -88,7 +88,7 @@ void Calculater::calcu()
 		return;
 	}
 
-	std::ofstream ofile(Aside::config->outputfile.string().c_str(), std::ios_base::trunc);
+	std::ofstream ofile(Aside::config->wordid_outputfile.string().c_str(), std::ios_base::trunc);
 	long double base = Aside::curDocNum;
 	for (wordnum_t i = 0, end = Aside::wordsNum(); i < end; ++i)
 	{
@@ -102,15 +102,15 @@ void Calculater::calcu()
 		}
 	}
 	ofile.close();
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile.string();
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->wordid_outputfile.string();
 }
 
-void Calculater::prepare()
+void Transformer::prepare()
 {
 	response_data[0] = 1;		// anyway response "1".
 }
 
-void Calculater::init()
+void Transformer::init()
 {
 	dflist.resize(Aside::wordsNum(), 0);
 
@@ -124,7 +124,7 @@ void Calculater::init()
 }
 
 // true: continue with receiving, false: stop receiveing.
-bool Calculater::process(zmq::socket_t& sock, zmq::message_t& message)
+bool Transformer::process(zmq::socket_t& sock, zmq::message_t& message)
 {
 	reply(sock);
 	CS_RETURN_IF(message.size() < 1, true);
@@ -148,7 +148,7 @@ bool Calculater::process(zmq::socket_t& sock, zmq::message_t& message)
 	}
 }
 
-void Calculater::attachDoc(const char* doc, size_t len)
+void Transformer::attachDoc(const char* doc, size_t len)
 {
 	CS_RETURN_IF(len < 1);
 	recorder.reset();
@@ -161,7 +161,7 @@ void Calculater::attachDoc(const char* doc, size_t len)
 	}
 }
 
-void Calculater::listen()
+void Transformer::listen()
 {
 	static const int64_t send_buf_size = 32;
 	sock.setsockopt(ZMQ_SNDBUF, &send_buf_size, sizeof(send_buf_size));
@@ -169,7 +169,7 @@ void Calculater::listen()
 	sock.bind((Aside::config->internal + "-" + boost::lexical_cast<std::string>(id)).c_str());
 }
 
-bool Calculater::handleCollected(uint8_t collector_id)
+bool Transformer::handleCollected(uint8_t collector_id)
 {
 	collector_finished.set(collector_id, true);
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "collector<" << static_cast<int>(collector_id) << "> finished. (" << collector_finished.count() << "/" << Aside::config->collector_num << ")";
@@ -182,7 +182,7 @@ bool Calculater::handleCollected(uint8_t collector_id)
 		return true;
 	}
 }
-bool Calculater::notifyMain()
+bool Transformer::notifyMain()
 {
 	if (isMain())
 	{
@@ -202,7 +202,7 @@ bool Calculater::notifyMain()
 	}
 }
 
-bool Calculater::handleCalculated(uint8_t calculater_id)
+bool Transformer::handleCalculated(uint8_t calculater_id)
 {
 	CS_RETURN_IF(!isMain(), false);
 	calculater_finished.set(calculater_id, true);
@@ -219,24 +219,24 @@ bool Calculater::handleCalculated(uint8_t calculater_id)
 	}
 }
 
-bool Calculater::isMain()
+bool Transformer::isMain()
 {
 	return id == mainid;
 }
 
-void Calculater::reply(zmq::socket_t& sock)
+void Transformer::reply(zmq::socket_t& sock)
 {
 	response.rebuild(response_data, 1, NULL, NULL);
 	sock.send(response, ZMQ_NOBLOCK);
 }
 
-void Calculater::stop()
+void Transformer::stop()
 {
 }
 
-Calculater::~Calculater()
+Transformer::~Transformer()
 {}
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

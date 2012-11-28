@@ -3,13 +3,13 @@
 
 #include "predef.hpp"
 #include <string>
+#include <string.h>
 #include <vector>
 #include <msgpack.hpp>
-#include "string"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 // document from input.
 class InDocument
@@ -70,6 +70,9 @@ public:
 	{
 		return _id_size;
 	}
+
+private:		// disable stack constructing.
+	~InDocument();
 };
 
 // for msgpack/unpck.
@@ -116,6 +119,6 @@ public:
 	MSGPACK_DEFINE(id, words);
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

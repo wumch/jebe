@@ -15,16 +15,6 @@ class Calculater;
 
 typedef boost::ptr_vector<Vector> VecList;
 
-enum Action {
-	wrong = 0,
-	tell_config = 1,
-	tell_total = 2,
-	send_doc = 10,
-	collected = 11,
-	calculated = 12,
-	thats_all = 3,
-};
-
 // misc class that hold some global-variables.
 class Aside
 {

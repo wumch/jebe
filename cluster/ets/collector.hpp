@@ -4,15 +4,18 @@
 #include "predef.hpp"
 #include <vector>
 #include <memory>
+#include <stdio.h>
 #include <boost/dynamic_bitset.hpp>
 #include <zmq.hpp>
 #include <msgpack.hpp>
+#include "autoincr.hpp"
 #include "input.hpp"
-#include "document.hpp"
+#include "input_document.hpp"
+#include "../document.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Collector
 {
@@ -30,7 +33,7 @@ private:
 
 	void process(const InDocument* doc);
 
-	OutDocument* convert(const InDocument* doc);
+	size_t convert(const InDocument* doc, char* chunk, size_t chunk_size_);
 
 	size_t pack_out_doc(const OutDocument& outdoc, char* zone);
 
@@ -53,11 +56,17 @@ private:
 	int acquire_out_chunk();
 
 	void prepare();
+	void send_config();
+
+	void notify();	// notify finish
 
 private:
 	zmq::socket_t& get_sock();
 
-	uint8_t id;
+	uint8_t id;		// collector-id
+
+	typedef staging::AutoIncr<staging::AutoIncrType<Document>, vid_t, 1> VecIdGen;
+	VecIdGen* vidgen;
 
 	zmq::context_t& context;
 	typedef std::vector<zmq::socket_t*> Socks;
@@ -82,8 +91,10 @@ private:
 
 	msgpack::sbuffer packer_buffer;
 
+	FILE* docs;	// processed docs.
+
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

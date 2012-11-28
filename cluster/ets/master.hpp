@@ -14,12 +14,11 @@
 #include <glog/logging.h>
 #include "config.hpp"
 #include "aside.hpp"
-#include "calculater.hpp"
 #include "collector.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 class Master
 {
@@ -37,9 +36,7 @@ public:
 
 protected:
 	void init() const
-	{
-		Aside::init();
-	}
+	{}
 
 	void prety() const
 	{
@@ -50,16 +47,8 @@ protected:
 
 	void work()
 	{
-		threads.reserve(Aside::config->calculater_num + Aside::config->collector_num);
-
+		threads.reserve(Aside::config->collector_num);
 		boost::shared_ptr<zmq::context_t> context(new zmq::context_t(Aside::config->io_threads));
-
-		for (uint i = 0; i < Aside::config->calculater_num; ++i)
-		{
-			boost::shared_ptr<Calculater> calculater(new Calculater(*context, i));
-			boost::thread* thread = new boost::thread(boost::bind(&Calculater::run, calculater));
-			threads.push_back(thread);
-		}
 
 		for (uint i = 0; i < Aside::config->collector_num; ++i)
 		{
@@ -80,6 +69,6 @@ private:
 	Threads threads;
 };
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */

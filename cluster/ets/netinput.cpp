@@ -6,13 +6,12 @@
 #endif
 #include <zmq.hpp>
 #include <msgpack.hpp>
-#include "config.hpp"
 #include "aside.hpp"
 #include "calculater.hpp"
 
 namespace jebe {
 namespace cluster {
-namespace preprocess {
+namespace ets {
 
 NetInput::NetInput()
 	: context(Config::getInstance()->io_threads),
@@ -127,6 +126,6 @@ NetInput::~NetInput()
 	delete cur;
 }
 
-} /* namespace preprocess */
+} /* namespace ets */
 } /* namespace cluster */
 } /* namespace jebe */
