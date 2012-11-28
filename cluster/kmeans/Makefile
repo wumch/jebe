@@ -98,7 +98,7 @@ $(OBJECT_PATH)/input.o: $(SOURCE_PATH)/input.cpp $(SOURCE_PATH)/input.hpp $(GLOB
 
 $(OBJECT_PATH)/calculater.o: $(SOURCE_PATH)/calculater.cpp $(SOURCE_PATH)/calculater.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) -Wno-unused-result $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/centerpicker.o: $(SOURCE_PATH)/centerpicker.cpp $(SOURCE_PATH)/centerpicker.hpp $(GLOBAL_DEPEND)
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)

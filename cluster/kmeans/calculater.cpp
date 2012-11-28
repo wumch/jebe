@@ -258,8 +258,8 @@ void Calculater::dump()
 		msgpack::sbuffer packerBuffer(1 << 10);
 		msgpack::packer<msgpack::sbuffer> packer(&packerBuffer);
 		packer.pack(doc);
-		fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out);
-		fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out);
+		static_cast<void>(fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out));
+		static_cast<void>(fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out));
 
 		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id>\\t<level>\" to " << Aside::config->cls_vecs_outputfile << std::endl;
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)

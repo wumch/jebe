@@ -63,6 +63,7 @@ void Collector::run()
 			break;
 		}
 		process(reinterpret_cast<InDocument*>(chunk));
+		recycle_in_chunk(chunk, chunk_idx);
 		__sync_add_and_fetch(&Aside::curDocNum, 1);
 	}
 	input->stop();
@@ -91,7 +92,7 @@ size_t Collector::convert(const InDocument* indoc, char* chunk, size_t chunk_siz
 {
 	Document doc(vidgen->gen());
 	Aside::transfer->trans(*indoc, doc.flist);
-	static_cast<void>(fprintf(docs, "%d\t", doc.id));
+	fprintf(docs, "%d\t", doc.id);
 	static_cast<void>(fwrite(indoc->_id, indoc->_id_size, 1, docs));
 	static_cast<void>(fwrite("\t", CS_CONST_STRLEN("\t"), 1, docs));
 	static_cast<void>(fwrite(indoc->url, indoc->url_size, 1, docs));

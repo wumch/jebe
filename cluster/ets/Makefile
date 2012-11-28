@@ -89,7 +89,7 @@ $(OBJECT_PATH)/config.o: $(SOURCE_PATH)/config.cpp $(SOURCE_PATH)/config.hpp $(S
 
 $(OBJECT_PATH)/collector.o: $(SOURCE_PATH)/collector.cpp $(SOURCE_PATH)/collector.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
+	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) -Wno-unused-result $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
 $(OBJECT_PATH)/transfer.o: $(SOURCE_PATH)/transfer.cpp $(SOURCE_PATH)/transfer.hpp
 	@echo compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
