@@ -91,11 +91,11 @@ size_t Collector::convert(const InDocument* indoc, char* chunk, size_t chunk_siz
 {
 	Document doc(vidgen->gen());
 	Aside::transfer->trans(*indoc, doc.flist);
-	fprintf(docs, "%d\t", doc.id);
-	fwrite(indoc->_id, indoc->_id_size, 1, docs);
-	fwrite("\t", CS_CONST_STRLEN("\t"), 1, docs);
-	fwrite(indoc->url, indoc->url_size, 1, docs);
-	fwrite("\n", CS_CONST_STRLEN("\n"), 1, docs);
+	static_cast<void>(fprintf(docs, "%d\t", doc.id));
+	static_cast<void>(fwrite(indoc->_id, indoc->_id_size, 1, docs));
+	static_cast<void>(fwrite("\t", CS_CONST_STRLEN("\t"), 1, docs));
+	static_cast<void>(fwrite(indoc->url, indoc->url_size, 1, docs));
+	static_cast<void>(fwrite("\n", CS_CONST_STRLEN("\n"), 1, docs));
 	packer_buffer.clear();
 	msgpack::packer<msgpack::sbuffer> packer(packer_buffer);
 	packer.pack(doc);

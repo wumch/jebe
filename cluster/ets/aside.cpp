@@ -1,5 +1,6 @@
 
 #include "aside.hpp"
+#include <iostream>
 #include <string>
 #include <string.h>
 #include <stdio.h>
@@ -47,7 +48,10 @@ void Aside::initWordList()
 	while (!feof(pfile))
 	{
 		memset(line, 0, __JEBE_PATTEN_LINE_SIZE_MAX);
-		fscanf(pfile, "%s\t%lf\n", line, &idf);
+		if (CS_BUNLIKELY(fscanf(pfile, "%s\t%lf\n", line, &idf) != 2))
+		{
+			CS_DIE("kid, fileds got from fscanf(" << Aside::config->synonymfile << ") is not 2.");
+		}
 		attachWord(Word(line), idf);
 	}
 	filter->attachTree(ftree);
