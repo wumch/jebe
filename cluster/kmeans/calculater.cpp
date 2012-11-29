@@ -9,6 +9,7 @@
 #include "cluster.hpp"
 #include "centerpicker.hpp"
 #include "vector.hpp"
+#include "vector_impl.hpp"
 
 namespace jebe {
 namespace cluster {
