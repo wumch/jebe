@@ -166,11 +166,7 @@ bool Calculater::should_optimize()
 
 Calculater::ClsList::iterator Calculater::optimize(ClsList::iterator cls_iter)
 {
-	if (cls_iter->size() == 0)
-	{
-		return clses.erase(cls_iter);
-	}
-	else if (cls_iter->size() < min_members)
+	if (cls_iter->size() < min_members)
 	{
 		return decompose(cls_iter);
 	}
