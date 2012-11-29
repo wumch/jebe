@@ -8,7 +8,7 @@ namespace jebe {
 namespace cluster {
 namespace kmeans {
 
-CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_, decimal_t center_min_features_rate = .0)
+CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_, decimal_t center_min_features_rate)
 	: vecs(vecs_), k(k_), got(0),  indexes(k), min_features_rate(center_min_features_rate)
 {
 	prepare();
