@@ -250,8 +250,8 @@ void Calculater::prepare()
 
 void Calculater::dump()
 {
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumping cluster centers to " << Aside::config->centers_outputfile << std::endl;
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "with num-of-vectors/k = " << vecs.size() << "/" <<  k << std::endl;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumping cluster centers to " << Aside::config->centers_outputfile
+		<< ", with num-of-vectors/k = " << vecs.size() << "/" <<  k << std::endl;
 	for (ClsList::const_iterator it = clses.cbegin(); it != clses.cend(); ++it)
 	{
 		Document doc(it->id, it->center->data());
@@ -259,7 +259,7 @@ void Calculater::dump()
 		msgpack::packer<msgpack::sbuffer> packer(&packerBuffer);
 		packer.pack(doc);
 		static_cast<void>(fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out));
-		static_cast<void>(fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out));
+//		static_cast<void>(fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out));
 
 		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id>\\t<level>\" to " << Aside::config->cls_vecs_outputfile << std::endl;
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)
@@ -273,7 +273,7 @@ void Calculater::dump()
 Calculater::~Calculater()
 {
 	fclose(centers_out);
-	fclose(centers_out);
+	fclose(cls_vecs_out);
 }
 
 Calculater::Calculater()
