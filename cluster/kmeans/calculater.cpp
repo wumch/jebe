@@ -150,7 +150,7 @@ void Calculater::optimize()
 			{
 				break;
 			}
-			LOG_IF(INFO, Aside::config->loglevel > 0) << "decomposed:" << decomposed << ", max-decompose:" << max_decompose;
+			LOG_IF(INFO, Aside::config->loglevel > 0) << "decomposing <Cluster(" << it->id << "){" << it->size() << "}>:" << ", total decomposed:" << decomposed << ", max-decompose:" << max_decompose;
 			__sync_add_and_fetch(&decomposed, 1);
 			it = decompose(it);
 		}
