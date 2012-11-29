@@ -120,6 +120,7 @@ void Calculater::upward()
 	cls_idx_offset = cls_id_gen->next();
 	supposed_k = k * Aside::config->level_k_rate;
 	k = supposed_k * Aside::config->supposed_k_before_decompose;
+	max_decompose = k * Aside::config->max_decompose;
 	clses.reserve(k);
 	// reset vecs
 	any_change = false;
@@ -140,15 +141,16 @@ void Calculater::optimize()
 {
 	CS_RETURN_IF_NORMAL(!should_optimize());
 	static clsnum_t decomposed = 0;
-	clsnum_t max_decompose = Aside::config->max_decompose * k;
 	for (ClsList::iterator it = clses.begin(); it != clses.end(); )
 	{
 		if (it->size() < min_members)
 		{
-			if (__sync_add_and_fetch(&decomposed, 1) > max_decompose)
+			if (decomposed >= max_decompose)
 			{
 				break;
 			}
+			LOG_IF(INFO, Aside::config->loglevel > 0) << "decomposed:" << decomposed << ", max-decompose:" << max_decompose;
+			__sync_add_and_fetch(&decomposed, 1);
 			it = decompose(it);
 		}
 		else
@@ -260,7 +262,7 @@ void Calculater::dump()
 		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id>\\t<level>\" to " << Aside::config->cls_vecs_outputfile << std::endl;
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)
 		{
-			LOG_IF(INFO, Aside::config->loglevel > 1) << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
+			LOG_IF(INFO, Aside::config->loglevel > 2) << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
 			fprintf(cls_vecs_out, "%u\t%u\t%u\n", (*iter)->id, (*iter)->belong_cls, level);
 		}
 	}
@@ -275,6 +277,7 @@ Calculater::~Calculater()
 Calculater::Calculater()
 	: cls_id_gen(ClsIdGen::instance()), vecs(Aside::vecs), level(0), supposed_k(Aside::config->supposed_lowest_k),
 	  k(supposed_k * Aside::config->supposed_k_before_decompose),
+	  max_decompose(k * Aside::config->max_decompose),
 	  iter_times(0), cls_idx_offset(cls_id_gen->next()), any_change(true)
 {
 	centers_out = fopen(Aside::config->centers_outputfile.string().c_str(), "wb");
@@ -285,6 +288,7 @@ void Calculater::reset_supposed_k(clsnum_t sk_)
 {
 	supposed_k = sk_;
 	k = supposed_k * Aside::config->supposed_k_before_decompose;
+	max_decompose = k * Aside::config->max_decompose;
 	clses.reserve(k);
 }
 

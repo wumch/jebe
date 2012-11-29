@@ -27,11 +27,13 @@ private:
 	ClsList clses;
 
 	uint32_t level;
-	uint32_t supposed_k;
-	uint32_t k;
+	clsnum_t supposed_k;
+	clsnum_t k;
 
-	uint64_t min_members;
-	uint64_t max_members;
+	clsnum_t max_decompose;
+
+	vnum_t min_members;
+	vnum_t max_members;
 
 	uint32_t iter_times;
 
