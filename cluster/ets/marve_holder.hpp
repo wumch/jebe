@@ -6,6 +6,7 @@
 #include <boost/unordered_map.hpp>
 #include <msgpack.hpp>
 #include "hash.hpp"
+#include "config.hpp"
 #include "wordmap.hpp"
 #include "node.hpp"
 #include "../document.hpp"
