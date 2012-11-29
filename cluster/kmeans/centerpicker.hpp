@@ -26,8 +26,11 @@ private:
 
 	std::vector<vnum_t> indexes;
 
+	fnum_t min_features;
+	decimal_t min_features_rate;
+
 public:
-	CenterPicker(const VecList& vecs_, vnum_t k_);
+	CenterPicker(const VecList& vecs_, vnum_t k_, decimal_t center_min_features_rate = .0);
 
 	CS_FORCE_INLINE bool more() const
 	{
@@ -39,7 +42,11 @@ public:
 private:
 	void prepare();
 
+	void calcu_min_features();
+
 	void rand();
+
+	CS_FORCE_INLINE bool validate(const Vector& center);
 };
 
 } /* namespace kmeans */

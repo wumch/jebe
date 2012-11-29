@@ -131,7 +131,7 @@ void Calculater::upward()
 
 void Calculater::pick_centers()
 {
-	CenterPicker picker(vecs, k);
+	CenterPicker picker(vecs, k, Aside::config->center_min_features_rate);
 	while (picker.more())
 	{
 		clses.push_back(new Cluster(cls_id_gen->gen(), picker.next()));

@@ -8,8 +8,8 @@ namespace jebe {
 namespace cluster {
 namespace kmeans {
 
-CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_)
-	: vecs(vecs_), k(k_), got(0),  indexes(k)
+CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_, decimal_t center_min_features_rate = .0)
+	: vecs(vecs_), k(k_), got(0),  indexes(k), min_features_rate(center_min_features_rate)
 {
 	prepare();
 }
@@ -22,6 +22,7 @@ const Vector* CenterPicker::next()
 void CenterPicker::prepare()
 {
 	rand();
+	calcu_min_features();
 }
 
 void CenterPicker::rand()
@@ -37,6 +38,23 @@ void CenterPicker::rand()
 			indexes[i++] = idx;
 		}
 	}
+}
+
+void CenterPicker::calcu_min_features()
+{
+	std::vector<fnum_t> vals;
+	vals.reserve(vecs.size());
+	for (VecList::const_iterator it = vecs.begin(); it != vecs.end(); ++it)
+	{
+		vals.push_back((*it)->nnz());
+	}
+	std::sort(vals.begin(), vals.end());
+	min_features = vals[vals.size() * min_features_rate];
+}
+
+bool CenterPicker::validate(const Vector& center)
+{
+	return center->nnz() >= min_features;
 }
 
 } /* namespace kmeans */

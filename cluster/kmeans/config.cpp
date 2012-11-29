@@ -126,6 +126,8 @@ void Config::initDesc()
 		("max-members-by-average", boost::program_options::value<typeof(max_members_by_avg)>()->default_value(20))
 		("max-decompose", boost::program_options::value<typeof(max_decompose)>()->default_value(0.05))
 		("max-separate", boost::program_options::value<typeof(max_separate)>()->default_value(0.1))
+
+		("center-min-features-rate", boost::program_options::value<typeof(center_min_features_rate)>()->default_value(0.15))
 		;
 }
 
@@ -183,6 +185,8 @@ void Config::load(const std::string& config_file)
 	max_decompose = options["max-decompose"].as<typeof(max_decompose)>();
 	max_members_by_avg = options["max-members-by-average"].as<typeof(max_members_by_avg)>();
 	max_separate = options["max-separate"].as<typeof(max_separate)>();
+
+	center_min_features_rate = options["center-min-features-rate"].as<typeof(center_min_features_rate)>();
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	record_on_cache = options["record-on-cache"].as<typeof(record_on_cache)>();

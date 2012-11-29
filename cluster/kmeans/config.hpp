@@ -76,6 +76,8 @@ public:
     decimal_t max_decompose;
     decimal_t max_separate;
 
+    decimal_t center_min_features_rate;
+
     vnum_t auto_recalc_threshold;		// threshold (count of member) of auto recalculate the center of a cluster..
 
     clsnum_t supposed_lowest_k;		// 最底层 类别数
