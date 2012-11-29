@@ -1,6 +1,7 @@
 
 #include "calculater.hpp"
 #include <iostream>
+#include <sstream>
 #include <clocale>
 #include <stdio.h>
 #include "misc.hpp"
@@ -135,6 +136,14 @@ void Calculater::pick_centers()
 	{
 		clses.push_back(new Cluster(cls_id_gen->gen(), picker.next()));
 	}
+
+	std::stringstream buf;
+	buf << "initially centers: ";
+	for (ClsList::const_iterator it = clses.begin(); it != clses.end(); ++it)
+	{
+		buf << ", " << it->id << ":" << it->center.id << "[" << it->center.rv.begin().index() << "]";
+	}
+	LOG_IF(INFO, Aside::config->loglevel > 1) << buf.str();
 }
 
 // 目前只支持分解，不支持分裂。 => TODO
