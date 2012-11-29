@@ -33,9 +33,10 @@ void CenterPicker::rand()
 	for (vnum_t i = 0, idx = 0; i < k; )
 	{
 		idx = random.rand();
-		if (!recorder.test(idx))
+		if (!recorder.test(idx) && validate(vecs[idx]))
 		{
 			indexes[i++] = idx;
+			recorder.set(idx, true);
 		}
 	}
 }
