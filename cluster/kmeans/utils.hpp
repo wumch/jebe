@@ -2,6 +2,8 @@
 #pragma once
 
 #include "predef.hpp"
+#include <cmath>
+#include "aside.hpp"
 
 namespace jebe {
 namespace cluster {
