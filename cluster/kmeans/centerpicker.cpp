@@ -50,7 +50,8 @@ void CenterPicker::calcu_min_features()
 		vals.push_back((*it)->nnz());
 	}
 	std::sort(vals.begin(), vals.end());
-	min_features = vals[vals.size() * min_features_rate];
+	min_features = vals[(vals.size() - 1) * min_features_rate];
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "centers required min features num:" << min_features;
 }
 
 bool CenterPicker::validate(const Vector& center)
