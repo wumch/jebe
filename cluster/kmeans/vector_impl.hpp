@@ -6,7 +6,6 @@
 #include "vector.hpp"
 #include "hash.hpp"
 #include "math.hpp"
-#include "cluster.hpp"
 
 namespace jebe {
 namespace cluster {
@@ -15,11 +14,6 @@ namespace kmeans {
 static inline decimal_t cos(const Vector& v1, const Vector& v2)
 {
 	return 1 - boost::numeric::ublas::inner_prod(*v1, *v2);
-}
-
-static inline decimal_t disparity(const Vector& vec, const Cluster& cls)
-{
-	return cos(vec, cls.center);
 }
 
 static inline decimal_t disparity(const Vector& v1, const Vector& v2)

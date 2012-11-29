@@ -55,7 +55,7 @@ void Calculater::deliver(const Vector& vec)
 	dcur.min_disp = 3.0;
 	for (uint32_t i = 0; i < k; ++i)
 	{
-		dcur.cur_disp = disparity(vec, clses[i]);
+		dcur.cur_disp = disparity(vec, clses[i].center);
 		if (dcur.cur_disp < dcur.min_disp)
 		{
 			dcur.min_disp = dcur.cur_disp;
