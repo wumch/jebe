@@ -141,7 +141,7 @@ void Calculater::pick_centers()
 	buf << "initially centers: ";
 	for (ClsList::const_iterator it = clses.begin(); it != clses.end(); ++it)
 	{
-		buf << ", " << it->id << ":" << it->center.id << "[" << it->center.rv.begin().index() << "]";
+		buf << ", " << it->id << ":" << it->center.id << "[" << it->center->nnz() << "]";
 	}
 	LOG_IF(INFO, Aside::config->loglevel > 1) << buf.str();
 }
