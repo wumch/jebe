@@ -9,7 +9,7 @@ namespace cluster {
 namespace kmeans {
 
 CenterPicker::CenterPicker(const VecList& vecs_, vnum_t k_, decimal_t center_min_features_rate)
-	: vecs(vecs_), k(k_), got(0),  indexes(k), min_features_rate(center_min_features_rate)
+	: vecs(vecs_), k(k_), got(0),  indexes(k), min_features(0), min_features_rate(center_min_features_rate)
 {
 	prepare();
 }
@@ -43,6 +43,7 @@ void CenterPicker::rand()
 
 void CenterPicker::calcu_min_features()
 {
+	CS_RETURN_IF(!(0 < min_features_rate && min_features_rate < 1));
 	std::vector<fnum_t> vals;
 	vals.reserve(vecs.size());
 	for (VecList::const_iterator it = vecs.begin(); it != vecs.end(); ++it)
