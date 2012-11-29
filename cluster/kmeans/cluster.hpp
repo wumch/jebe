@@ -5,7 +5,10 @@
 #include <list>
 #include <boost/noncopyable.hpp>
 #include <boost/pool/pool_alloc.hpp>
+#include "utils.hpp"
+#include "aside.hpp"
 #include "vector.hpp"
+#include "vector_impl.hpp"
 
 namespace jebe {
 namespace cluster {
