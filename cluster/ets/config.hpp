@@ -81,6 +81,7 @@ public:
 
     // for performance
     fnum_t reserve_fnum;		// 缺省预留特征数（内存预分配）
+    wordnum_t doc_top_words;
 
     decimal_t min_members_by_avg;		// cluster.min-members / avg-members, suggestion: 0.05
     decimal_t max_members_by_avg;		//         max									  20

@@ -116,6 +116,7 @@ void Config::initDesc()
 		("chunk-num", boost::program_options::value<typeof(chunk_num)>()->default_value(10))
 
 		("reserve-features-count", boost::program_options::value<typeof(reserve_fnum)>()->default_value(200))
+		("doc-top-words", boost::program_options::value<typeof(doc_top_words)>()->default_value(200))
 
 		("supposed-lowest-k", boost::program_options::value<typeof(supposed_lowest_k)>()->default_value(500))
 		("supposed-levels", boost::program_options::value<typeof(supposed_levels)>()->default_value(4))
@@ -177,6 +178,7 @@ void Config::load(const std::string& config_file)
 	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>() << 10;
 
 	reserve_fnum = options["reserve-features-count"].as<typeof(reserve_fnum)>();
+	doc_top_words = options["doc-top-words"].as<typeof(doc_top_words)>();
 	supposed_lowest_k = options["supposed-lowest-k"].as<typeof(supposed_lowest_k)>();
 	supposed_levels = options["supposed-levels"].as<typeof(supposed_levels)>();
 	supposed_k_before_decompose = options["supposed-k-before-decompose"].as<typeof(supposed_k_before_decompose)>();

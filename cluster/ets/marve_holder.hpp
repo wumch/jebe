@@ -64,6 +64,10 @@ public:
 			flist.push_back(Feature(it->first, (it->second * Aside::wordmap->getIDFById(it->first) / words_atimes_total)));
 		}
 		std::sort(flist.begin(), flist.end(), comparer);
+		if (flist.size() > Aside::config->doc_top_words)
+		{
+			flist.resize(Aside::config->doc_top_words);
+		}
 	}
 
 	void reset()
