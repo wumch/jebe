@@ -159,7 +159,8 @@ void Calculater::optimize()
 			{
 				break;
 			}
-			LOG_IF(INFO, Aside::config->loglevel > 0) << "decomposing <Cluster(" << it->id << "){" << it->size() << "}>:" << ", total decomposed:" << decomposed << ", max-decompose:" << max_decompose;
+			LOG_IF(INFO, Aside::config->loglevel > 0) << "decomposing <Cluster(" << it->id << "){" << it->size()
+				<< "}>:" << ", total decomposed:" << decomposed << ", max-decompose:" << max_decompose;
 			__sync_add_and_fetch(&decomposed, 1);
 			it = decompose(it);
 		}
@@ -197,7 +198,8 @@ void Calculater::regen_bound()
 	vnum_t avg = vecs.size() / k;
 	min_members = avg * Aside::config->min_members_by_avg;
 	max_members = avg * Aside::config->max_members_by_avg;
-	LOG_IF(INFO, Aside::config->loglevel > 0) << "required count of members: with k=" << k << ": average=" << avg << ", min=" << min_members << ", max=" << max_members << std::endl;
+	LOG_IF(INFO, Aside::config->loglevel > 0) << "required count of members: with k=" << k
+		<< ": average=" << avg << ", min=" << min_members << ", max=" << max_members << std::endl;
 }
 
 Calculater::ClsList::iterator Calculater::decompose(ClsList::iterator cls_iter)

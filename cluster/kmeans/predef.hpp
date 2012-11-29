@@ -1,7 +1,7 @@
 
 #pragma once
 
-#define _JEBE_ENABLE_AUTO_RECALC	1
+#define _JEBE_ENABLE_AUTO_RECALC	0
 
 #include "../predef.hpp"
 #include <boost/static_assert.hpp>

@@ -29,17 +29,45 @@ public:
 	Vector center;
 
 public:
-	Cluster(clsid_t id_);
+	Cluster(clsid_t id_)
+		: id(id_), count(0)
+	{}
 
-	Cluster(clsid_t id_, const Vector& center_);
+	Cluster(clsid_t id_, const Vector& center_)
+		: id(id_), count(0), center(center_)
+	{}
 
-	Cluster(clsid_t id_, const Vector* center_);
+	Cluster(clsid_t id_, const Vector* center_)
+		: id(id_), count(0), center(*center_)
+	{}
 
-	void clear_members();
+	void clear_members()
+	{
+		count = 0;
+		members.clear();
+	}
 
-	void attach(const Vector* vec);
+	void attach(const Vector* vec)
+	{
+		members.push_back(vec);
+		++count;
+#if _JEBE_ENABLE_AUTO_RECALC
+		if (CS_BUNLIKELY(count < Aside::config->auto_recalc_threshold))
+		{
+			recalc_center();
+		}
+#endif
+	}
 
-	void recalc_center();
+	void recalc_center()
+	{
+		RawVector rv(Aside::totalFeatureNum, guess_nonzeros(size()));
+		for (MemberList::const_iterator it = members.begin(); it != members.end(); ++it)
+		{
+			rv += ***it;
+		}
+		center.reset(rv / size());
+	}
 
 	vnum_t size() const
 	{
