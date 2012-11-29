@@ -254,7 +254,7 @@ void Calculater::dump()
 	for (ClsList::const_iterator it = clses.cbegin(); it != clses.cend(); ++it)
 	{
 		Document doc(it->id, it->center->data());
-		msgpack::sbuffer packerBuffer(1 << 10);
+		msgpack::sbuffer packerBuffer(2 << 20);
 		msgpack::packer<msgpack::sbuffer> packer(&packerBuffer);
 		packer.pack(doc);
 		static_cast<void>(fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out));
