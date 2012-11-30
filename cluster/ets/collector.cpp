@@ -64,7 +64,6 @@ void Collector::run()
 		}
 		process(reinterpret_cast<InDocument*>(chunk));
 		recycle_in_chunk(chunk, chunk_idx);
-		__sync_add_and_fetch(&Aside::curDocNum, 1);
 	}
 	input->stop();
 
@@ -79,7 +78,8 @@ void Collector::process(const InDocument* indoc)
 
 	char* chunk = out_chunks[get_out_chunk()];
 	size_t msg_size = convert(indoc, chunk + 1, chunk_size - 1) + 1;
-	CS_RETURN_IF(msg_size == 0);
+	CS_RETURN_IF(msg_size == 1);
+	__sync_add_and_fetch(&Aside::curDocNum, 1);
 	zmq::socket_t& sock = get_sock();
 	zmq::message_t message(chunk, msg_size, &Collector::recycle_out_chunk_, this);
 	sock.send(message, ZMQ_NOBLOCK);
@@ -92,6 +92,7 @@ size_t Collector::convert(const InDocument* indoc, char* chunk, size_t chunk_siz
 {
 	Document doc(vidgen->gen());
 	Aside::transfer->trans(*indoc, doc.flist);
+	CS_RETURN_IF(doc.flist.empty(), 0);
 	fprintf(docs, "%d\t", doc.id);
 	static_cast<void>(fwrite(indoc->_id, indoc->_id_size, 1, docs));
 	static_cast<void>(fwrite("\t", CS_CONST_STRLEN("\t"), 1, docs));
