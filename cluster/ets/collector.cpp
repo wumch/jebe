@@ -78,7 +78,11 @@ void Collector::process(const InDocument* indoc)
 
 	char* chunk = out_chunks[get_out_chunk()];
 	size_t msg_size = convert(indoc, chunk + 1, chunk_size - 1) + 1;
-	CS_RETURN_IF(msg_size == 1);
+	if (msg_size == 1)
+	{
+		recycle_out_chunk_(chunk, this);
+		return;
+	}
 	__sync_add_and_fetch(&Aside::curDocNum, 1);
 	zmq::socket_t& sock = get_sock();
 	zmq::message_t message(chunk, msg_size, &Collector::recycle_out_chunk_, this);
