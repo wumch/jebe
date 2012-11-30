@@ -83,7 +83,7 @@ void MongoInput::start()
 		LOG_IF(ERROR, Aside::config->loglevel > 0) << "connect to mongodb-server [" << server << "] faield: " << error;
 	}
 	mongo::BSONObj fields(BSON("_id" << 1 << "text" << 1 << "url" << 1 << "title" << 1));
-	cur = con->query(collection, mongo::Query().sort("$natural", 1), Aside::config->mongo_max_doc, 0, &fields);
+	cur = con->query(collection, mongo::Query().sort("$natural", -1), Aside::config->mongo_max_doc, 0, &fields);
 }
 
 bool MongoInput::more() const
