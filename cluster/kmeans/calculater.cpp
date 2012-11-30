@@ -196,8 +196,8 @@ Calculater::ClsList::iterator Calculater::optimize(ClsList::iterator cls_iter)
 void Calculater::regen_bound()
 {
 	vnum_t avg = vecs.size() / k;
-	min_members = avg * Aside::config->min_members_by_avg;
-	max_members = avg * Aside::config->max_members_by_avg;
+	min_members = std::max<vnum_t>(1u, avg * Aside::config->min_members_by_avg);
+	max_members = std::max<vnum_t>(1u, avg * Aside::config->max_members_by_avg);
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "required count of members: with k=" << k
 		<< ": average=" << avg << ", min=" << min_members << ", max=" << max_members << std::endl;
 }
