@@ -14,6 +14,7 @@ MongoInput::MongoInput()
 	  server(Aside::config->mongo_server),
 	  collection(Aside::config->mongo_collection),
 	  field(Aside::config->mongo_field),
+	  _id_field("_id"), url_field("url"), text_field("text"), title_field("title"),
 	  empty_indoc(NULL)
 {}
 
@@ -22,12 +23,13 @@ bool MongoInput::next(char* heap)
 	mongo::BSONObj bson(nextBSON());
 	if (CS_BLIKELY(!bson.isEmpty()))
 	{
-		mongo::BSONElement _id = bson.getField(std::string("_id"));
-		mongo::BSONElement url = bson.getField(std::string("url"));
-		mongo::BSONElement text = bson.getField(std::string("text"));
+		mongo::BSONElement _id = bson.getField(_id_field);
+		mongo::BSONElement url = bson.getField(url_field);
+		mongo::BSONElement text = bson.getField(text_field);
+		mongo::BSONElement title = bson.getField(title_field);
 		if (CS_BLIKELY(_id.type() == mongo::String && url.type() == mongo::String && text.type() == mongo::String))
 		{
-			new (heap) InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
+			new (heap) InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize(), title.valuestr(), title.valuestrsize());
 			return true;
 		}
 	}
@@ -39,12 +41,13 @@ InDocument* MongoInput::nextDoc()
 	mongo::BSONObj bson(nextBSON());
 	if (CS_BLIKELY(!bson.isEmpty()))
 	{
-		mongo::BSONElement _id = bson.getField(std::string("_id"));
-		mongo::BSONElement url = bson.getField(std::string("url"));
-		mongo::BSONElement text = bson.getField(std::string("text"));
+		mongo::BSONElement _id = bson.getField(_id_field);
+		mongo::BSONElement url = bson.getField(url_field);
+		mongo::BSONElement text = bson.getField(text_field);
+		mongo::BSONElement title = bson.getField(title_field);
 		if (CS_BLIKELY(_id.type() == mongo::String && url.type() == mongo::String && text.type() == mongo::String))
 		{
-			return new InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize());
+			return new InDocument(_id.valuestr(), _id.valuestrsize(), url.valuestr(), url.valuestrsize(), text.valuestr(), text.valuestrsize(), title.valuestr(), title.valuestrsize());
 		}
 	}
 	return empty_indoc;
@@ -79,7 +82,7 @@ void MongoInput::start()
 	{
 		LOG_IF(ERROR, Aside::config->loglevel > 0) << "connect to mongodb-server [" << server << "] faield: " << error;
 	}
-	mongo::BSONObj fields(BSON("_id" << 1 << "text" << 1 << "url" << 1));
+	mongo::BSONObj fields(BSON("_id" << 1 << "text" << 1 << "url" << 1 << "title" << 1));
 	cur = con->query(collection, mongo::Query().sort("$natural", 1), Aside::config->mongo_max_doc, 0, &fields);
 }
 

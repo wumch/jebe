@@ -76,6 +76,8 @@ public:
 
     docnum_t mongo_max_doc;
 
+    uint32_t doc_title_weight;
+
     uint32_t chunk_size;
     uint32_t chunk_num;
 

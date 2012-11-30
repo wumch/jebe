@@ -112,6 +112,8 @@ void Config::initDesc()
 		("mongo-auto-reconnect", boost::program_options::value<typeof(mongo_auto_reconnect)>()->default_value(true))
 		("mongo-max-documents", boost::program_options::value<typeof(mongo_max_doc)>()->default_value(0))
 
+		("document-title-weight", boost::program_options::value<typeof(doc_title_weight)>()->default_value(5))
+
 		("chunk-size", boost::program_options::value<typeof(chunk_size)>()->default_value(128))
 		("chunk-num", boost::program_options::value<typeof(chunk_num)>()->default_value(10))
 
@@ -176,6 +178,8 @@ void Config::load(const std::string& config_file)
 	chunk_size = options["chunk-size"].as<typeof(chunk_size)>() << 10;
 	chunk_num = options["chunk-num"].as<typeof(chunk_num)>();
 	msg_max_size = options["message-max-size"].as<typeof(msg_max_size)>() << 10;
+
+	doc_title_weight = options["document-title-weight"].as<typeof(doc_title_weight)>();
 
 	reserve_fnum = options["reserve-features-count"].as<typeof(reserve_fnum)>();
 	doc_top_words = options["doc-top-words"].as<typeof(doc_top_words)>();

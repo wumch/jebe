@@ -26,6 +26,11 @@ private:
 	std::string collection;
 	std::string field;
 
+	const std::string _id_field;
+	const std::string url_field;
+	const std::string text_field;
+	const std::string title_field;
+
 	InDocument* empty_indoc;
 	mongo::BSONObj empty_bson;
 
