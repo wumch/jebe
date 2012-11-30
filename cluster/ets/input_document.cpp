@@ -5,10 +5,10 @@ namespace jebe {
 namespace cluster {
 namespace ets {
 
-const size_t InDocument::_id_max_size;
-const size_t InDocument::url_max_size;
-const size_t InDocument::text_max_size;
-const size_t InDocument::title_max_size;
+const uint32_t InDocument::_id_max_size;
+const uint32_t InDocument::url_max_size;
+const uint32_t InDocument::text_max_size;
+const uint32_t InDocument::title_max_size;
 
 } /* namespace ets */
 } /* namespace cluster */
