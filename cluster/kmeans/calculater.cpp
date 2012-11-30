@@ -204,12 +204,20 @@ void Calculater::regen_bound()
 
 Calculater::ClsList::iterator Calculater::decompose(ClsList::iterator cls_iter)
 {
-	Cluster::MemberList members = cls_iter->members;
-	ClsList::iterator it = clses.erase(cls_iter);
-	--k;
-	decompose(members);
-	regen_bound();
-	return it;
+	if (cls_iter->size() == 0)
+	{
+		--k;
+		return clses.erase(cls_iter);
+	}
+	else
+	{
+		Cluster::MemberList members = cls_iter->members;
+		ClsList::iterator it = clses.erase(cls_iter);
+		--k;
+		decompose(members);
+		regen_bound();
+		return it;
+	}
 }
 
 void Calculater::decompose(Cluster::MemberList& members)
