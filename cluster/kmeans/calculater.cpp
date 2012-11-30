@@ -279,7 +279,7 @@ void Calculater::dump()
 		static_cast<void>(fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out));
 //		static_cast<void>(fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out));
 
-		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id>\\t<level>\" to " << Aside::config->cls_vecs_outputfile << std::endl;
+		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id=" << it->id << ">\\t<level=" << level << ">\" to " << Aside::config->cls_vecs_outputfile << std::endl;
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)
 		{
 			LOG_IF(INFO, Aside::config->loglevel > 2) << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
