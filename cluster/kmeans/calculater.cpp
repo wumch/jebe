@@ -277,13 +277,13 @@ void Calculater::dump()
 		msgpack::packer<msgpack::sbuffer> packer(&packerBuffer);
 		packer.pack(doc);
 		static_cast<void>(fwrite(packerBuffer.data(), packerBuffer.size(), 1, centers_out));
-//		static_cast<void>(fwrite(CS_LINESEP_STR, CS_CONST_STRLEN(CS_LINESEP_STR), 1, centers_out));
 
 		LOG_IF(INFO, Aside::config->loglevel > 1) << "dumping " << it->members.size() << " lines of \"<vector-id>\\t<cluster-id="
 			<< it->id << ">\\t<level=" << level << ">\" to " << Aside::config->cls_vecs_outputfile << std::endl;
 		for (Cluster::MemberList::const_iterator iter = it->members.begin(); iter != it->members.end(); ++iter)
 		{
-			LOG_IF(INFO, Aside::config->loglevel > 2) << (*iter)->id << Aside::config->output_delimiter << (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
+			LOG_IF(INFO, Aside::config->loglevel > 2) << (*iter)->id << Aside::config->output_delimiter
+				<< (*iter)->belong_cls << Aside::config->output_delimiter << level << CS_LINESEP;
 			fprintf(cls_vecs_out, "%u\t%u\t%u\n", (*iter)->id, (*iter)->belong_cls, level);
 		}
 	}
