@@ -99,7 +99,7 @@ baidu_cates = {
         'parent' : 3,
         'cond' : PL(
             domain.eq('www.4399.com'),
-            maindomain.eq('17173.com') & subdomain.notinside(['www', 'news', 'media', 'download', 'bbs', 'blog', 'act', 'china']),
+            maindomain.eq('17173.com') & subdomain.inside(['www', 'news', 'media', 'download', 'bbs', 'blog', 'act', 'china']),
         ),
     },
     302:{
