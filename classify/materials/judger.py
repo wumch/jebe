@@ -10,7 +10,7 @@ class Judger(object):
     def __init__(self, outfile, maxdocs=0):
         self.supplier = Supplier(maxdocs=maxdocs)
         self.analyzer = Analyzer()
-        self.recorder = Recorder()
+        self.recorder = Recorder(outfile=outfile)
 
     def run(self):
         for doc in self.supplier:
