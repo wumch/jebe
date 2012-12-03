@@ -98,7 +98,8 @@ baidu_cates = {
         'title' : '综合游戏',
         'parent' : 3,
         'cond' : PL(
-            domain.eq('www.4399.com'),
+            domain.eq('www.17173.com'),
+            domain.eq('www.4399.com') & toppath.notinside(['flash', 'special']),
             maindomain.eq('17173.com') & subdomain.inside(['www', 'news', 'media', 'download', 'bbs', 'blog', 'act', 'china']),
         ),
     },
