@@ -14,4 +14,4 @@ class Recorder(object):
 
     def record(self, doc, cate):
         self.counter[cate] += 1
-        self.fp.write(self.format % (cate, doc['url']))
+        self.fp.write(self.format % (cate, doc['url'].encode('utf-8')))

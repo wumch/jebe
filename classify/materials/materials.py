@@ -403,8 +403,3 @@ i8cates = {
 
 cates = baidu_cates.copy()
 cates.update(i8cates)
-
-cates = {
-    103:cates[103],
-    106:cates[106],
-}
