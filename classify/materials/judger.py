@@ -7,7 +7,7 @@ from recorder import Recorder
 
 class Judger(object):
 
-    def __init__(self, maxdocs=0):
+    def __init__(self, outfile, maxdocs=0):
         self.supplier = Supplier(maxdocs=maxdocs)
         self.analyzer = Analyzer()
         self.recorder = Recorder()
@@ -22,5 +22,8 @@ class Judger(object):
         return self.analyzer.analysis(doc)
 
 if __name__ == '__main__':
-    maxdocs = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    Judger(maxdocs=maxdocs).run()
+    if len(sys.argv) < 2:
+        print "usage: %s <output-file> [max-docs=1<<31]"
+        sys.exit(1)
+    maxdocs = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    Judger(outfile=sys.argv[0], maxdocs=maxdocs).run()
