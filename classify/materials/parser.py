@@ -29,7 +29,7 @@ class Parser(object):
         }
 
     def split_title(self, title):
-        return [s.encode('utf-8') for s in self.title_spliter.split(unicode(title, 'utf-8'))]
+        return self.title_spliter.split(title, 'utf-8')
 
     def parseDomain(self, domain):
         info = (domain[:domain.find(':')] if ':' in domain else domain).split('.')

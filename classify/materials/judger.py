@@ -1,5 +1,6 @@
 #coding:utf-8
 
+import sys
 from analyzer import *
 from supplier import Supplier
 from recorder import Recorder
@@ -21,4 +22,5 @@ class Judger(object):
         return self.analyzer.analysis(doc)
 
 if __name__ == '__main__':
-    Judger().run()
+    if len(sys.argv) > 1:
+        Judger(int(sys.argv[1])).run()

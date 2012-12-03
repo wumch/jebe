@@ -10,7 +10,8 @@ from config import config, logger
 
 class Supplier(object):
 
-    def __init__(self):
+    def __init__(self, maxdocs=0):
+        self.maxdocs = maxdocs or (1 << 31)
         self.maxts = 1352304000     # 2012-11-08 00:00:00
         self.mints = self.maxts - (86400 * 7)    # one week ago
         self.curts = 1352736000     # 2012-11-13 00:00:00
@@ -46,4 +47,4 @@ class Supplier(object):
             self.connections[dbtype] = pymongo.Connection(**server['param'])
             self.dbs[dbtype] = self.connections[dbtype][server['db']]
             self.collections[dbtype] = self.dbs[dbtype][server['collection']]
-        self.textCursor = self.collections['text'].find({}, ['url', 'title']).sort("$natural", -1)
+        self.textCursor = self.collections['text'].find({}, ['url', 'title']).limit(self.maxdocs).sort("$natural", -1)
