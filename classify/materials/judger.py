@@ -26,4 +26,4 @@ if __name__ == '__main__':
         print "usage: %s <output-file> [max-docs=1<<31]"
         sys.exit(1)
     maxdocs = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-    Judger(outfile=sys.argv[0], maxdocs=maxdocs).run()
+    Judger(outfile=sys.argv[1], maxdocs=maxdocs).run()

@@ -31,7 +31,7 @@ baidu_cates = {
             domain.eq('.iqiyi.com/zongyi/'),     # 奇艺综艺
             maindomain.eq('youku.com') & title.contains(u'—综艺—'),
             maindomain.eq('iqiyi.com') & stitle.contains(u'综艺'),
-            domain.eq('zy.tudou.com') ,          # （主页）
+            domain.eq('zy.tudou.com'),          # （主页）
             domain.eq('zy.kankan.com') & stitle.contains(u'综艺'),
         ),
     },
@@ -65,7 +65,7 @@ baidu_cates = {
             domain.eq('www.m1905.com') & toppath.inside(['vod', 'mdb']),
             domain.eq('dianying.cntv.cn'),
             domain.eq('v.qq.com') & title.unmatch(u'(第[0-9]{1,3}|全)[集|季]'),
-            domain.eq('movie.letv.com') | (maindomain.eq('letv.com') & title.unmatch('[0-9]{2,} - ')),
+            (maindomain.eq('letv.com') & title.unmatch('[0-9]{2,} - ')) | domain.eq('movie.letv.com'),
             domain.eq('tv.sohu.com') & title.unmatch(u'(第[0-9]{1,3}|全)[集|季]'),
             maindomain.eq('hunantv.com') & title.contains(u'电影库'),
         )
@@ -131,7 +131,7 @@ baidu_cates = {
         'title' : '网页游戏',
         'parent' : 3,
         'cond': PL(
-            domain.eq('web.4399.com') | (maindomain.eq('4399.com') & subdomain.notinside(['www', 'web'])),
+            (maindomain.eq('4399.com') & subdomain.notinside(['www', 'web'])) | domain.eq('web.4399.com'),
             domain.eq('web.7k7k.com'),
             domain.contains('.web.17173.com'),
             domain.eq('game.yeyou.com'),

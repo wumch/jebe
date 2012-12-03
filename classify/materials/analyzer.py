@@ -10,6 +10,8 @@ class Analyzer(object):
 
     def analysis(self, doc):
         subject = self.parser.parse(doc)
+        if not subject:
+            return None
         for cid, info in cates.iteritems():
             if 'cond' in info:
                 if info['cond'](subject):

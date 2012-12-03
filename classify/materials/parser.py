@@ -15,6 +15,8 @@ class Parser(object):
     def parse(self, doc):
         info = urlparse(doc['url'])
         domain_info = self.parseDomain(info[1])
+        if domain_info is None:
+            return None
         paths = info[2].split('/', 2)
         path = paths[1] if len(paths) > 2 else ''
         return {
