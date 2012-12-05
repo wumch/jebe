@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #coding:utf-8
 
 #
@@ -14,7 +15,7 @@ import random
 locale.setlocale(locale.LC_ALL, '')
 encoding = locale.getpreferredencoding()
 statwin_height = 12
-logfile = r'/tmp/a.txt'
+logfile = r'/dev/shm/crawler.log'
 
 class Window(object):
 
@@ -198,7 +199,7 @@ def main():
         clean(scr=scr)
     except:
         clean(scr=scr)
-        traceback.print_exc()
+#        traceback.print_exc()
 
 if __name__ == '__main__':
     main()
