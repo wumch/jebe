@@ -7,7 +7,6 @@
 
 import os, sys
 import time
-import popen2
 import curses, traceback
 import locale
 import random
@@ -58,7 +57,7 @@ class Window(object):
         self.win.refresh()
 
     def settitle(self, title):
-        decorater = '- ' * ((self.width - len(title)) >> 2)
+        decorater = '- ' * ((self.width - len(title.encode(encoding))) >> 2)
         title = decorater + title + ' ' + decorater
         self.win.move(1, 2)
         self.appendline(title, attr=curses.A_BOLD, nonl=True)
@@ -74,11 +73,11 @@ class StatWin(Window):
         self.int_max_len = 20
 
     def _prepare(self):
-        self.settitle('statistics and prediction')
+        self.settitle(u'统计/预测')
 
     def _initialize(self):
-        siders = ['per second', 'per hour', 'per day']
-        headers = ['active PC', 'crawl page', 'words(distinct in page)']
+        siders = [u'每秒', u'每小时', u'每天']
+        headers = [u'活跃PC', u'抓取网页', u'关键词']
         self.coef = [5.973797, 1.371477, 403.97437]
         gwidth = max(self.width / (len(headers) + 2), max(map(len, siders)) + 6)
 
@@ -89,11 +88,12 @@ class StatWin(Window):
         yoffset = 2
         for i in range(1, len(headers) + 1):
             self.win.move(yoffset, self.poses[i - 1])
-            self.win.insstr(headers[i - 1])
+            self.win.insstr(headers[i - 1].encode(encoding))
         for i in range(0, len(siders)):
-            self.win.move(yoffset + 2 + (i * 2), gwidth - 6 - len(siders[i]))
-            self.win.insstr(siders[i])
+            self.win.move(yoffset + 2 + (i * 2), gwidth - 6 - len(siders[i]) + (0 if i == 1 else 1))
+            self.win.insstr(siders[i].encode(encoding))
         self.update(0)
+        self.win.box(curses.ACS_VLINE, curses.ACS_HLINE)
         self.win.refresh()
 
     def update(self, count):
@@ -103,7 +103,7 @@ class StatWin(Window):
             [self.coef[0] * (count + random.random()) * 86400,  self.coef[1] * (count + random.random()) * 86400,   self.coef[2] * (count + random.random()) * 86400],
         ]
         row = 2
-        fmt = "  %-" + str(self.int_max_len) + "s"
+        fmt = "%-" + str(self.int_max_len) + "s"
         for line in data:
             row += 2
             for i in range(0, len(self.poses)):
@@ -124,7 +124,8 @@ class CrawlWin(Window):
         self.y = statwin_height
 
     def _prepare(self):
-        self.settitle('currently crawling')
+        self.settitle(u'实时抓取状态')
+        self.win.box(curses.ACS_VLINE, curses.ACS_HLINE)
 
 class Manager(object):
 
@@ -155,10 +156,11 @@ class Manager(object):
                     time.sleep(0.0001)
                     line = fp.readline().strip()
             url = line[self.delimiter:]
-            self.crawlwin.appendline('crawling:\t%s' % url)
+            self.crawlwin.appendline(u'正在抓取:\t%s' % url)
             count += 1
             if int(time.time()) != last_ts:
                 self.refresh(count=count)
+                time.sleep(0.0001)
                 count = 0
                 last_ts = int(time.time())
 
