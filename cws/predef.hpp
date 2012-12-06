@@ -12,7 +12,7 @@
 
 #define CS_USE_WCS					0
 
-#define BOOST_EXCEPTION_DIABLE		// no guy should throw exceptions to me!
+#define BOOST_EXCEPTION_DIABLE		// no guy could throw exceptions to me!
 
 #include "staging.hpp"
 #include <string>
@@ -26,7 +26,7 @@ extern "C" {
 #define _JEBE_SCAN_FROM_RIGHT		0
 #define _JEBE_USE_TIMER				0
 #define _JEBE_ENABLE_MAXMATCH		0
-#define _JEBE_ENABLE_NOMISS			1
+#define _JEBE_ENABLE_NOMISS			0
 #define _JEBE_STEP_FWD_OPTI			0
 
 #define _JEBE_WORD_MAX_LEN			(8U*3)

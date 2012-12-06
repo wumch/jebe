@@ -40,6 +40,7 @@ public:
 	void msgpack_pack(Packer& pk) const
 	{
 		pk.pack_array(2);
+		CS_SAY("packing [" << node->str() << "], [" << (uint64_t)node << "]");
 		pk.pack(node->str());
 		pk.pack(weight);
 	}
@@ -81,11 +82,13 @@ public:
 
 	void operator()(const Node* node)
 	{
+		CS_SAY("packing [" << node->str() << "], [" << (uint64_t)node << "]");
 		Words::iterator it = words.find(node);
 		if (CS_BUNLIKELY(it == words.end()))
 		{
 			word_atime.first = node;
 			words.insert(word_atime);
+			CS_SAY("operator [" << words.begin()->first->str() << "], [" << (uint64_t)words.begin()->first << "]");
 		}
 		else
 		{

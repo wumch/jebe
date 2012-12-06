@@ -3,6 +3,7 @@
 
 #include "predef.hpp"
 #include <string>
+#include <iostream>
 #include "node.hpp"
 #include "config.hpp"
 
@@ -31,7 +32,7 @@ private:
 
     void build(const std::string& fname);
 
-    void attach_word(const char* word);
+    void attach_word(const char* word, double idf);
 
     Node* root;
 
@@ -104,6 +105,9 @@ public:
     template<typename CallbackType>
     tsize_t find(const byte_t* const atoms, tsize_t len, CallbackType& callback) const
     {
+#if !_JEBE_ENABLE_NOMISS
+    	const Node* cur_max_matched = NULL;
+#endif
 #if _JEBE_ENABLE_MAXMATCH
     	tsize_t matched = 0;
 #endif
@@ -122,11 +126,6 @@ public:
 #endif
 			if ((node = node->cichildat(atoms[i])))
 			{
-#if _JEBE_SCAN_FROM_RIGHT
-				--i;
-#else
-				++i;
-#endif
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				if (CS_BUNLIKELY(begin_from_root))
 				{
@@ -140,8 +139,17 @@ public:
 #endif
 				if (node->patten_end)
 				{
+#if _JEBE_ENABLE_NOMISS
 					callback(node);
-					CS_SAY("matched: [" << node->patten << "]");
+#endif
+
+#if !_JEBE_ENABLE_NOMISS
+#	if _JEBE_SCAN_FROM_RIGHT
+						offset = i--;
+#	else
+						offset = i++;
+#	endif
+#endif
 					if (CS_BLIKELY(node->is_leaf))
 					{
 #if _JEBE_ENABLE_MAXMATCH
@@ -153,25 +161,45 @@ public:
 							}
 						}
 #endif
-						node = tree.root;
-#if !_JEBE_ENABLE_NOMISS
-#	if _JEBE_SCAN_FROM_RIGHT
-						offset = i;
-#	else
-						offset = i;
-#	endif
-#else
+#if _JEBE_ENABLE_NO_MISS
 #	if _JEBE_SCAN_FROM_RIGHT
 						i = --offset;
 #	else
 						i = ++offset;
 #	endif
 #endif
+#if !_JEBE_ENABLE_NOMISS
+						callback(node);
+						cur_max_matched = NULL;
+#endif
+						node = tree.root;
 					}
+#if !_JEBE_ENABLE_NOMISS
+					else
+					{
+						cur_max_matched = node;
+					}
+#endif
+				}
+				else
+				{
+
+#if _JEBE_SCAN_FROM_RIGHT
+					--i;
+#else
+					++i;
+#endif
 				}
 			}
 			else
 			{
+#if !_JEBE_ENABLE_NOMISS
+				if (cur_max_matched)
+				{
+					callback(cur_max_matched);
+					cur_max_matched = NULL;
+				}
+#endif
 				node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
 				begin_from_root = true;
@@ -187,6 +215,12 @@ public:
 #endif
 			}
 		}
+#if !_JEBE_ENABLE_NOMISS
+		if (cur_max_matched)
+		{
+			callback(cur_max_matched);
+		}
+#endif
 #if _JEBE_SCAN_FROM_RIGHT
 		return std::min<int32_t>(offset, _JEBE_WORD_MAX_LEN);
 #else

@@ -1,7 +1,7 @@
 
 #include "filter.hpp"
 #include <iostream>
-#include <fstream>
+#include <stdio.h>
 #include <iomanip>
 #include "numcast.hpp"
 
@@ -11,65 +11,52 @@ namespace cws {
 void Ftree::build(const std::string& fname)
 {
 	Filter::initCharBytesTable();
-    char word[word_max_bytes];
-    try
-    {
-        std::ifstream fp(fname.c_str());
-        if (fp)
-        {
-            while (fp.getline(word, word_max_bytes))
-            {
-                attach_word(word);
-            }
-        }
-    }
-    catch (const std::exception& e)
-    {
-        CS_SAY("error occured while <Ftree> building: " << e.what());
-        exit(1);
-    }
+	FILE* fp = fopen(fname.c_str(), "rb");
+	if (fp)
+	{
+	    char word[word_max_bytes + 1];
+	    double idf = .0;
+		while (!feof(fp))
+		{
+			if (CS_BLIKELY(fscanf(fp, "%s\t%lf\n", word, &idf) == 2))
+			{
+				CS_SAY("scaned word [" << word << "]");
+				attach_word(word, idf);
+			}
+			else
+			{
+				CS_DIE("error occured while <Ftree> building. patten-file: " << fname);
+			}
+		}
+	}
+	else
+	{
+		CS_DIE("error occured while opening file: " << fname);
+	}
     optimize();
 }
 
-void Ftree::attach_word(const char* const word)
+void Ftree::attach_word(const char* const word, double idf)
 {
     const byte_t* const patten = reinterpret_cast<const byte_t*>(word);
     Node* node = root;
-    double idf = 0;
+    uint32_t len = strlen(word);
 #if _JEBE_SCAN_FROM_RIGHT
-    wsize_t len = 0;
-    for(int32_t i = strlen(word); i > 0; )
+    for(int32_t i = len; i > 0; )
     {
     	--i;
 #else
-	wsize_t i = 0;
-    for (wsize_t end = strlen(word); i < end; ++i)
+    for (wsize_t i = 0; i < len; ++i)
     {
 #endif
-    	if (patten[i] == '\t')
-    	{
-    		idf = boost::lexical_cast<double>(patten + i + 1);
-#if _JEBE_SCAN_FROM_RIGHT
-    		len = i;
-#else
-    		break;
-#endif
-    	}
-#if _JEBE_SCAN_FROM_RIGHT
-    	else if (len)
-#else
-    	else
-#endif
-    	{
-    		node = node->attach_child(patten[i]);
-    	}
+		node = node->attach_child(patten[i]);
     }
 #if _JEBE_SCAN_FROM_RIGHT
 //    CS_SAY("[" << std::string(word, len)  << "(" << (int)len << ")"<< "] idf: " << idf);
     node->endswith(std::string(word, len), idf);
 #else
-    CS_SAY("[" << std::string(word, i) << "] idf: " << idf);
-    node->endswith(std::string(word, i), idf);
+    CS_SAY("[" << std::string(word, len) << "] idf: " << idf);
+    node->endswith(std::string(word, len), idf);
 #endif
 }
 
