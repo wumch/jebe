@@ -69,7 +69,8 @@ window[callbackName] = function(data)
 {
     alert(typeof(data) + ":" + data);
 };
-I8Poster.post("http://10.10.11.42/i8poster/i8poster.php", {key:"value"}, callbackName, true);
+var headers = {'hoho':'http://www.baidu.com/aaa/'};
+I8Poster.post("http://10.10.11.42/i8poster/i8poster.php", {key:"value"}, callbackName, true, headers);
 </script>
 
 </body>

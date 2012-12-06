@@ -42,6 +42,10 @@ public class I8Poster extends Sprite
         {
             data = text;
         }
+        if (!headers)
+        {
+            headers = {};
+        }
         headers[CONTENT_TYPE_KEY] = (CONTENT_TYPE_KEY in headers) ? headers[CONTENT_TYPE_KEY] : (compress ? "application/octet-stream" : (isJson ? "text/plain" : "application/x-www-form-urlencoded"));
         //headers[CONTENT_TYPE_KEY] = (CONTENT_TYPE_KEY in headers) ? headers[CONTENT_TYPE_KEY] : (compress ? "multipart/form-data" : (isJson ? "text/plain" : "application/x-www-form-urlencoded"));
         sendContent(service, data, callback, headers);
