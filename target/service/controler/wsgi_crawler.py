@@ -15,6 +15,7 @@ script.type = 'text/javascript';
 script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
+detach_notask_jsonp = '''setTimeout(document.location.reload, 180000);'''
 
 class WsgiCrawler(WsgiControler):
 
@@ -43,7 +44,7 @@ class WsgiCrawler(WsgiControler):
 
     def detach_task(self):
         url = CrawlQueue.instance().detach()
-        return (detach_jsonp % url) if url else ''
+        return (detach_jsonp % url) if url else detach_notask_jsonp
 
     def _prepare_attach(self):
         if 'QUERY_STRING' in self.env:
