@@ -15,7 +15,7 @@ script.type = 'text/javascript';
 script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
-detach_notask_jsonp = '''setTimeout(document.location.reload, 180000);'''
+detach_notask_jsonp = '''setTimeout(function() { document.location.reload(); }, 180000);'''
 
 class WsgiCrawler(WsgiControler):
 
