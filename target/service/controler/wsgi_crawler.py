@@ -2,20 +2,19 @@
 
 import zlib
 import urlparse
-from config import config, logger
+from config import config, sysconfig, logger
 from wsgi_controler import WsgiControler
 from model.mpagestorer import PageStorer
 from model.crawlqueue import CrawlQueue
 
 detach_jsonp = '''
-window.i8_next_task = function(){document.location.href = '%s';}
+window.i8_next_task = function(){document.location.href = '%%s';}
 var script = document.createElement('script');
 script.charset = 'utf-8';
 script.type = 'text/javascript';
-//script.src = 'http://ad.i8ad.cn/crawler.js';
-script.src = 'http://www.jebe.com/crawler.js';
+script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
-'''
+''' % sysconfig.CRAWLER_DOMAIN
 
 class WsgiCrawler(WsgiControler):
 
