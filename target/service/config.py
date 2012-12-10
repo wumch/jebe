@@ -101,6 +101,7 @@ class Config(object):
         'loc' : {'db':'loc', 'collection':'main', 'param':{'host':'192.168.88.4', 'port':9200, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
         'paths_old' : {'db':'paths_old', 'collection':'main', 'param':{'host':'192.168.88.8', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
         'paths' : {'db':'paths', 'collection':'main', 'param':{'host':'192.168.88.8', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+        'crawlqueue' : {'db':'crawlq', 'collection':'main', 'param':{'host':'192.168.88.7', 'port':27017, 'max_pool_size':5, 'network_timeout':5, 'socketTimeoutMS':1000, }},
     }
 
     adcollectors = ('tcp://%s:10016' % interal_api_host, )
@@ -117,10 +118,12 @@ class Config(object):
         locdbs = ('tcp://%s:10018' % natip, )
         adcollectors = ('tcp://%s:10017' % natip, )
         mongodbs = {
-            'text' : {'db':'text', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+#            'text' : {'db':'text', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+            'text' : {'db':'text', 'collection':'main', 'param':{'host':'211.154.172.172', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
             'loc' : {'db':'loc', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
             'paths_old' : {'db':'paths_old', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
             'paths' : {'db':'paths', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
+            'crawlqueue' : {'db':'crawlqueue', 'collection':'main', 'param':{'host':'127.0.0.1', 'port':27017, 'max_pool_size':2, 'network_timeout':5, 'socketTimeoutMS':1000, }},
         }
         iothreads = 1
 
@@ -214,3 +217,4 @@ config = Config.instance()
 sysconfig = SysConfig()
 logger = Logger.instance(logfile=config.LOG_FILE, also_print=DEBUG)
 backtracer = BackTracer(max_depth=10)
+os.environ['TZ'] =  'Asia/Shanghai'

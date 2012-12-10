@@ -1,14 +1,15 @@
 (function()
 {
 	window.i8vars= window.i8vars || {};
+    i8vars.crawler_domain = 'ad.guangao.i8.com.cn';
+    i8vars['crawlServer'] = 'http://' + i8vars.crawler_domain + '/crawler/';
+    i8vars['targetServer'] = 'http://' + i8vars.crawler_domain + '/target/';
 
-    i8vars['crawlServer'] = 'http://ad.i8ad.cn/crawler/';
-    i8vars['targetServer'] = 'http://ad.i8ad.cn/target/';
 	i8vars.eldest= i8vars.eldest? i8vars.eldest: document.body.firstChild;
 	i8vars.cmtorid= 'i8_communicator';
 
     i8vars.showAds = function() {};
-    i8vars.skipTags = ',SCRIPT,STYLE,INPUT,TEXTAREA,BUTTON,';
+    i8vars.skipTags = ',SCRIPT,STYLE,INPUT,TEXTAREA,BUTTON,IFRAME,IMG,OBJECT,';
     i8vars.max_recurve = 20000;
 
     function installCommunicator()
@@ -20,12 +21,12 @@
                 var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
                 if (!cmtor) return;
                 if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
-                if (!cmtor.i8post) return;
+                if (!cmtor.i8crawlPage) return;
                 i8vars.cmtor = cmtor;
                 setTimeout(askPageExists, 10);
             } catch (e) {}
         }
-        var swf= 'http://ad.i8ad.cn/crawler.swf?initrc=' + initrc;
+        var swf= 'http://' + i8vars.crawler_domain + '/crawler.swf?initrc=' + initrc;
         var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
                 'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
                 'width="1" height="1" id="' + i8vars.cmtorid + '" name="' + i8vars.cmtorid + '">' +
@@ -37,7 +38,7 @@
             '</object>';
 
         var div= document.createElement('div');
-            div.style.cssText= 'position:absolute; left:-10000px; top:-10000px; width:1px; height:1px; overflow:hidden;';
+            div.style.cssText= 'position:absolute; left:0; top:0; width:1px; height:1px; overflow:hidden;';
             div.innerHTML= html;
         document.body.insertBefore(div, i8vars.eldest);
     }
@@ -171,7 +172,7 @@
 	{
         if (!shouldSkip())
         {
-            i8vars.cmtor.i8crawlPage(i8vars.crawlServer, data);
+            i8vars.cmtor.i8crawlPage(i8vars.crawlServer, data, window.i8_next_task ? 'i8_next_task' : '');
         }
 	}
 
@@ -213,5 +214,15 @@
         document.body.insertBefore(i8vars.create('script', {'src': url,'type': 'text/javascript'}), i8vars.eldest);
 	}
 
-    i8vars.crawlPage();
+    if (document.location.href == 'about:blank')
+    {
+        if (window.i8_next_task)
+        {
+            window.i8_next_task();
+        }
+    }
+    else
+    {
+        i8vars.crawlPage();
+    }
 })();

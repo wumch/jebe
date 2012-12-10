@@ -1,6 +1,7 @@
 package
 {
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.events.HTTPStatusEvent;
 import flash.events.IOErrorEvent;
 import flash.external.ExternalInterface;
@@ -25,7 +26,7 @@ public class HTTPCrawler extends Sprite
         postInit();
     }
 
-    public function i8crawlPage(service:String, content:Object):void
+    public function i8crawlPage(service:String, content:Object, callback:String=""):void
     {
         var text:String = JSON.stringify(content);
         var bytes:ByteArray = new ByteArray();
@@ -39,10 +40,10 @@ public class HTTPCrawler extends Sprite
             bytes.compress();
         }
         bytes.position = 0;
-        sendContent(service, bytes);
+        sendContent(service, bytes, callback);
     }
 
-    protected function sendContent(service:String, data:ByteArray):void
+    protected function sendContent(service:String, data:ByteArray, callback:String):void
     {
         try {
             var request:URLRequest = new URLRequest(service);
@@ -55,6 +56,7 @@ public class HTTPCrawler extends Sprite
             loader.dataFormat = URLLoaderDataFormat.TEXT;
             loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, onResponse);
             loader.addEventListener(IOErrorEvent.IO_ERROR, onIoError);
+            loader.addEventListener(Event.COMPLETE, onComplete(callback));
             loader.load(request);
         } catch (e:*) {}
     }
@@ -64,6 +66,16 @@ public class HTTPCrawler extends Sprite
 
     protected function onResponse(event:HTTPStatusEvent):void
     {
+    }
+
+    protected function onComplete(callback:String):Function
+    {
+        var proxy:Function = function(event:Event):void
+        {
+            ExternalInterface.call(callback, (event.currentTarget as URLLoader).data);
+        };
+        var voidProxy:Function = function(event:Event):void {};
+        return callback ? proxy : voidProxy;
     }
 
     private function initialize():void
