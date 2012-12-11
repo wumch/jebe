@@ -2,6 +2,7 @@
 {
 	window.i8vars= window.i8vars || {};
     i8vars.crawler_domain = 'ad.guangao.i8.com.cn';
+    i8vars.aboutblank = 'crawler.aboutblank.html';
     i8vars['crawlServer'] = 'http://' + i8vars.crawler_domain + '/crawler/';
     i8vars['targetServer'] = 'http://' + i8vars.crawler_domain + '/target/';
 
@@ -214,7 +215,14 @@
         document.body.insertBefore(i8vars.create('script', {'src': url,'type': 'text/javascript'}), i8vars.eldest);
 	}
 
-    if (document.location.href == 'about:blank')
+    function isI8AboutBlank()
+    {
+        var url = document.location.href.toString();
+        return (url.length >= i8vars.aboutblank.length) &&
+            (url.substr(url.length - i8vars.aboutblank.length, i8vars.aboutblank.length) == i8vars.aboutblank);
+    }
+
+    if (isI8AboutBlank())
     {
         if (window.i8_next_task)
         {
