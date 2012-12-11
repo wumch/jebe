@@ -62,7 +62,9 @@ public:
 
 	explicit Vector(vid_t id_, const RawVector& rv_)
 		: VectorMeta(id_), rv(rv_)
-	{}
+	{
+		rv.assign(rv_);
+	}
 
 	// fix the copy-constructor of boost::mapped_vector.
 	Vector(const Vector& vec)
@@ -73,7 +75,7 @@ public:
 
 	void reset(const RawVector& rv_)
 	{
-		rv = rv_;
+		rv.assign(rv_);
 	}
 
 public:

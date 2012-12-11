@@ -69,7 +69,8 @@ public:
 		{
 			rv += ***it;
 		}
-		center.reset(rv / size());
+		whiten(rv);
+		center.reset(rv);
 	}
 
 	vnum_t size() const

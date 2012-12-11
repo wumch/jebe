@@ -31,6 +31,30 @@ static inline decimal_t mod(const InputVector& vec)
 	return std::sqrt(square_sum);
 }
 
+static inline decimal_t mod(const RawVector& vec)
+{
+	decimal_t square_sum = .0;
+	for (RawVector::const_iterator it = vec.begin(); it != vec.end(); ++it)
+	{
+		square_sum += staging::square(vec[it.index()]);
+	}
+	return std::sqrt(square_sum);
+}
+
+static inline void whiten(RawVector& vec)
+{
+	const decimal_t m = mod(vec);
+	for (RawVector::iterator it = vec.begin(); it != vec.end(); ++it)
+	{
+		*it /= m;
+	}
+}
+
+static inline void whiten_lazy(RawVector& vec)
+{
+	vec /= mod(vec);
+}
+
 typedef staging::HashTomasWang32<vid_t> VidHash;
 
 class VectorHash
