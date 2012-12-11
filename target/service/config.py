@@ -188,6 +188,7 @@ class SysConfig(object):
 
     CRAWL_UPDATE_INTERVAL = 86400
     INT_BIT = 64
+    PAGE_TITLE_WEIGHT = 5
 
     ERR_CODE_KEY_NAME = 'code'
     ERR_CODE_OK = 'ok'
