@@ -91,7 +91,7 @@ void Calculater::calcu()
 	long double base = Aside::curDocNum;
 	for (wordnum_t i = 0, end = Aside::wordsNum(); i < end; ++i)
 	{
-		ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (std::log10<long double>(base / dflist[i]))) << CS_LINESEP;
+		ofile << Aside::wordList[i] << '\t' << (CS_BUNLIKELY(dflist[i] == Aside::curDocNum) ? 0 : (std::log10(base / dflist[i]))) << CS_LINESEP;
 	}
 	ofile.close();
 	LOG_IF(INFO, Aside::config->loglevel > 0) << "dumped to " << Aside::config->outputfile.string();
