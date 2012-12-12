@@ -3,7 +3,6 @@
 
 #include "predef.hpp"
 #include <string>
-#include <iostream>
 #include "node.hpp"
 #include "config.hpp"
 
