@@ -107,10 +107,10 @@ public:
 #if !_JEBE_ENABLE_NOMISS
     	const Node* cur_max_matched = NULL;
 #endif
+    	const Node* node = tree.root;
 #if _JEBE_ENABLE_MAXMATCH
     	tsize_t matched = 0;
 #endif
-    	const Node* node = tree.root;
 #if defined(_JEBE_NO_REWIND_OPTI) && _JEBE_NO_REWIND_OPTI
     	bool begin_from_root = true;
 #endif
@@ -149,7 +149,7 @@ public:
 						offset = i++;
 #	endif
 #endif
-					if (CS_BLIKELY(node->is_leaf))
+					if (node->is_leaf)
 					{
 #if _JEBE_ENABLE_MAXMATCH
 						if (CS_BUNLIKELY(Config::getInstance()->max_match))
@@ -166,8 +166,7 @@ public:
 #	else
 						i = ++offset;
 #	endif
-#endif
-#if !_JEBE_ENABLE_NOMISS
+#else
 						callback(node);
 						cur_max_matched = NULL;
 #endif

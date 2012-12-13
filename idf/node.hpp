@@ -15,6 +15,9 @@ namespace idf {
 class Node;
 static Node* make_node(byte_t _atom);
 
+template<int id> class PoolTag {};
+typedef boost::singleton_pool<PoolTag<1>, sizeof(Node), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePool;
+
 class Node
 {
 public:
@@ -36,61 +39,46 @@ public:
 
     Node* insert_child(byte_t _atom)
     {
-		if (CS_BUNLIKELY(childrenum == 0))
+    	if (childrenum == 0)
 		{
-			children = reinterpret_cast<Node**>(malloc(sizeof(Node*)));
-			childrenum = 1;
-			return children[0] = make_node(_atom);
+			return insert_child_at(_atom, 0);
 		}
-
-		// hopefully avoid from loop.
-		if (children[0]->atom == _atom)
-		{
-			return children[0];
-		}
-
-		uint left = 0, right = childrenum - 1;
-		uint cur = (left + right) >> 1;
-
-		// avoid from loop if only two atoms.
-		while (left < cur && cur < right)
-		{
-			if (children[cur]->atom == _atom)
-			{
-				return children[cur];
-			}
-			else if (children[cur]->atom < _atom)
-			{
-				left = cur;
-			}
-			else
-			{
-				right = cur;
-			}
-			cur = (left + right) >> 1;
-		}
-
+		int left = 0, right = childrenum - 1, cur;
 		if (children[left]->atom == _atom)
 		{
 			return children[left];
 		}
-		else if (children[right]->atom == _atom)
+		else if(children[right]->atom == _atom)
 		{
 			return children[right];
 		}
-
-		return insert_child_at(_atom, right + (children[right]->atom < _atom));
+		while (left <= right)
+		{
+			cur = (left + right) >> 1;
+			if (children[cur]->atom == _atom)
+			{
+				return children[cur];
+			}
+			if (children[cur]->atom < _atom)
+			{
+				left = cur + 1;
+			}
+			else
+			{
+				right = cur - 1;
+			}
+		}
+		return insert_child_at(_atom, left);
     }
 
     Node* insert_child_at(byte_t child_atom, byte_t index)
     {
-    	children = reinterpret_cast<Node**>(realloc(children, (childrenum + 1) * sizeof(Node*)));
+    	const Node* const* old_children = children;
+    	children = reinterpret_cast<Node**>(NodePtrPool::ordered_malloc(childrenum + 1));
     	assert(children != NULL);
-    	for (uint i = childrenum; i > index; --i)
-    	{
-    		move_child(i - 1, i);
-    	}
+		memcpy(children, old_children, index * sizeof(Node*));
     	children[index] = make_node(child_atom);
+    	memcpy(children + index + 1, old_children + index, (childrenum - index) * sizeof(Node*));
     	++childrenum;
     	return children[index];
     }
@@ -181,9 +169,7 @@ protected:	// sort declartion of data-fields for memory saving...
     uint8_t patten_end:1;
 };
 
-template<int id> class PoolTag {};
-typedef boost::singleton_pool<PoolTag<1>, sizeof(Node), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex> NodePool;
-typedef boost::singleton_pool<PoolTag<2>, sizeof(Node*), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex> NodePtrPool;
+typedef boost::singleton_pool<PoolTag<2>, sizeof(Node*), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePtrPool;
 
 static Node* make_node(byte_t _atom)
 {
