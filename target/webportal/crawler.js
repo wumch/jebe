@@ -110,19 +110,20 @@
     var curDomain = getMainDomain(document.location.href);
 
     var domainRecorded = {};
-    var maxRecordPerDomain = 50;
+    var collectLinks = (getMainDomain(document.location.href) == 'no5.com.cn');
+    i8vars.maxRecordPerDomain = collectLinks ? 1000 : 50;
     function formatLink(link)
     {
         if (link.innerText && link.href)
         {
             var domain = getMainDomain(link.href);
-            if (domain && curDomain && domain != curDomain)
+            if (domain && curDomain && (collectLinks || (domain != curDomain)))
             {
                 if (!domainRecorded[domain])
                 {
                     domainRecorded[domain] = 0;
                 }
-                if (domainRecorded[domain]++ < maxRecordPerDomain)
+                if (domainRecorded[domain]++ < i8vars.maxRecordPerDomain)
                 {
                     return [jsonEscape(link.href), jsonEscape(link.title || link.innerText)];
                 }
