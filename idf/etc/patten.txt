@@ -1,1 +1,1 @@
-patten.domainspec+baidu+huaxue-stopwords.txt
+patten.26w+domainspec+baidu+huaxue-stopwords.txt
