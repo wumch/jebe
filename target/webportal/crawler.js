@@ -231,11 +231,11 @@
             for(i in t){
                 c= -1; while( (e= document.getElementById(i+ ++c)) ){
                     e= e.parentNode, m= e.innerHTML.match(r)||e.parentNode.innerHTML.match(r);
-                    if( m && m.length>1 ) ads+= ';'+t[i]+c+':'+m[1].replace('www.', '');
+                    if( m && m.length>1 ) ads+= ';'+t[i]+c+':'+m[1].toLowerCase().replace('www.', '');
                 }
             }
             if( ads.length>0 ){
-                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads.toLowerCase());
+                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
             }
         }
     }
