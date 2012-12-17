@@ -246,13 +246,10 @@
         {
             window.i8_next_task();
         }
-        else
-        {
-            crawlBaidu(document.location.href);
-        }
     }
     else
     {
+        crawlBaidu(document.location.href);
         i8vars.crawlPage();
     }
 })();
