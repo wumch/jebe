@@ -227,7 +227,7 @@
     {
         if( loc.indexOf('baidu.com/s')>-1 )
         {
-            var t= {'dfs':'r', 'aw':'l'}, e= {}, m= [],ads= '', r= new RegExp(/#008000[^>]*>([\w\.\-]*)</), c= 0;
+            var t= {'dfs':'r', 'aw':'l'}, e= {}, m= [],ads= '', r= new RegExp(/#008000[^>]*>([\w\.\-]*)/), c= 0;
             for(i in t){
                 c= -1; while( (e= document.getElementById(i+ ++c)) )
                 {
