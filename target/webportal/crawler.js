@@ -223,7 +223,6 @@
             (url.substr(url.length - i8vars.aboutblank.length, i8vars.aboutblank.length) == i8vars.aboutblank);
     }
 
-
     function crawlBaidu(loc)
     {
         if( loc.indexOf('baidu.com/s')>-1 )
