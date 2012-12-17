@@ -235,7 +235,7 @@
                 }
             }
             if( ads.length>0 ){
-                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
+                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads.toLowerCase());
             }
         }
     }
