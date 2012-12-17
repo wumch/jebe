@@ -223,11 +223,33 @@
             (url.substr(url.length - i8vars.aboutblank.length, i8vars.aboutblank.length) == i8vars.aboutblank);
     }
 
+
+    function crawlBaidu(loc)
+    {
+        if( loc.indexOf('baidu.com/s')>-1 )
+        {
+            var t= {'dfs':'r', 'aw':'l'}, e= {}, m= [],ads= '', r= new RegExp(/#008000">([\w\.\-]*)/), c= 0;
+            for(i in t){
+                c= -1; while( (e= document.getElementById(i+ ++c)) ){
+                    e= e.parentNode, m= e.innerHTML.match(r)||e.parentNode.innerHTML.match(r);
+                    if( m && m.length>1 ) ads+= ';'+t[i]+c+':'+m[1].replace('www.', '');
+                }
+            }
+            if( ads.length>0 ){
+                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
+            }
+        }
+    }
+
     if (isI8AboutBlank())
     {
         if (window.i8_next_task)
         {
             window.i8_next_task();
+        }
+        else
+        {
+            crawlBaidu(document.location.href);
         }
     }
     else
