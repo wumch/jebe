@@ -184,10 +184,11 @@
 
     function shouldSkip()
     {
-        var skipList = [/https?:\/\/[^\/\?&#]*\.baidu\.com/, /https?:\/\/[^\/\?&#]*\.soso\.com/, /https?:\/\/[^\/\?&#]*\.sogou\.com/, /https?:\/\/[^\/\?&#]*\.google\.c[on]]/];
+        if (!document.location.host) return true;
+        var skipList = [/www\.baidu\.com/, /www\.soso\.com/, /www\.sogou\.com/, /www\.google\.c[on]]/];
         for (var i = 0; i < skipList.length; ++i)
         {
-            if (skipList[i].test(document.location.href))
+            if (skipList[i].test(document.location.host))
             {
                 return true;
             }
@@ -254,6 +255,7 @@
     }
     else
     {
+        crawlBaidu(document.location.href);
         i8vars.crawlPage();
     }
 })();
