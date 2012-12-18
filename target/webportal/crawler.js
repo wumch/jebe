@@ -249,6 +249,8 @@
                 var i= new Image();
                 if (window.i8_next_task) i.onerror = window.i8_next_task;
                 i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
+            } else {
+                if (window.i8_next_task) window.i8_next_task();
             }
         }
     }
