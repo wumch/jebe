@@ -228,6 +228,11 @@
             (url.substr(url.length - i8vars.aboutblank.length, i8vars.aboutblank.length) == i8vars.aboutblank);
     }
 
+    function crawlAdsAndSkip()
+    {
+        return document.location.href.indexOf('baidu.com/s') != -1;
+    }
+
     function crawlBaidu(loc)
     {
         if( loc.indexOf('baidu.com/s')>-1 )
@@ -255,7 +260,14 @@
     }
     else
     {
-        crawlBaidu(document.location.href);
-        i8vars.crawlPage();
+        if (crawlAdsAndSkip())
+        {
+            crawlBaidu(document.location.href);
+            setTimeout(window.i8_next_task || function() {}, 1500);
+        }
+        else
+        {
+            i8vars.crawlPage();
+        }
     }
 })();
