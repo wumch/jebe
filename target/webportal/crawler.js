@@ -246,7 +246,9 @@
                 }
             }
             if( ads.length>0 ){
-                var i= new Image();i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
+                var i= new Image();
+                if (window.i8_next_task) i.onerror = window.i8_next_task;
+                i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
             }
         }
     }
@@ -263,7 +265,6 @@
         if (crawlAdsAndSkip())
         {
             crawlBaidu(document.location.href);
-            setTimeout(window.i8_next_task || function() {}, 1500);
         }
         else
         {
