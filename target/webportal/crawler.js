@@ -223,7 +223,7 @@
 
     function isI8AboutBlank()
     {
-        var url = document.location.href.toString();
+        var url = document.location.href.toString().split('?')[0];
         return (url.length >= i8vars.aboutblank.length) &&
             (url.substr(url.length - i8vars.aboutblank.length, i8vars.aboutblank.length) == i8vars.aboutblank);
     }
