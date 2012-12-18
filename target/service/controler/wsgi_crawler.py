@@ -15,10 +15,12 @@ script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
 detach_jsonp = '''
+(function(){
 window.i8_next_task = function(){document.location.href = '%s';}
-''' + inject
-detach_notask_jsonp = '''setTimeout(function() { document.location.reload(); }, 180000);
-''' + inject
+''' + inject + '''})();'''
+detach_notask_jsonp = '''
+(function(){setTimeout(function() { document.location.reload(); }, 180000);
+''' + inject + '''})();'''
 
 class WsgiCrawler(WsgiControler):
 
@@ -65,7 +67,7 @@ class WsgiCrawler(WsgiControler):
         return True
 
     def _prepare_store(self):
-        if 'CONTENT_LENGTH' in self.env and 'wsgi.input' in self.env:
+        if 'CONTENT_LENGTH' in self.env and 'wsgi.input' in self.env and self.env['CONTENT_LENGTH']:
             self.postData = self.env.get('wsgi.input').read(int(self.env['CONTENT_LENGTH']))
             self.pageStorer = PageStorer.instance()
             return True
