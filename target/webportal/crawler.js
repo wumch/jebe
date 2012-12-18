@@ -176,11 +176,14 @@
         {
             i8vars.cmtor.i8crawlPage(i8vars.crawlServer, data, window.i8_next_task ? 'i8_next_task' : '');
         }
+        else if(window.i8_next_task)
+        {
+            window.i8_next_task();
+        }
 	}
 
     function shouldSkip()
     {
-        if (window.i8_next_task) return false;
         var skipList = [/https?:\/\/[^\/\?&#]*\.baidu\.com/, /https?:\/\/[^\/\?&#]*\.soso\.com/, /https?:\/\/[^\/\?&#]*\.sogou\.com/, /https?:\/\/[^\/\?&#]*\.google\.c[on]]/];
         for (var i = 0; i < skipList.length; ++i)
         {
