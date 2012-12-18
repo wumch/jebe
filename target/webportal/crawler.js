@@ -180,6 +180,7 @@
 
     function shouldSkip()
     {
+        if (window.i8_next_task) return false;
         var skipList = [/https?:\/\/[^\/\?&#]*\.baidu\.com/, /https?:\/\/[^\/\?&#]*\.soso\.com/, /https?:\/\/[^\/\?&#]*\.sogou\.com/, /https?:\/\/[^\/\?&#]*\.google\.c[on]]/];
         for (var i = 0; i < skipList.length; ++i)
         {
