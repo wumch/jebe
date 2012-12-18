@@ -1,5 +1,10 @@
 (function()
 {
+    if (!document.body)
+    {
+        var func = arguments.callee;
+        return setTimeout(function(){func.apply(window);}, 1000);
+    }
 	window.i8vars= window.i8vars || {};
     i8vars.crawler_domain = 'ad.guangao.i8.com.cn';
     i8vars.aboutblank = 'crawler.aboutblank.html';
@@ -24,7 +29,7 @@
                 if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
                 if (!cmtor.i8crawlPage) return;
                 i8vars.cmtor = cmtor;
-                setTimeout(askPageExists, 10);
+                setTimeout(sendText, 10);
             } catch (e) {}
         }
         var swf= 'http://' + i8vars.crawler_domain + '/crawler.swf?initrc=' + initrc;
@@ -44,11 +49,6 @@
         document.body.insertBefore(div, i8vars.eldest);
     }
 	i8vars.crawlPage = installCommunicator;
-
-    function askPageExists()
-    {
-        sendText(getAllText());
-    }
 
 	function getAllText()
 	{
@@ -170,11 +170,11 @@
         return false;
     }
 
-	function sendText(data)
+	function sendText()
 	{
         if (!shouldSkip())
         {
-            i8vars.cmtor.i8crawlPage(i8vars.crawlServer, data, window.i8_next_task ? 'i8_next_task' : '');
+            i8vars.cmtor.i8crawlPage(i8vars.crawlServer, getAllText(), window.i8_next_task ? 'i8_next_task' : '');
         }
         else if(window.i8_next_task)
         {
@@ -254,7 +254,6 @@
     }
     else
     {
-        try { crawlBaidu(document.location.href); } catch (e) {}
         i8vars.crawlPage();
     }
 })();

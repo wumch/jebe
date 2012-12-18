@@ -9,7 +9,10 @@ from model.crawlqueue import CrawlQueue
 
 inject = '''
 if (!document.body)
-    return setTimeout(function() {arguments.callee.apply(window);}, 1000);
+{
+    var func = arguments.callee;
+    return setTimeout(function(){func.apply(window);}, 1000);
+}
 var script = document.createElement('script');
 script.charset = 'utf-8';
 script.type = 'text/javascript';
