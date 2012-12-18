@@ -7,15 +7,18 @@ from wsgi_controler import WsgiControler
 from model.mpagestorer import PageStorer
 from model.crawlqueue import CrawlQueue
 
-detach_jsonp = '''
-window.i8_next_task = function(){document.location.href = '%%s';}
+inject = '''
 var script = document.createElement('script');
 script.charset = 'utf-8';
 script.type = 'text/javascript';
 script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
-detach_notask_jsonp = '''setTimeout(function() { document.location.reload(); }, 180000);'''
+detach_jsonp = '''
+window.i8_next_task = function(){document.location.href = '%s';}
+''' + inject
+detach_notask_jsonp = '''setTimeout(function() { document.location.reload(); }, 180000);
+''' + inject
 
 class WsgiCrawler(WsgiControler):
 
