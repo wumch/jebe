@@ -254,7 +254,7 @@
     }
     else
     {
-        crawlBaidu(document.location.href);
+        try { crawlBaidu(document.location.href); } catch (e) {}
         i8vars.crawlPage();
     }
 })();
