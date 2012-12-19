@@ -1,5 +1,6 @@
 (function()
 {
+    window.onerror = function() { return true; };
     if (!document.body)
     {
         var func = arguments.callee;
