@@ -1,0 +1,294 @@
+
+#ifndef __GNUC__
+#	error "before resolving config options, please make sure your compiler has `typeof(var)` supported"
+#endif
+
+#include "config.hpp"
+#include <iostream>
+#include <string>
+#include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/dynamic_bitset.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/logic/tribool_io.hpp>
+extern "C" {
+#include <sched.h>
+}
+#include "sys.hpp"
+#include "net.hpp"
+
+#define _JEBE_OUT_CONFIG_PROPERTY(property)		<< CS_OC_RED(#property) << ":\t\t" << CS_OC_GREEN(property) << std::endl
+
+namespace jebe {
+namespace dsvd {
+namespace svd {
+
+namespace {
+BOOST_TRIBOOL_THIRD_STATE(nonspecified)
+}
+
+void Config::init(int argc_, char* argv_[])
+{
+	argc = argc_;
+	argv = argv_;
+	argv_first = argv[0];
+
+	boost::filesystem::path program_path = argv[0];
+#if BOOST_VERSION > 104200
+	program_name = program_path.filename().string();
+#else
+	program_name = program_path.filename();
+#endif
+
+	boost::filesystem::path default_config_file("etc/" + program_name + ".conf");
+
+	boost::filesystem::path default_pidfile(std::string("/var/run/") + program_name + ".pid");
+	boost::filesystem::path default_logfile(std::string("/var/log/") + program_name + ".log");
+
+	desc.add_options()
+		("help,h", "show this help and exit.")
+		("config,c", boost::program_options::value<typeof(config_file)>()->default_value(default_config_file),
+			("config file, defaults to " + default_config_file.string() + ".").c_str())
+
+		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value(default_pidfile),
+			(std::string("pid file, defaults to ") + default_pidfile.string()).c_str())
+
+		("log-file", boost::program_options::value<typeof(logfile)>()->default_value(default_logfile),
+			(std::string("log file, defaults to ") + default_logfile.string() + ".").c_str())
+		("log-level", boost::program_options::value<typeof(loglevel)>()->default_value(0),
+			"0,1 or 2. the higher, the more verbose, and 0 stands for disable log.")
+
+		("svd_nsv", boost::program_options::value<typeof(nsv)>()->default_value(0),
+			"num of singular-values being expected. default: 0, stands for all.")
+		("svd_ncv", boost::program_options::value<typeof(ncv)>()->default_value(0),
+			"num of columns should be used to calculate singular-values. default: 0, stands for all.")
+
+		("sort-asc", boost::program_options::value<typeof(asc)>()->default_value(false),
+			"whether sort singular-value ascending or not (descending). default: no (i.e. descending).")
+
+		("daemon,d", boost::program_options::value<typeof(daemon)>()->default_value(false),
+			"whether run as a daemon or not. default: no.")
+		("memlock", boost::program_options::value<typeof(memlock)>()->default_value(false),
+			"as u know.")
+		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""),
+			"as u know.")
+
+		("matrix-file,m", boost::program_options::value<typeof(matfile)>()->default_value(""),
+			"input matrix-file, in SPESc binary format.")
+
+		("output-dir,o", boost::program_options::value<typeof(output_dir)>()->default_value("data"),
+			"directory of output matrix files.")
+		("matrix-file-extension", boost::program_options::value<typeof(matfile_ext)>()->default_value(".mtx"),
+			"extension of output matrix files.")
+		("store-USV", boost::program_options::value<typeof(store_usv)>()->default_value(nonspecified),
+			"whether store USV or not. default: auto guess from other options such as \"matrix-file-U\".")
+		("matrix-file-U", boost::program_options::value<typeof(outfile_u)>()->default_value(""),
+			"path of output matrix file -- U.")
+		("matrix-file-S", boost::program_options::value<typeof(outfile_s)>()->default_value(""),
+			"path of output matrix file -- S.")
+		("matrix-file-V", boost::program_options::value<typeof(outfile_v)>()->default_value(""),
+			"path of output matrix file -- V (NOTE: whether it's transposed or not depends on another option which called \"transpose-v\").")
+
+
+		("store-solution", boost::program_options::value<typeof(store_solution)>()->default_value(nonspecified),
+			"whether store solution or not. default: auto guess from \"solution-file\".")
+		("solution-file-extension", boost::program_options::value<typeof(solution_file_ext)>()->default_value(".dat"),
+			"extension of solution file.")
+		("solution-file", boost::program_options::value<typeof(outfile_solution)>()->default_value(""),
+			"path of output solution file.")
+	;
+
+	try
+	{
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc, cmd_style), options);
+	}
+	catch (const std::exception& e)
+	{
+		CS_DIE(CS_OC_RED(e.what()) << CS_LINESEP << desc << CS_LINESEP << desc);
+	}
+	boost::program_options::notify(options);
+
+	if (options.count("help"))
+	{
+		std::cout << desc << CS_LINESEP << desc << std::endl;
+	}
+	else
+	{
+		config_file = options["config"].as<typeof(config_file)>();
+		load();
+	}
+}
+
+void Config::load()
+{
+	try
+	{
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc, cmd_style), options);
+		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.c_str(), desc), options);
+	}
+	catch (const std::exception& e)
+	{
+		CS_DIE("faild on read/parse config-file: " << config_file.c_str() << "\n" << CS_OC_RED(e.what()));
+	}
+	boost::program_options::notify(options);
+	pidfile = options["pid-file"].as<typeof(pidfile)>();
+	logfile = options["log-file"].as<typeof(logfile)>();
+	loglevel = options["log-level"].as<typeof(loglevel)>();
+
+	nsv = options["svd_nsv"].as<typeof(nsv)>();
+	ncv = options["svd_ncv"].as<typeof(nsv)>();
+	asc = options["sort-asc"].as<typeof(asc)>();
+
+	matfile = options["matrix-file"].as<typeof(matfile)>();
+
+	output_dir = options["output-dir"].as<typeof(output_dir)>();
+	matfile_ext = options["matrix-file-extension"].as<typeof(matfile_ext)>();
+	solution_file_ext = options["solution-file-extension"].as<typeof(solution_file_ext)>();
+
+	outfile_u = options["matrix-file-U"].as<typeof(outfile_u)>();
+	outfile_s = options["matrix-file-S"].as<typeof(outfile_s)>();
+	outfile_v = options["matrix-file-V"].as<typeof(outfile_v)>();
+	outfile_solution = options["solution-file"].as<typeof(outfile_solution)>();
+
+	memlock = options["memlock"].as<typeof(memlock)>();
+	if (memlock)
+	{
+#if CS_DEBUG
+		assert(!mlockall(MCL_CURRENT | MCL_FUTURE));
+#else
+		mlockall(MCL_CURRENT | MCL_FUTURE);
+#endif
+	}
+
+	// `cpu-affinity` no longer useable since the threads-model changed.
+	std::string cpumask = options["cpuaffinity"].as<std::string>();
+
+	typedef boost::char_separator<char> Separator;
+	typedef boost::tokenizer<Separator> Tokenizer;
+	Separator sep("[],");
+	Tokenizer tokens(cpumask, sep);
+
+	if (cpumask.size())
+	{
+		uint cpunum = staging::getCpuNum();
+		uint bits = cpunum;
+		if (cpumask.size() < bits)
+		{
+			cpumask.append(bits - cpumask.size(), '0');
+		}
+		cpuaffinity = boost::dynamic_bitset<>(cpumask);
+	}
+
+	solve_files();
+
+	CS_SAY("configs in [" << config_file << "]:" << std::endl
+		_JEBE_OUT_CONFIG_PROPERTY(program_name)
+		_JEBE_OUT_CONFIG_PROPERTY(daemon)
+		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
+		_JEBE_OUT_CONFIG_PROPERTY(logfile)
+		_JEBE_OUT_CONFIG_PROPERTY(loglevel)
+		_JEBE_OUT_CONFIG_PROPERTY(memlock)
+		_JEBE_OUT_CONFIG_PROPERTY(nsv)
+		_JEBE_OUT_CONFIG_PROPERTY(ncv)
+		_JEBE_OUT_CONFIG_PROPERTY(asc)
+		_JEBE_OUT_CONFIG_PROPERTY(matfile)
+
+		_JEBE_OUT_CONFIG_PROPERTY(output_dir)
+
+		_JEBE_OUT_CONFIG_PROPERTY(store_usv)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_u)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_s)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_v)
+
+		_JEBE_OUT_CONFIG_PROPERTY(store_solution)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution)
+
+		_JEBE_OUT_CONFIG_PROPERTY(store_product)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_us)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_feature_space)
+	);
+}
+
+void Config::solve_files()
+{
+	if (nonspecified(store_usv))
+	{
+		store_usv = !outfile_u.empty()
+			|| !outfile_s.empty()
+			|| !outfile_v.empty();
+	}
+	CS_RETURN_IF_NORMAL(output_dir.empty());
+
+	if (outfile_u.empty())
+	{
+		outfile_u = output_dir / "u";
+	}
+	boost::tribool b;
+	if (!outfile_u.has_extension())
+	{
+		outfile_u.replace_extension(matfile_ext);
+	}
+
+	if (outfile_s.empty())
+	{
+		outfile_s = output_dir / "s";
+	}
+	if (!outfile_s.has_extension())
+	{
+		outfile_s.replace_extension(matfile_ext);
+	}
+
+	if (outfile_v.empty())
+	{
+		outfile_v = output_dir / "v";
+	}
+	if (!outfile_v.has_extension())
+	{
+		outfile_v.replace_extension(matfile_ext);
+	}
+
+	// solve "outfile-solution".
+	if (nonspecified(store_solution))
+	{
+		store_solution = outfile_solution.empty();
+	}
+	if (outfile_solution.empty())
+	{
+		outfile_solution = output_dir / "solution";
+	}
+	if (!outfile_solution.has_extension())
+	{
+		outfile_solution.replace_extension(solution_file_ext);
+	}
+
+	// solve "calcu-product" before overwrite any options.
+	if (nonspecified(store_product))
+	{
+		store_product = !outfile_feature_space.empty() || !outfile_us.empty();
+	}
+
+	if (outfile_us.empty())
+	{
+		outfile_us = output_dir / "us";
+	}
+	if (!outfile_us.has_extension())
+	{
+		outfile_us.replace_extension(matfile_ext);
+	}
+
+	if (outfile_feature_space.empty())
+	{
+		outfile_feature_space = output_dir / "v";
+	}
+	if (!outfile_feature_space.has_extension())
+	{
+		outfile_feature_space.replace_extension(matfile_ext);
+	}
+}
+
+} /* namespace svd */
+} /* namespace dsvd */
+} /* namespace jebe */
+
+#undef _JEBE_OUT_CONFIG_PROPERTY
