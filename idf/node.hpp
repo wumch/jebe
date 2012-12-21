@@ -16,7 +16,7 @@ class Node;
 static Node* make_node(byte_t _atom);
 
 template<int id> class PoolTag {};
-typedef boost::singleton_pool<PoolTag<1>, sizeof(Node), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePool;
+typedef boost::singleton_pool<PoolTag<2>, sizeof(Node*), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePtrPool;
 
 class Node
 {
@@ -96,44 +96,23 @@ public:
 
     Node* find_child(byte_t _atom) const
     {
-    	if (CS_BUNLIKELY(childrenum == 0))
+    	int left = 0, right = childrenum - 1, cur;
+    	while (left <= right)
     	{
-    		return NULL;
-    	}
-
-    	// hopefully avoid from loop.
-    	if (children[0]->atom == _atom)
-    	{
-    		return children[0];
-    	}
-
-    	uint left = 0, right = childrenum - 1;
-    	uint cur = (left + right) >> 1;
-    	while (left < cur && cur < right)
-    	{
+    		cur = (left + right) >> 1;
     		if (children[cur]->atom == _atom)
     		{
     			return children[cur];
     		}
     		if (children[cur]->atom < _atom)
     		{
-    			left = cur;
+    			left = cur + 1;
     		}
     		else
     		{
-    			right = cur;
+    			right = cur - 1;
     		}
-    		cur = (left + right) >> 1;
     	}
-
-		if (children[right]->atom == _atom)
-		{
-			return children[right];
-		}
-		else if (children[left]->atom == _atom)
-		{
-			return children[left];
-		}
 		return NULL;
     }
 
@@ -165,12 +144,11 @@ protected:	// sort declartion of data-fields for memory saving...
 
     byte_t atom;
 
-    uint8_t is_leaf:1;
-    uint8_t patten_end:1;
+    bool is_leaf;
+    bool patten_end;
 };
 
-typedef boost::singleton_pool<PoolTag<2>, sizeof(Node*), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePtrPool;
-
+typedef boost::singleton_pool<PoolTag<1>, sizeof(Node), boost::default_user_allocator_malloc_free, boost::details::pool::null_mutex, 20 << 20> NodePool;
 static Node* make_node(byte_t _atom)
 {
 	return new (NodePool::malloc()) Node(_atom);
