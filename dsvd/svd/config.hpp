@@ -14,6 +14,10 @@ namespace jebe {
 namespace dsvd {
 namespace svd {
 
+namespace {
+BOOST_TRIBOOL_THIRD_STATE(nonspecified)
+}
+
 class Config
 {
 	friend int ::main(int, char*[]);
@@ -36,7 +40,7 @@ public:
 	char** argv;
 	boost::filesystem::path config_file;
 
-	bool daemon;
+	bool as_daemon;
     boost::filesystem::path pidfile;
 
     boost::filesystem::path logfile;
@@ -59,6 +63,7 @@ public:
 
     boost::tribool store_solution;	// whether store the solution of the SVD problem or not.
     boost::filesystem::path outfile_solution;
+    boost::filesystem::path outfile_solution_text;
 
     bool transpose_vt;		// whether transposed V or not. true: output V, false: output Vt.
 
@@ -87,9 +92,9 @@ protected:
     void init(int argc, char* argv[]);
 
     Config()
-    	: store_usv(boost::tribool::indeterminate_value),
-    	  store_solution(boost::tribool::indeterminate_value),
-    	  store_product(boost::tribool::indeterminate_value),
+    	: store_usv(nonspecified),
+    	  store_solution(nonspecified),
+    	  store_product(nonspecified),
     	  desc("allowed config options")
     {}
 

@@ -18,6 +18,8 @@ public:
 
 protected:
 	static void initLogger();
+
+	static void ready();
 };
 
 } /* namespace svd */

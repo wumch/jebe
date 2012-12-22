@@ -65,6 +65,7 @@ private:
 	FILE* out_v;
 	char* addr_v;
 	FILE* out_solution;
+	FILE* out_solution_text;
 
 private:
 	void build();
@@ -79,7 +80,8 @@ private:
 	void prepare_retrieve();
 	void retrieve();
 
-	void record(PetscReal s, Vec u, Vec v);
+	void CS_FORCE_INLINE record(PetscReal s, Vec u, Vec v);
+	void record(double s, Vec u, Vec v, size_t size);
 
 	void record_solution();
 };

@@ -24,10 +24,6 @@ namespace jebe {
 namespace dsvd {
 namespace svd {
 
-namespace {
-BOOST_TRIBOOL_THIRD_STATE(nonspecified)
-}
-
 void Config::init(int argc_, char* argv_[])
 {
 	argc = argc_;
@@ -50,6 +46,8 @@ void Config::init(int argc_, char* argv_[])
 		("help,h", "show this help and exit.")
 		("config,c", boost::program_options::value<typeof(config_file)>()->default_value(default_config_file),
 			("config file, defaults to " + default_config_file.string() + ".").c_str())
+		("no-config-file", boost::program_options::bool_switch()->default_value(false),
+			"force do not load options from config file, defaults to false.")
 
 		("pid-file", boost::program_options::value<typeof(pidfile)>()->default_value(default_pidfile),
 			(std::string("pid file, defaults to ") + default_pidfile.string()).c_str())
@@ -64,12 +62,12 @@ void Config::init(int argc_, char* argv_[])
 		("svd_ncv", boost::program_options::value<typeof(ncv)>()->default_value(0),
 			"num of columns should be used to calculate singular-values. default: 0, stands for all.")
 
-		("sort-asc", boost::program_options::value<typeof(asc)>()->default_value(false),
+		("sort-asc", boost::program_options::bool_switch()->default_value(false),
 			"whether sort singular-value ascending or not (descending). default: no (i.e. descending).")
 
-		("daemon,d", boost::program_options::value<typeof(daemon)>()->default_value(false),
+		("daemon,d", boost::program_options::bool_switch()->default_value(false),
 			"whether run as a daemon or not. default: no.")
-		("memlock", boost::program_options::value<typeof(memlock)>()->default_value(false),
+		("memlock", boost::program_options::bool_switch()->default_value(false),
 			"as u know.")
 		("cpuaffinity", boost::program_options::value<std::string>()->default_value(""),
 			"as u know.")
@@ -81,6 +79,9 @@ void Config::init(int argc_, char* argv_[])
 			"directory of output matrix files.")
 		("matrix-file-extension", boost::program_options::value<typeof(matfile_ext)>()->default_value(".mtx"),
 			"extension of output matrix files.")
+		("solution-file-extension", boost::program_options::value<typeof(solution_file_ext)>()->default_value(".dat"),
+			"extension of solution file (for binary file).")
+
 		("store-USV", boost::program_options::value<typeof(store_usv)>()->default_value(nonspecified),
 			"whether store USV or not. default: auto guess from other options such as \"matrix-file-U\".")
 		("matrix-file-U", boost::program_options::value<typeof(outfile_u)>()->default_value(""),
@@ -90,33 +91,43 @@ void Config::init(int argc_, char* argv_[])
 		("matrix-file-V", boost::program_options::value<typeof(outfile_v)>()->default_value(""),
 			"path of output matrix file -- V (NOTE: whether it's transposed or not depends on another option which called \"transpose-v\").")
 
-
 		("store-solution", boost::program_options::value<typeof(store_solution)>()->default_value(nonspecified),
 			"whether store solution or not. default: auto guess from \"solution-file\".")
-		("solution-file-extension", boost::program_options::value<typeof(solution_file_ext)>()->default_value(".dat"),
-			"extension of solution file.")
 		("solution-file", boost::program_options::value<typeof(outfile_solution)>()->default_value(""),
+			"path of output solution file (in binary format).")
+		("solution-file-text", boost::program_options::value<typeof(outfile_solution_text)>()->default_value(""),
+			"path of output solution file (in plain text format).")
+
+		("store-product", boost::program_options::value<typeof(store_product)>()->default_value(nonspecified),
+			"whether store the product of U*S or not. default: auto guess from \"matrix-file-US\".")
+		("matrix-file-US", boost::program_options::value<typeof(outfile_us)>()->default_value(""),
 			"path of output solution file.")
 	;
 
 	try
 	{
-		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc, cmd_style), options);
+		boost::program_options::command_line_parser parser(argc, argv);
+		parser.options(desc).allow_unregistered().style(cmd_style);
+		boost::program_options::store(parser.run(), options);
 	}
 	catch (const std::exception& e)
 	{
-		CS_DIE(CS_OC_RED(e.what()) << CS_LINESEP << desc << CS_LINESEP << desc);
+		CS_DIE(CS_OC_RED(e.what()) << CS_LINESEP << desc);
 	}
 	boost::program_options::notify(options);
 
 	if (options.count("help"))
 	{
-		std::cout << desc << CS_LINESEP << desc << std::endl;
+		std::cout << desc << std::endl;
 	}
 	else
 	{
-		config_file = options["config"].as<typeof(config_file)>();
-		load();
+		bool no_config_file = options["no-config-file"].as<bool>();
+		if (!no_config_file)
+		{
+			config_file = options["config"].as<typeof(config_file)>();
+			load();
+		}
 	}
 }
 
@@ -124,7 +135,6 @@ void Config::load()
 {
 	try
 	{
-		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc, cmd_style), options);
 		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.c_str(), desc), options);
 	}
 	catch (const std::exception& e)
@@ -146,10 +156,18 @@ void Config::load()
 	matfile_ext = options["matrix-file-extension"].as<typeof(matfile_ext)>();
 	solution_file_ext = options["solution-file-extension"].as<typeof(solution_file_ext)>();
 
+	store_usv = options["store-USV"].as<typeof(store_usv)>();
+	store_solution = options["store-solution"].as<typeof(store_solution)>();
+	store_product = options["store-product"].as<typeof(store_product)>();
+
 	outfile_u = options["matrix-file-U"].as<typeof(outfile_u)>();
 	outfile_s = options["matrix-file-S"].as<typeof(outfile_s)>();
 	outfile_v = options["matrix-file-V"].as<typeof(outfile_v)>();
+
 	outfile_solution = options["solution-file"].as<typeof(outfile_solution)>();
+	outfile_solution_text = options["solution-file-text"].as<typeof(outfile_solution_text)>();
+
+	outfile_us = options["matrix-file-US"].as<typeof(outfile_us)>();
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
@@ -184,7 +202,7 @@ void Config::load()
 
 	CS_SAY("configs in [" << config_file << "]:" << std::endl
 		_JEBE_OUT_CONFIG_PROPERTY(program_name)
-		_JEBE_OUT_CONFIG_PROPERTY(daemon)
+		_JEBE_OUT_CONFIG_PROPERTY(as_daemon)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
 		_JEBE_OUT_CONFIG_PROPERTY(logfile)
 		_JEBE_OUT_CONFIG_PROPERTY(loglevel)
@@ -203,6 +221,7 @@ void Config::load()
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_solution)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution_text)
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_product)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_us)
@@ -218,68 +237,78 @@ void Config::solve_files()
 			|| !outfile_s.empty()
 			|| !outfile_v.empty();
 	}
-	CS_RETURN_IF_NORMAL(output_dir.empty());
-
-	if (outfile_u.empty())
-	{
-		outfile_u = output_dir / "u";
-	}
-	boost::tribool b;
-	if (!outfile_u.has_extension())
-	{
-		outfile_u.replace_extension(matfile_ext);
-	}
-
-	if (outfile_s.empty())
-	{
-		outfile_s = output_dir / "s";
-	}
-	if (!outfile_s.has_extension())
-	{
-		outfile_s.replace_extension(matfile_ext);
-	}
-
-	if (outfile_v.empty())
-	{
-		outfile_v = output_dir / "v";
-	}
-	if (!outfile_v.has_extension())
-	{
-		outfile_v.replace_extension(matfile_ext);
-	}
-
 	// solve "outfile-solution".
 	if (nonspecified(store_solution))
 	{
-		store_solution = outfile_solution.empty();
+		store_solution = !outfile_solution.empty();
 	}
-	if (outfile_solution.empty())
-	{
-		outfile_solution = output_dir / "solution";
-	}
-	if (!outfile_solution.has_extension())
-	{
-		outfile_solution.replace_extension(solution_file_ext);
-	}
-
 	// solve "calcu-product" before overwrite any options.
 	if (nonspecified(store_product))
 	{
 		store_product = !outfile_feature_space.empty() || !outfile_us.empty();
 	}
 
-	if (outfile_us.empty())
+	if (!output_dir.empty())
 	{
-		outfile_us = output_dir / "us";
+
+		if (outfile_u.empty())
+		{
+			outfile_u = output_dir / "u";
+		}
+
+		if (outfile_s.empty())
+		{
+			outfile_s = output_dir / "s";
+		}
+
+		if (outfile_v.empty())
+		{
+			outfile_v = output_dir / "v";
+		}
+
+		if (outfile_solution.empty())
+		{
+			outfile_solution = output_dir / "solution";
+		}
+		if (outfile_solution_text.empty())
+		{
+			outfile_solution_text = outfile_solution;
+		}
+
+		if (outfile_us.empty())
+		{
+			outfile_us = output_dir / "us";
+		}
+
+		if (outfile_feature_space.empty())
+		{
+			outfile_feature_space = output_dir / "v";
+		}
+	}
+
+	if (!outfile_u.has_extension())
+	{
+		outfile_u.replace_extension(matfile_ext);
+	}
+	if (!outfile_s.has_extension())
+	{
+		outfile_s.replace_extension(matfile_ext);
+	}
+	if (!outfile_v.has_extension())
+	{
+		outfile_v.replace_extension(matfile_ext);
+	}
+	if (!outfile_solution.has_extension())
+	{
+		outfile_solution.replace_extension(solution_file_ext);
+	}
+	if (!outfile_solution_text.has_extension())
+	{
+		outfile_solution_text.replace_extension(".txt");
 	}
 	if (!outfile_us.has_extension())
 	{
 		outfile_us.replace_extension(matfile_ext);
-	}
-
-	if (outfile_feature_space.empty())
-	{
-		outfile_feature_space = output_dir / "v";
 	}
 	if (!outfile_feature_space.has_extension())
 	{
