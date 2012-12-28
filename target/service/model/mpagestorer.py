@@ -55,14 +55,14 @@ class PageStorer(object):
         path = self.urlParser.toPath(url)
         text = self._genTextData(url=url, title=title, content=content, path=path, links=links, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
-            del text['_id']
+            text.pop('_id')
             self.collections['text'].update(spec={'_id':entry['_id']}, document=text, upsert=False)
         else:
             self.collections['text'].insert(text)
 
         loc = self._genLocData(content=content, title=title, md5_res=md5_res, time_stamp=time_stamp)
         if willUpdate:
-            del loc['_id']
+            loc.pop('_id')
             self.collections['loc'].update(spec={'_id':entry['_id']}, document=loc, upsert=False)
         else:
             self.collections['loc'].insert(loc)
@@ -109,7 +109,7 @@ class PageStorer(object):
 
     def _genLocData(self, content, title=None, md5_res=None, time_stamp=None):
         if title and len(title) < 300:
-            wordsWeight = self._marve(title * sysconfig.PAGE_TITLE_WEIGHT * title)
+            wordsWeight = self._marve(title * sysconfig.PAGE_TITLE_WEIGHT + content)
         else:
             wordsWeight = self._marve(content)
         return {
