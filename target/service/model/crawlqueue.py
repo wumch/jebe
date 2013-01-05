@@ -67,3 +67,6 @@ class CrawlQueue(object):
 
     def task_exists(self, md5ed_url):
         return not not self.collections['loc'].find_one({'_id':md5ed_url})
+
+    def nonempty(self):
+        return not not self.collections['crawlqueue'].find_one()

@@ -27,6 +27,31 @@ detach_notask_jsonp = '''
 (function(){setTimeout(function() { document.location.reload(); }, 180000);
 ''' + inject + '''})();'''
 
+#[crlower]
+#dotask=1 or 0   //1就执行,0就不执行
+#url=		//窗口第一次打开url的地址
+#jsurl=        //窗口加载js的地址
+#lifetime=   //窗口生命期,毫秒
+about_blank = 'http://%s/crawler.aboutblank.html' % sysconfig.CRAWLER_DOMAIN
+jsurl = 'http://%s/crawler/task/detach/' % sysconfig.CRAWLER_DOMAIN
+lifetime = 10 * 60 * 1000
+__param = (about_blank, jsurl, lifetime, )
+ini = (('''
+[crawler]
+dotask=0
+url=%s
+jsurl=%s
+lifetime=%d
+''' % __param).replace('\n', '\r\n'),
+('''
+[crawler]
+dotask=1
+url=%s
+jsurl=%s
+lifetime=%d
+''' % __param).replace('\n', '\r\n')
+)
+
 class WsgiCrawler(WsgiControler):
 
     def __init__(self, environ, start_response):
@@ -43,10 +68,12 @@ class WsgiCrawler(WsgiControler):
             return self._prepare_store() and self.store()
         else:
             if 'PATH_INFO' in self.env:
-                if self.env['PATH_INFO'].startswith('/crawler/task/attach'):
+                if self.env['PATH_INFO'].startswith(r'/crawler/task/attach'):
                     return self._prepare_attach() and self.attach_task()
-                elif self.env['PATH_INFO'].startswith('/crawler/task/detach'):
+                elif self.env['PATH_INFO'].startswith(r'/crawler/task/detach'):
                     return self._prepare_detach() and self.detach_task()
+                elif self.env['PATH_INFO'].startswith(r'/crawler/task/crawler.ini'):
+                    return self.gen_init()
 
     def attach_task(self):
         CrawlQueue.instance().attach(self.url)
@@ -55,6 +82,9 @@ class WsgiCrawler(WsgiControler):
     def detach_task(self):
         url = CrawlQueue.instance().detach()
         return (detach_jsonp % url) if url else detach_notask_jsonp
+
+    def gen_init(self):
+        return ini[CrawlQueue.instance().nonempty()]
 
     def _prepare_attach(self):
         if 'QUERY_STRING' in self.env:
