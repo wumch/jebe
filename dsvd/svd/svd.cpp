@@ -12,7 +12,7 @@
 
 #define _DSVD_USV_DENSE 1
 
-#if CS_DEBUG > 1
+#if CS_DEBUG
 #	define _DSVD_CHECKABORT(invoking)				\
 	do {											\
 		ierr = invoking;							\
@@ -21,10 +21,7 @@
 	} while (false)
 #else
 #	define _DSVD_CHECKABORT(invoking)				\
-	do {											\
-		ierr = invoking;							\
-		CHKERRABORT(PETSC_COMM_WORLD, ierr);		\
-	} while (false)
+		CHKERRABORT(PETSC_COMM_WORLD, invoking);
 #endif
 
 namespace jebe {
@@ -154,26 +151,21 @@ void DSVD::prepare_retrieve() throw()
 		solution.r = r = nconved - 1;
 	}
 
-	if (Aside::config->store_USV)
+	if (Aside::config->store_USV || Aside::config->store_product)
 	{
-		out_S = fopen(Aside::config->outfile_S.c_str(), "wb");
-//		mmap(NULL, r * sizeof(double), PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
-
-		out_U = fopen(Aside::config->outfile_U.c_str(), "wb");
-//		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
-
-		out_Vt = fopen(Aside::config->outfile_Vt.c_str(), "wb");
-//		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
-	}
-
-	if (Aside::config->store_product)
-	{
-#if _DSVD_USV_DENSE
+//		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, 1, PETSC_NULL, 1, PETSC_NULL, &U));
 		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, PETSC_NULL, &U));
-		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S));
-		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt));
+		if (Aside::config->store_USV)
+		{
+			_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S));
+			_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt));
+		}
+		if (Aside::config->store_product)
+		{
+#if _DSVD_USV_DENSE
+			_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &Sv));
 #endif
-		_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_WORLD, r, &s_inverse));
+		}
 	}
 }
 
@@ -192,15 +184,28 @@ void DSVD::retrieve()
 		_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, i, &s, u, v));
 		record(i, s, u ,v);
 	}
-	if (Aside::config->store_product)
+
+	if (Aside::config->store_USV || Aside::config->store_product)
 	{
 		_DSVD_CHECKABORT(MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY));
 		_DSVD_CHECKABORT(MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY));
-		_DSVD_CHECKABORT(MatAssemblyBegin(Vt, MAT_FINAL_ASSEMBLY));
-		_DSVD_CHECKABORT(MatAssemblyEnd(Vt, MAT_FINAL_ASSEMBLY));
+		if (Aside::config->store_USV)
+		{
+			_DSVD_CHECKABORT(MatAssemblyBegin(S, MAT_FINAL_ASSEMBLY));
+			_DSVD_CHECKABORT(MatAssemblyEnd(S, MAT_FINAL_ASSEMBLY));
+			_DSVD_CHECKABORT(MatAssemblyBegin(Vt, MAT_FINAL_ASSEMBLY));
+			_DSVD_CHECKABORT(MatAssemblyEnd(Vt, MAT_FINAL_ASSEMBLY));
+		}
+		if (Aside::config->store_product)
+		{
+			_DSVD_CHECKABORT(MatAssemblyBegin(Sv, MAT_FINAL_ASSEMBLY));
+			_DSVD_CHECKABORT(MatAssemblyEnd(Sv, MAT_FINAL_ASSEMBLY));
+		}
 	}
 
 	_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, nconved - 1, &s, PETSC_NULL, PETSC_NULL));
+
+	store_USV();
 
 	if (Aside::config->store_solution)
 	{
@@ -210,23 +215,44 @@ void DSVD::retrieve()
 
 	if (Aside::config->store_product)
 	{
-		product();
-		record_product();
+		calc_SvUt();
+		calc_SvUtA();
+	}
+}
+
+void DSVD::store_USV()
+{
+	if (Aside::config->store_USV)
+	{
+		if (Aside::config->store_product)
+		{
+			store_mat(Aside::config->outfile_U, U);
+		}
+		else
+		{
+			frozen_mat(Aside::config->outfile_U, U);
+		}
+		frozen_mat(Aside::config->outfile_S, S);
+		frozen_mat(Aside::config->outfile_Vt, Vt);
 	}
 }
 
 // (Sk ^ -1) * transposed(Uk).
 // NOTE: it will change S => 1/S. so, should store S (even if need not S) before product.
-void DSVD::product()
+void DSVD::calc_SvUt()
 {
-	_DSVD_CHECKABORT(MatDiagonalSet(S, s_inverse, INSERT_VALUES));
-	Mat P;
-	MatMatMult(S, U, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &P);
+//	MatMatTransposeMult(Sv, U, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
+	Mat Ut;
+	MatTranspose(U, MAT_INITIAL_MATRIX, &Ut);
+	MatMatMult(Sv, Ut, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
+	store_mat(Aside::config->outfile_SvUt, SvUt);
 }
 
-void DSVD::record_product()
+void DSVD::calc_SvUtA()
 {
-
+	MatMatMult(SvUt, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUtA);
+	frozen_mat(Aside::config->outfile_feature_space, SvUtA);
+	free(SvUt);
 }
 
 void DSVD::record(PetscInt turn, double s, Vec u, Vec v)
@@ -242,12 +268,12 @@ void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 	// S
 	if (Aside::config->store_USV)
 	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(&s, sizeof(s), 1, out_S)) != 1);
+		_DSVD_CHECKABORT(MatSetValues(Sv, 1, &turn, 1, &turn, &s, INSERT_VALUES));
 	}
 	if (Aside::config->store_product)
 	{
 		const double s_inv = 1.0 / static_cast<long double>(s);
-		_DSVD_CHECKABORT(VecSetValues(s_inverse, 1, &turn, &s_inv, INSERT_VALUES));
+		_DSVD_CHECKABORT(MatSetValues(Sv, 1, &turn, 1, &turn, &s_inv, INSERT_VALUES));
 	}
 
 	static double* const buf = new double[size];
@@ -268,34 +294,20 @@ void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 	VecAssemblyBegin(u);
 	VecAssemblyEnd(u);
 	VecGetValues(u, size, idxn, buf);
-	if (Aside::config->store_USV)
-	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), size, out_U)) != size);
-	}
-	if (Aside::config->store_product)
-	{
-		MatSetValues(U, 1, idxm, size, idxn, buf, INSERT_VALUES);
-	}
+	MatSetValues(U, 1, idxm, size, idxn, buf, INSERT_VALUES);
 
-	// V
+	// Vt
 	VecAssemblyBegin(v);
 	VecAssemblyEnd(v);
 	VecGetValues(v, size, idxn, buf);
-	if (Aside::config->store_USV)
-	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), size, out_Vt)) != size);
-	}
-	if (Aside::config->store_product)
-	{
-		MatSetValues(Vt, size, idxn, 1, idxm, buf, INSERT_VALUES);
-	}
+	MatSetValues(Vt, size, idxn, 1, idxm, buf, INSERT_VALUES);
 }
 
 void DSVD::record_solution()
 {
-	CS_ABORT_IF(static_cast<PetscInt>(fwrite(&solution, sizeof(solution), 1, out_solution)) != 1);
+	CS_DIE_IF(static_cast<PetscInt>(fwrite(&solution, sizeof(solution), 1, out_solution)) != 1, "fwrite not completely done.");
 	std::string solution_text = pack_solution(solution);
-	CS_ABORT_IF(fputs(solution_text.c_str(), out_solution_text) != static_cast<int>(solution_text.size()));
+	CS_DIE_IF(fputs(solution_text.c_str(), out_solution_text) == EOF, "fputs not completely done.");
 }
 
 void DSVD::finalize()
@@ -305,31 +317,68 @@ void DSVD::finalize()
 	{
 		if (Aside::config->store_USV)
 		{
-//			munmap(addr_s, io_cache_elem * sizeof(double));
-//			munmap(addr_u, io_cache_elem * (r * sizeof(double)));
-//			munmap(addr_v, io_cache_elem * (r * sizeof(double)));
-			fclose(out_S);
-			fclose(out_U);
-			fclose(out_Vt);
-			fclose(out_solution);
+			CS_DIE_IF(fclose(out_solution) != 0, "fclose failed.");
 		}
 		_DSVD_CHECKABORT(SVDDestroy(&svd));
-		_DSVD_CHECKABORT(MatDestroy(&A));
+		free(A);
 		_DSVD_CHECKABORT(SlepcFinalize());
 	}
 }
 
 DSVD::DSVD()
-	: ierr(0), process_rank(0), is_main(false),
+	:
+#if CS_DEBUG
+	  ierr(0),
+#endif
+	  process_rank(0), is_main(false),
 	  A(NULL), m(0), n(0), svd(NULL),
 	  r(0), io_cache_elem(1 << 10),
-	  out_U(NULL), addr_U(NULL),
-	  out_S(NULL), addr_S(NULL),
-	  out_Vt(NULL), addr_Vt(NULL),
 	  out_solution(NULL),
 	  finalized(0)
 {}
 
+void DSVD::frozen_mat(const boost::filesystem::path& filename, Mat mat)
+{
+	frozen_mat(filename.string().c_str(), mat);
+}
+
+void DSVD::frozen_mat(const char* filename, Mat mat)
+{
+	store_mat(filename, mat);
+	free(mat);
+}
+
+void DSVD::store_mat(const boost::filesystem::path& filename, Mat mat)
+{
+	store_mat(filename.string().c_str(), mat);
+}
+
+void DSVD::store_mat(const char* filename, Mat mat)
+{
+	PetscViewer viewer;
+	_DSVD_CHECKABORT(PetscViewerBinaryOpen(PETSC_COMM_SELF, filename, FILE_MODE_WRITE, &viewer));
+	store_mat(mat, viewer);
+}
+
+void DSVD::store_mat(Mat mat, PetscViewer viewer)
+{
+	_DSVD_CHECKABORT(MatAssemblyBegin(mat, MAT_FINAL_ASSEMBLY));
+	_DSVD_CHECKABORT(MatAssemblyEnd(mat, MAT_FINAL_ASSEMBLY));
+	_DSVD_CHECKABORT(MatView(mat, viewer));
+	_DSVD_CHECKABORT(PetscViewerDestroy(&viewer));
+}
+
+CS_FORCE_INLINE void DSVD::free(Mat& mat_)
+{
+	_DSVD_CHECKABORT(MatDestroy(&mat_));
+	mat_ = NULL;
+}
+
+CS_FORCE_INLINE void DSVD::free(Vec& vec_)
+{
+	VecDestroy(&vec_);
+	vec_ = NULL;
+}
 DSVD::~DSVD()
 {
 	finalize();

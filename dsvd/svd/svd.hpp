@@ -6,10 +6,9 @@
 #endif
 
 #include "predef.hpp"
-#include <vector>
 #include <stdio.h>
 #include <boost/noncopyable.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/filesystem/path.hpp>
 #include <petscmat.h>
 #include <slepcsvd.h>
 #include "../solution.h"
@@ -50,15 +49,14 @@ public:
 	~DSVD();
 
 private:
+#if CS_DEBUG
 	PetscErrorCode ierr;
+#endif
 
-	PetscMPIInt process_rank;	// mpi-rank of current process..
+	PetscMPIInt process_rank;	// mpi-rank of current process.
 	bool is_main;				// whether current process is the "main-process" of the session.
 								// some jobs are for only main-process, such as store results into disk.
 private:
-	typedef boost::ptr_vector<VecClassType> VecList;
-	typedef std::vector<PetscReal> ScalarList;
-
 	Solution solution;	// info about the result of solve.
 
 	Mat A;				// problem matrix. m * n dim.
@@ -70,21 +68,20 @@ private:
 	Mat S;
 	Mat Vt;
 
-	Vec s_inverse;		// store 1/s in a Vec (since S is a diagonal matrix).
-
+	Mat Sv;				// inversed S. as E/S.
 	Mat SvUt;			// (Sk ^ -1) * transposed(Uk).
-	Mat Vk;				// SvUt * A.
+	Mat SvUtA;				// SvUt * A, the feature space.
 
 	PetscInt r;				// expected rank. indicate how many triplesets should be computed and retrieved.
 	PetscInt nconved;		// how many triplesets are really computed.
 	size_t io_cache_elem;	// how many vectors(rows) should be cached while mmap.
 
-	FILE* out_U;			// fp of output-file U.
-	char* addr_U;			// mmap addr of output-file U.
-	FILE* out_S;
-	char* addr_S;
-	FILE* out_Vt;
-	char* addr_Vt;
+//	FILE* out_U;			// fp of output-file U.
+//	char* addr_U;			// mmap addr of output-file U.
+//	FILE* out_S;
+//	char* addr_S;
+//	FILE* out_Vt;
+//	char* addr_Vt;
 	FILE* out_solution;		// fp of output-file solution -- binary format.
 	FILE* out_solution_text;	// fp of output-file solution -- plain text format.
 
@@ -110,9 +107,21 @@ private:
 
 	void record_solution();
 
-	// product UkSk
-	void product();
-	void record_product();
+	void store_USV();
+
+	void calc_SvUt();	// product SvUt, the transformation.
+	void calc_SvUtA();	// product SvUt, the feature_space.
+
+private:	// IO related.
+	void store_mat(const boost::filesystem::path& filename, Mat mat);
+	void store_mat(const char* filename, Mat mat);
+	void store_mat(Mat mat, PetscViewer viewer);
+	void frozen_mat(const boost::filesystem::path& filename, Mat mat);
+	void frozen_mat(const char* filename, Mat mat);		// store, then destroy matrix.
+
+private:	// utility
+	CS_FORCE_INLINE void free(Mat& mat_);
+	CS_FORCE_INLINE void free(Vec& vec_);
 };
 
 } /* namespace svd */

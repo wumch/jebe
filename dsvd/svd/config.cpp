@@ -103,7 +103,7 @@ void Config::init(int argc_, char* argv_[])
 			"path of output solution file (in plain text format).")
 
 		("store-product", boost::program_options::value<typeof(store_product)>()->default_value(nonspecified),
-			"whether store the product of U*S or not. default: auto guess from \"matrix-file-SvUt\".")
+			"whether store the product of U*S or not. default: auto guess from \"matrix-file-SvUt\" or \"matrix-file-feature-space\".")
 		("matrix-file-SvUt", boost::program_options::value<typeof(outfile_SvUt)>()->default_value(""),
 			"path of output solution file.")
 		("matrix-file-feature-space", boost::program_options::value<typeof(outfile_feature_space)>()->default_value(""),
@@ -253,7 +253,7 @@ void Config::solve_files()
 	// solve "calcu-product" before overwrite any options.
 	if (nonspecified(store_product))
 	{
-		store_product = !outfile_feature_space.empty() || !outfile_SvUt.empty();
+		store_product = !(outfile_feature_space.empty() && outfile_SvUt.empty());
 	}
 
 	if (!output_dir.empty())

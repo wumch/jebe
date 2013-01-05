@@ -44,8 +44,8 @@ endif
 PETSC_CC_INCLUDES	+= $(CS_INCLUDES)
 PETSC_WITH_EXTERNAL_LIB += $(CS_LIBS)
 
-OBJS = $(EXENAME).o main.o config.o aside.o matstream.o
-OBJFILES = $(OBJPATH)/$(EXENAME).o $(OBJPATH)/main.o $(OBJPATH)/config.o $(OBJPATH)/aside.o $(OBJPATH)/matstream.o
+OBJS = $(EXENAME).o main.o config.o aside.o
+OBJFILES = $(OBJPATH)/$(EXENAME).o $(OBJPATH)/main.o $(OBJPATH)/config.o $(OBJPATH)/aside.o
 
 $(OBJFILES): $(OBJS)
 	@test -n "$(find ./ -maxdepth 1 -name '*.o')" && mv *.o $(OBJPATH)/
