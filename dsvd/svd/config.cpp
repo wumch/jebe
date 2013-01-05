@@ -75,21 +75,25 @@ void Config::init(int argc_, char* argv_[])
 		("matrix-file,m", boost::program_options::value<typeof(matfile)>()->default_value(""),
 			"input matrix-file, in SPESc binary format.")
 
-		("output-dir,o", boost::program_options::value<typeof(output_dir)>()->default_value("data"),
+		("output-dir,o", boost::program_options::value<typeof(output_dir)>()->default_value("./data"),
 			"directory of output matrix files.")
 		("matrix-file-extension", boost::program_options::value<typeof(matfile_ext)>()->default_value(".mtx"),
 			"extension of output matrix files.")
 		("solution-file-extension", boost::program_options::value<typeof(solution_file_ext)>()->default_value(".dat"),
 			"extension of solution file (for binary file).")
+		("text-file-extension", boost::program_options::value<typeof(solution_file_ext)>()->default_value(".txt"),
+			"extension of plain text file.")
 
-		("store-USV", boost::program_options::value<typeof(store_usv)>()->default_value(nonspecified),
+		("store-USV", boost::program_options::value<typeof(store_USV)>()->default_value(nonspecified),
 			"whether store USV or not. default: auto guess from other options such as \"matrix-file-U\".")
-		("matrix-file-U", boost::program_options::value<typeof(outfile_u)>()->default_value(""),
+		("matrix-file-U", boost::program_options::value<typeof(outfile_U)>()->default_value(""),
 			"path of output matrix file -- U.")
-		("matrix-file-S", boost::program_options::value<typeof(outfile_s)>()->default_value(""),
+		("matrix-file-S", boost::program_options::value<typeof(outfile_S)>()->default_value(""),
 			"path of output matrix file -- S.")
-		("matrix-file-V", boost::program_options::value<typeof(outfile_v)>()->default_value(""),
-			"path of output matrix file -- V (NOTE: whether it's transposed or not depends on another option which called \"transpose-v\").")
+		("matrix-file-Vt", boost::program_options::value<typeof(outfile_Vt)>()->default_value(""),
+			"path of output matrix file -- Vt. (NOTE: whether it's transposed or not depends on another option which called \"transpose-v\").")
+		("transpose-Vt", boost::program_options::bool_switch()->default_value(false),
+			"whether transpose Vt to real V or not. default: no, indicates that Vt -- which already transposed V will be kept.")
 
 		("store-solution", boost::program_options::value<typeof(store_solution)>()->default_value(nonspecified),
 			"whether store solution or not. default: auto guess from \"solution-file\".")
@@ -99,9 +103,11 @@ void Config::init(int argc_, char* argv_[])
 			"path of output solution file (in plain text format).")
 
 		("store-product", boost::program_options::value<typeof(store_product)>()->default_value(nonspecified),
-			"whether store the product of U*S or not. default: auto guess from \"matrix-file-US\".")
-		("matrix-file-US", boost::program_options::value<typeof(outfile_us)>()->default_value(""),
+			"whether store the product of U*S or not. default: auto guess from \"matrix-file-SvUt\".")
+		("matrix-file-SvUt", boost::program_options::value<typeof(outfile_SvUt)>()->default_value(""),
 			"path of output solution file.")
+		("matrix-file-feature-space", boost::program_options::value<typeof(outfile_feature_space)>()->default_value(""),
+			"path of output matrix file -- Vk (= SvUt * A), the feature space.")
 	;
 
 	try
@@ -119,6 +125,7 @@ void Config::init(int argc_, char* argv_[])
 	if (options.count("help"))
 	{
 		std::cout << desc << std::endl;
+		std::exit(0);
 	}
 	else
 	{
@@ -156,18 +163,19 @@ void Config::load()
 	matfile_ext = options["matrix-file-extension"].as<typeof(matfile_ext)>();
 	solution_file_ext = options["solution-file-extension"].as<typeof(solution_file_ext)>();
 
-	store_usv = options["store-USV"].as<typeof(store_usv)>();
+	store_USV = options["store-USV"].as<typeof(store_USV)>();
 	store_solution = options["store-solution"].as<typeof(store_solution)>();
 	store_product = options["store-product"].as<typeof(store_product)>();
 
-	outfile_u = options["matrix-file-U"].as<typeof(outfile_u)>();
-	outfile_s = options["matrix-file-S"].as<typeof(outfile_s)>();
-	outfile_v = options["matrix-file-V"].as<typeof(outfile_v)>();
+	outfile_U = options["matrix-file-U"].as<typeof(outfile_U)>();
+	outfile_S = options["matrix-file-S"].as<typeof(outfile_S)>();
+	outfile_Vt = options["matrix-file-Vt"].as<typeof(outfile_Vt)>();
 
 	outfile_solution = options["solution-file"].as<typeof(outfile_solution)>();
 	outfile_solution_text = options["solution-file-text"].as<typeof(outfile_solution_text)>();
 
-	outfile_us = options["matrix-file-US"].as<typeof(outfile_us)>();
+	outfile_SvUt = options["matrix-file-SvUt"].as<typeof(outfile_SvUt)>();
+	outfile_feature_space = options["matrix-file-feature-space"].as<typeof(outfile_feature_space)>();
 
 	memlock = options["memlock"].as<typeof(memlock)>();
 	if (memlock)
@@ -214,28 +222,28 @@ void Config::load()
 
 		_JEBE_OUT_CONFIG_PROPERTY(output_dir)
 
-		_JEBE_OUT_CONFIG_PROPERTY(store_usv)
-		_JEBE_OUT_CONFIG_PROPERTY(outfile_u)
-		_JEBE_OUT_CONFIG_PROPERTY(outfile_s)
-		_JEBE_OUT_CONFIG_PROPERTY(outfile_v)
+		_JEBE_OUT_CONFIG_PROPERTY(store_USV)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_U)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_S)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_Vt)
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_solution)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution_text)
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_product)
-		_JEBE_OUT_CONFIG_PROPERTY(outfile_us)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_SvUt)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_feature_space)
 	);
 }
 
 void Config::solve_files()
 {
-	if (nonspecified(store_usv))
+	if (nonspecified(store_USV))
 	{
-		store_usv = !outfile_u.empty()
-			|| !outfile_s.empty()
-			|| !outfile_v.empty();
+		store_USV = !outfile_U.empty()
+			|| !outfile_S.empty()
+			|| !outfile_Vt.empty();
 	}
 	// solve "outfile-solution".
 	if (nonspecified(store_solution))
@@ -245,27 +253,26 @@ void Config::solve_files()
 	// solve "calcu-product" before overwrite any options.
 	if (nonspecified(store_product))
 	{
-		store_product = !outfile_feature_space.empty() || !outfile_us.empty();
+		store_product = !outfile_feature_space.empty() || !outfile_SvUt.empty();
 	}
 
 	if (!output_dir.empty())
 	{
-
-		if (outfile_u.empty())
+		// U * S * Vt
+		if (outfile_U.empty())
 		{
-			outfile_u = output_dir / "u";
+			outfile_U = output_dir / "U";
+		}
+		if (outfile_S.empty())
+		{
+			outfile_S = output_dir / "S";
+		}
+		if (outfile_Vt.empty())
+		{
+			outfile_Vt = output_dir / "Vt";
 		}
 
-		if (outfile_s.empty())
-		{
-			outfile_s = output_dir / "s";
-		}
-
-		if (outfile_v.empty())
-		{
-			outfile_v = output_dir / "v";
-		}
-
+		// solution
 		if (outfile_solution.empty())
 		{
 			outfile_solution = output_dir / "solution";
@@ -275,28 +282,30 @@ void Config::solve_files()
 			outfile_solution_text = outfile_solution;
 		}
 
-		if (outfile_us.empty())
+		// Sv * Ut = E / (U * S)
+		if (outfile_SvUt.empty())
 		{
-			outfile_us = output_dir / "us";
+			outfile_SvUt = output_dir / "SvUt";
 		}
 
+		// Vk, the feature space.
 		if (outfile_feature_space.empty())
 		{
-			outfile_feature_space = output_dir / "v";
+			outfile_feature_space = output_dir / "Vk";
 		}
 	}
 
-	if (!outfile_u.has_extension())
+	if (!outfile_U.has_extension())
 	{
-		outfile_u.replace_extension(matfile_ext);
+		outfile_U.replace_extension(matfile_ext);
 	}
-	if (!outfile_s.has_extension())
+	if (!outfile_S.has_extension())
 	{
-		outfile_s.replace_extension(matfile_ext);
+		outfile_S.replace_extension(matfile_ext);
 	}
-	if (!outfile_v.has_extension())
+	if (!outfile_Vt.has_extension())
 	{
-		outfile_v.replace_extension(matfile_ext);
+		outfile_Vt.replace_extension(matfile_ext);
 	}
 	if (!outfile_solution.has_extension())
 	{
@@ -304,11 +313,11 @@ void Config::solve_files()
 	}
 	if (!outfile_solution_text.has_extension())
 	{
-		outfile_solution_text.replace_extension(".txt");
+		outfile_solution_text.replace_extension(text_file_ext);
 	}
-	if (!outfile_us.has_extension())
+	if (!outfile_SvUt.has_extension())
 	{
-		outfile_us.replace_extension(matfile_ext);
+		outfile_SvUt.replace_extension(matfile_ext);
 	}
 	if (!outfile_feature_space.has_extension())
 	{

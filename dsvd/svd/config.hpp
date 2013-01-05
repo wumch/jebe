@@ -55,11 +55,12 @@ public:
     boost::filesystem::path output_dir;
     std::string matfile_ext;
     std::string solution_file_ext;
+    std::string text_file_ext;
 
-    boost::tribool store_usv;		// whether store U/S/V or not.
-    boost::filesystem::path outfile_u;
-    boost::filesystem::path outfile_s;
-    boost::filesystem::path outfile_v;
+    boost::tribool store_USV;		// whether store U/S/V or not.
+    boost::filesystem::path outfile_U;
+    boost::filesystem::path outfile_S;
+    boost::filesystem::path outfile_Vt;
 
     boost::tribool store_solution;	// whether store the solution of the SVD problem or not.
     boost::filesystem::path outfile_solution;
@@ -74,8 +75,8 @@ public:
     size_t ncv;			// num of column-vectors which join in SVD.
 
     boost::tribool store_product;
-    boost::filesystem::path outfile_us;		// cuted(U) * cuted(S)^-1
-    boost::filesystem::path outfile_feature_space;	// transposed(cuted(A)) * cuted(U) * cuted(S)^-1
+    boost::filesystem::path outfile_SvUt;		// cuted(U) * cuted(S)^-1
+    boost::filesystem::path outfile_feature_space;	// Vk (= SvUt * A), the feature space.
 
     bool memlock;
     boost::dynamic_bitset<> cpuaffinity;
@@ -92,7 +93,7 @@ protected:
     void init(int argc, char* argv[]);
 
     Config()
-    	: store_usv(nonspecified),
+    	: store_USV(nonspecified),
     	  store_solution(nonspecified),
     	  store_product(nonspecified),
     	  desc("allowed config options")

@@ -10,9 +10,22 @@
 #include <slepcsvd.h>
 #include "aside.hpp"
 
-#define _DSVD_CHECKABORT(invoker)		\
-	ierr = invoker;						\
-	CHKERRABORT(PETSC_COMM_WORLD, ierr);
+#define _DSVD_USV_DENSE 1
+
+#if CS_DEBUG > 1
+#	define _DSVD_CHECKABORT(invoking)				\
+	do {											\
+		ierr = invoking;							\
+		if (CS_UNLIKELY(ierr)) { CS_ERR("kid, PETSc error deteced by frank: " << __FILE__ << ":" << __LINE__ << "::" << #invoking << "=" << ierr); }	\
+		CHKERRABORT(PETSC_COMM_WORLD, ierr);		\
+	} while (false)
+#else
+#	define _DSVD_CHECKABORT(invoking)				\
+	do {											\
+		ierr = invoking;							\
+		CHKERRABORT(PETSC_COMM_WORLD, ierr);		\
+	} while (false)
+#endif
 
 namespace jebe {
 namespace dsvd {
@@ -20,13 +33,13 @@ namespace svd {
 
 void DSVD::run()
 {
-	prepare();
+	initiate();
 	build();
 	solve();
 	finalize();
 }
 
-void DSVD::prepare()
+void DSVD::initiate()
 {
 	SlepcInitialize(const_cast<int*>(&Aside::config->argc),
 		const_cast<char***>(&Aside::config->argv),
@@ -91,7 +104,10 @@ void DSVD::solve()
 void DSVD::decompose()
 {
 	// solve svd..
-	_DSVD_CHECKABORT(SVDSolve(svd));
+	if (is_main)
+	{
+		_DSVD_CHECKABORT(SVDSolve(svd));
+	}
 
 	{
 		PetscInt iter_times;
@@ -118,38 +134,17 @@ void DSVD::decompose()
 	}
 }
 
-void DSVD::retrieve()
-{
-	prepare_retrieve();
-
-	PetscReal s;
-	Vec u, v;
-	VecCreateSeq(PETSC_COMM_SELF, m, &u);
-	VecCreateSeq(PETSC_COMM_SELF, n, &v);
-	PetscInt i = 0;
-	for (PetscInt end = nconved - 1; i < end; ++i)
-	{
-		_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, i, &s, u, v));
-		record(s, u ,v);
-	}
-
-	_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, nconved - 1, &s, PETSC_NULL, PETSC_NULL));
-
-	if (Aside::config->store_solution)
-	{
-		solution.related_error = std::sqrt(s);
-		record_solution();
-	}
-}
-
-void DSVD::prepare_retrieve()
+void DSVD::prepare_retrieve() throw()
 {
 	_DSVD_CHECKABORT(SVDGetConverged(svd, &nconved));
 
 	if (nconved <= 1)
 	{
-		MPI_Abort(PETSC_COMM_WORLD, 1);
-		std::exit(CS_EXIT_STATUS_FAILED);
+		if (MPI_Abort(PETSC_COMM_WORLD, 1) != MPI_SUCCESS)
+		{
+			std::exit(CS_EXIT_STATUS_FAILED);
+			throw new int(1);
+		}
 	}
 
 	if (Aside::config->store_solution)
@@ -159,105 +154,185 @@ void DSVD::prepare_retrieve()
 		solution.r = r = nconved - 1;
 	}
 
-	if (Aside::config->store_usv)
+	if (Aside::config->store_USV)
 	{
-		out_s = fopen(Aside::config->outfile_s.c_str(), "wb");
-		mmap(NULL, r * sizeof(double), PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
+		out_S = fopen(Aside::config->outfile_S.c_str(), "wb");
+//		mmap(NULL, r * sizeof(double), PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
 
-		out_u = fopen(Aside::config->outfile_u.c_str(), "wb");
-		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
+		out_U = fopen(Aside::config->outfile_U.c_str(), "wb");
+//		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
 
-		out_v = fopen(Aside::config->outfile_v.c_str(), "wb");
-		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
+		out_Vt = fopen(Aside::config->outfile_Vt.c_str(), "wb");
+//		mmap(NULL, io_cache_elem * sizeof(double) * r, PROT_WRITE, MAP_PRIVATE, fileno(out_s), 0);
 	}
 
 	if (Aside::config->store_product)
 	{
-		MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, PETSC_NULL, &U);
-		MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S);
-		MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt);
+#if _DSVD_USV_DENSE
+		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, PETSC_NULL, &U));
+		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S));
+		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt));
+#endif
+		_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_WORLD, r, &s_inverse));
 	}
 }
 
-void DSVD::record(double s, Vec u, Vec v)
+//
+void DSVD::retrieve()
+{
+	prepare_retrieve();
+
+	// retrieve singular triplets.
+	PetscReal s;
+	Vec u, v;
+	_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_SELF, m, &u));
+	_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_SELF, n, &v));
+	for (PetscInt i = 0, end = nconved - 1; i < end; ++i)
+	{
+		_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, i, &s, u, v));
+		record(i, s, u ,v);
+	}
+	if (Aside::config->store_product)
+	{
+		_DSVD_CHECKABORT(MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyBegin(Vt, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(Vt, MAT_FINAL_ASSEMBLY));
+	}
+
+	_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, nconved - 1, &s, PETSC_NULL, PETSC_NULL));
+
+	if (Aside::config->store_solution)
+	{
+		solution.related_error = std::sqrt(s);
+		record_solution();
+	}
+
+	if (Aside::config->store_product)
+	{
+		product();
+		record_product();
+	}
+}
+
+// (Sk ^ -1) * transposed(Uk).
+// NOTE: it will change S => 1/S. so, should store S (even if need not S) before product.
+void DSVD::product()
+{
+	_DSVD_CHECKABORT(MatDiagonalSet(S, s_inverse, INSERT_VALUES));
+	Mat P;
+	MatMatMult(S, U, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &P);
+}
+
+void DSVD::record_product()
 {
 
 }
 
-void DSVD::record(double s, Vec u, Vec v, size_t size)
+void DSVD::record(PetscInt turn, double s, Vec u, Vec v)
+{
+	if (Aside::config->store_product || Aside::config->store_USV)
+	{
+		record(turn, s, u, v, r);
+	}
+}
+
+void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 {
 	// S
-	if (Aside::config->store_usv)
+	if (Aside::config->store_USV)
 	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(&s, sizeof(s), 1, out_s)) != 1);
+		CS_ABORT_IF(static_cast<PetscInt>(fwrite(&s, sizeof(s), 1, out_S)) != 1);
+	}
+	if (Aside::config->store_product)
+	{
+		const double s_inv = 1.0 / static_cast<long double>(s);
+		_DSVD_CHECKABORT(VecSetValues(s_inverse, 1, &turn, &s_inv, INSERT_VALUES));
 	}
 
-	static double* buf = new double[r];
-	static PetscInt* idx = new PetscInt[r];
+	static double* const buf = new double[size];
+	static PetscInt* const idxm = new PetscInt[size];
+	static PetscInt* const idxn = new PetscInt[size];
 	static bool idx_inited = false;
 	if (!idx_inited)
 	{
 		idx_inited = true;
-		for (PetscInt i = 0; i < r; ++i)
+		for (PetscInt i = 0; i < size; ++i)
 		{
-			idx[i] = i;
+			idxm[i] = turn;
+			idxn[i] = i;
 		}
 	}
 
 	// U
 	VecAssemblyBegin(u);
 	VecAssemblyEnd(u);
-	VecGetValues(u, r, idx, buf);
-	if (Aside::config->store_usv)
+	VecGetValues(u, size, idxn, buf);
+	if (Aside::config->store_USV)
 	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), r, out_u)) != r);
+		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), size, out_U)) != size);
+	}
+	if (Aside::config->store_product)
+	{
+		MatSetValues(U, 1, idxm, size, idxn, buf, INSERT_VALUES);
 	}
 
 	// V
 	VecAssemblyBegin(v);
 	VecAssemblyEnd(v);
-	VecGetValues(v, r, idx, buf);
-	if (Aside::config->store_usv)
+	VecGetValues(v, size, idxn, buf);
+	if (Aside::config->store_USV)
 	{
-		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), r, out_v)) != r);
+		CS_ABORT_IF(static_cast<PetscInt>(fwrite(buf, sizeof(double), size, out_Vt)) != size);
+	}
+	if (Aside::config->store_product)
+	{
+		MatSetValues(Vt, size, idxn, 1, idxm, buf, INSERT_VALUES);
 	}
 }
 
 void DSVD::record_solution()
 {
 	CS_ABORT_IF(static_cast<PetscInt>(fwrite(&solution, sizeof(solution), 1, out_solution)) != 1);
-	fputs(pack_solution(solution).c_str(), out_solution_text);
+	std::string solution_text = pack_solution(solution);
+	CS_ABORT_IF(fputs(solution_text.c_str(), out_solution_text) != static_cast<int>(solution_text.size()));
 }
 
 void DSVD::finalize()
 {
-	if (Aside::config->store_usv)
+	// so that this function is thread-safe and idenpotent(projective).
+	if (finalized == 0 && __sync_add_and_fetch(&finalized, 1) == 1)
 	{
-		munmap(addr_s, io_cache_elem * sizeof(double));
-		munmap(addr_u, io_cache_elem * (r * sizeof(double)));
-		munmap(addr_v, io_cache_elem * (r * sizeof(double)));
-		fclose(out_s);
-		fclose(out_u);
-		fclose(out_v);
-		fclose(out_solution);
+		if (Aside::config->store_USV)
+		{
+//			munmap(addr_s, io_cache_elem * sizeof(double));
+//			munmap(addr_u, io_cache_elem * (r * sizeof(double)));
+//			munmap(addr_v, io_cache_elem * (r * sizeof(double)));
+			fclose(out_S);
+			fclose(out_U);
+			fclose(out_Vt);
+			fclose(out_solution);
+		}
+		_DSVD_CHECKABORT(SVDDestroy(&svd));
+		_DSVD_CHECKABORT(MatDestroy(&A));
+		_DSVD_CHECKABORT(SlepcFinalize());
 	}
-	_DSVD_CHECKABORT(SVDDestroy(&svd));
-	_DSVD_CHECKABORT(MatDestroy(&A));
-	_DSVD_CHECKABORT(SlepcFinalize());
 }
 
 DSVD::DSVD()
 	: ierr(0), process_rank(0), is_main(false),
 	  A(NULL), m(0), n(0), svd(NULL),
 	  r(0), io_cache_elem(1 << 10),
-	  out_u(NULL), addr_u(NULL),
-	  out_s(NULL), addr_s(NULL),
-	  out_v(NULL), addr_v(NULL),
-	  out_solution(NULL)
+	  out_U(NULL), addr_U(NULL),
+	  out_S(NULL), addr_S(NULL),
+	  out_Vt(NULL), addr_Vt(NULL),
+	  out_solution(NULL),
+	  finalized(0)
 {}
 
 DSVD::~DSVD()
 {
+	finalize();
 }
 
 } /* namespace svd */
