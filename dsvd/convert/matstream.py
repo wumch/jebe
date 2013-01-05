@@ -1,6 +1,41 @@
 #coding:utf-8
 
+"""
+$    int    MAT_FILE_CLASSID
+$    int    number of rows
+$    int    number of columns
+$    int    total number of nonzeros
+$    int    *number nonzeros in each row
+$    int    *column indices of all nonzeros (starting index is zero)
+$    PetscScalar *values of all nonzeros
+"""
+
 import struct
+
+class MatPets(object):
+
+    MAT_FILE_CLASSID = 1211216  # NOTE: should keep consistent with PETSc.
+
+    def __init__(self, outfile, cols, transepose=False, input_col_begins=1):
+        self.cols = cols
+        self.m = self.n = self.nnz = 0
+        self.outfile = outfile
+        self._preapre()
+
+    def _preapre(self):
+        self.packer_int32 = struct.Struct('i')
+        self.packer_double = struct.Struct('d')
+        self.out = open(self.outfile, "wb")
+        self.out.write(self.packer_int32.pack(self.MAT_FILE_CLASSID))
+        self.out.write(self.packer_int32.pack(0))
+        self.out.write(self.packer_int32.pack(self.cols))
+        self.out.write(self.packer_int32.pack(0))
+
+
+    def attach(self, row, length=None):
+        length = len(row) if length is None else length
+        if length == 0:
+            return
 
 class MatStream(object):
 
