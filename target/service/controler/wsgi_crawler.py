@@ -36,15 +36,13 @@ about_blank = 'http://%s/crawler.aboutblank.html' % sysconfig.CRAWLER_DOMAIN
 jsurl = 'http://%s/crawler/task/detach/' % sysconfig.CRAWLER_DOMAIN
 lifetime = 10 * 60 * 1000
 __param = (about_blank, jsurl, lifetime, )
-ini = (('''
-[crawler]
+ini = (('''[crawler]
 dotask=0
 url=%s
 jsurl=%s
 lifetime=%d
 ''' % __param).replace('\n', '\r\n'),
-('''
-[crawler]
+('''[crawler]
 dotask=1
 url=%s
 jsurl=%s
