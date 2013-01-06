@@ -8,6 +8,7 @@
 #include <sys/mman.h>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/static_assert.hpp>
+#include <petscversion.h>
 #include <petscmat.h>
 #include <slepcsvd.h>
 #include "aside.hpp"
@@ -26,6 +27,12 @@
 		CHKERRABORT(PETSC_COMM_WORLD, invoking);
 #endif
 
+#if PETSC_VERSION_MINOR < 3
+#	define _DSVD_ARG_FOR_DESTROY(var)	var
+#else
+#	define _DSVD_ARG_FOR_DESTROY(var)	&var
+#endif
+
 namespace jebe {
 namespace dsvd {
 namespace svd {
@@ -42,7 +49,12 @@ void DSVD::initiate()
 {
 	SlepcInitialize(const_cast<int*>(&Aside::config->argc),
 		const_cast<char***>(&Aside::config->argv),
-		static_cast<const char*>(NULL), ""
+#if PETSC_VERSION_MINOR < 3
+		const_cast<char*>(static_cast<const char*>(NULL)),
+#else
+		static_cast<const char*>(NULL),
+#endif
+		""
 	);
 	_DSVD_CHECKABORT(MPI_Comm_rank(PETSC_COMM_WORLD, &process_rank));
 //	BOOST_STATIC_ASSERT(boost::type_traits::is_same<typeof(process_rank), typeof(Aside::config->main_process)>::value);
@@ -60,7 +72,7 @@ void DSVD::build()
 	_DSVD_CHECKABORT(PetscViewerBinaryOpen(PETSC_COMM_WORLD,
 		Aside::config->matfile.string().c_str(), FILE_MODE_READ, &viewer));
 	_DSVD_CHECKABORT(MatLoad(A, viewer));
-	_DSVD_CHECKABORT(PetscViewerDestroy(&viewer));
+	_DSVD_CHECKABORT(PetscViewerDestroy(_DSVD_ARG_FOR_DESTROY(viewer)));
 
 	// create svd <SVD>.
 	_DSVD_CHECKABORT(SVDCreate(PETSC_COMM_WORLD, &svd));
@@ -336,7 +348,7 @@ void DSVD::finalize()
 		{
 			CS_DIE_IF(std::fclose(out_solution) != 0, "fclose failed");
 		}
-		_DSVD_CHECKABORT(SVDDestroy(&svd));
+		_DSVD_CHECKABORT(SVDDestroy(_DSVD_ARG_FOR_DESTROY(svd)));
 		free(A);
 		_DSVD_CHECKABORT(SlepcFinalize());
 	}
@@ -382,18 +394,18 @@ void DSVD::store_mat(Mat mat, PetscViewer viewer)
 	_DSVD_CHECKABORT(MatAssemblyBegin(mat, MAT_FINAL_ASSEMBLY));
 	_DSVD_CHECKABORT(MatAssemblyEnd(mat, MAT_FINAL_ASSEMBLY));
 	_DSVD_CHECKABORT(MatView(mat, viewer));
-	_DSVD_CHECKABORT(PetscViewerDestroy(&viewer));
+	_DSVD_CHECKABORT(PetscViewerDestroy(_DSVD_ARG_FOR_DESTROY(viewer)));
 }
 
 CS_FORCE_INLINE void DSVD::free(Mat& mat_)
 {
-	_DSVD_CHECKABORT(MatDestroy(&mat_));
+	_DSVD_CHECKABORT(MatDestroy(_DSVD_ARG_FOR_DESTROY(mat_)));
 	mat_ = NULL;
 }
 
 CS_FORCE_INLINE void DSVD::free(Vec& vec_)
 {
-	VecDestroy(&vec_);
+	VecDestroy(_DSVD_ARG_FOR_DESTROY(vec_));
 	vec_ = NULL;
 }
 DSVD::~DSVD()
