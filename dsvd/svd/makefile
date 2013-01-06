@@ -3,7 +3,7 @@ EXENAME		= svd
 
 default: $(EXENAME)
 
-DEBUG = 2
+DEBUG = 0
 
 ifneq ($(DEBUG), 0)
   PARAM_PETSC_USE_DEBUG = -DPETSC_USE_DEBUG=$(DEBUG)
@@ -19,14 +19,17 @@ EXEPATH	= bin
 EXEFILE	= $(EXEPATH)/$(EXENAME)
 
 CC			= /usr/bin/mpicxx
-CFLAGS		= -DCS_DEBUG=$(DEBUG) $(PARAM_PETSC_USE_DEBUG) -fPIC -Wall
+CFLAGS		= -DCS_DEBUG=$(DEBUG) $(PARAM_PETSC_USE_DEBUG) -fPIC -Wall -pipe -fstack-protector
+LDFLAGS		= -pipe
 ifeq ($(DEBUG), 0)
-  CFLAGS		+= -DNDEBUG -fno-inline -O3
+  CFLAGS		+= -DNDEBUG -O3 -march=core2 -finline -finline-small-functions -fomit-frame-pointer -m64 -fno-threadsafe-statics -Wno-unused-function -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
+  LDFLAGS		+= -Wl,-O3
 else
-  CFLAGS		+= -O0 -g3
+  CFLAGS		+= -O0 -g3 -fno-inline
+  LDFLAGS		+= -Wl,-O0 -g3 -rdynamic
 endif
 
-CS_INCLUDES	= -I/data/fsuggest/staging/ccpp
+CS_INCLUDES	= -I../../staging
 CS_LIBS		= -lboost_system -lboost_program_options -lboost_filesystem -lglog
 CLINKER		= $(CC)
 CXXFLAGS	= $(CFLAGS)

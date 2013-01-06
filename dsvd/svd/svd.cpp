@@ -1,6 +1,8 @@
 
 #include "svd.hpp"
+#include <iostream>
 #include <cstdlib>
+#include <cstdio>
 #include <cmath>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -167,7 +169,7 @@ void DSVD::prepare_retrieve() throw()
 	}
 }
 
-//
+// retrieve results.
 void DSVD::retrieve()
 {
 	prepare_retrieve();

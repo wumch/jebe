@@ -103,7 +103,7 @@ private:
 	void prepare_retrieve() throw();
 	void retrieve();
 
-	void CS_FORCE_INLINE record(PetscInt turn, PetscReal s, Vec u, Vec v);
+	void record(PetscInt turn, PetscReal s, Vec u, Vec v);
 	void record(PetscInt turn, double s, Vec u, Vec v, PetscInt size);
 
 	void record_solution();
