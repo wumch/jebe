@@ -25,6 +25,9 @@ void Aside::initLogger()
 {
 	google::InitGoogleLogging(config->argv_first);
 	google::SetLogDestination(google::INFO, config->logfile.string().c_str());
+//	google::SetLogDestination(google::WARNING, config->logfile.string().c_str());
+//	google::SetLogDestination(google::ERROR, config->logfile.string().c_str());
+//	google::SetLogDestination(google::FATAL, config->logfile.string().c_str());
 }
 
 void Aside::ready()

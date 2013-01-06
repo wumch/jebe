@@ -86,6 +86,8 @@ void Config::init(int argc_, char* argv_[])
 
 		("store-USV", boost::program_options::value<typeof(store_USV)>()->default_value(nonspecified),
 			"whether store USV or not. default: auto guess from other options such as \"matrix-file-U\".")
+		("store-USV-product", boost::program_options::value<typeof(store_USV_product)>()->default_value(nonspecified),
+			"whether store USV product or not. default: auto guess from other options such as \"matrix-file-USV-product\".")
 		("matrix-file-U", boost::program_options::value<typeof(outfile_U)>()->default_value(""),
 			"path of output matrix file -- U.")
 		("matrix-file-S", boost::program_options::value<typeof(outfile_S)>()->default_value(""),
@@ -94,6 +96,9 @@ void Config::init(int argc_, char* argv_[])
 			"path of output matrix file -- Vt. (NOTE: whether it's transposed or not depends on another option which called \"transpose-v\").")
 		("transpose-Vt", boost::program_options::bool_switch()->default_value(false),
 			"whether transpose Vt to real V or not. default: no, indicates that Vt -- which already transposed V will be kept.")
+
+		("matrix-file-USV-product", boost::program_options::value<typeof(outfile_USV_product)>()->default_value(""),
+			"path of output matrix file -- USV product.")
 
 		("store-solution", boost::program_options::value<typeof(store_solution)>()->default_value(nonspecified),
 			"whether store solution or not. default: auto guess from \"solution-file\".")
@@ -164,12 +169,14 @@ void Config::load()
 	solution_file_ext = options["solution-file-extension"].as<typeof(solution_file_ext)>();
 
 	store_USV = options["store-USV"].as<typeof(store_USV)>();
+	store_USV_product = options["store-USV-product"].as<typeof(store_USV_product)>();
 	store_solution = options["store-solution"].as<typeof(store_solution)>();
 	store_product = options["store-product"].as<typeof(store_product)>();
 
 	outfile_U = options["matrix-file-U"].as<typeof(outfile_U)>();
 	outfile_S = options["matrix-file-S"].as<typeof(outfile_S)>();
 	outfile_Vt = options["matrix-file-Vt"].as<typeof(outfile_Vt)>();
+	outfile_USV_product = options["matrix-file-USV-product"].as<typeof(outfile_USV_product)>();
 
 	outfile_solution = options["solution-file"].as<typeof(outfile_solution)>();
 	outfile_solution_text = options["solution-file-text"].as<typeof(outfile_solution_text)>();
@@ -208,7 +215,8 @@ void Config::load()
 
 	solve_files();
 
-	CS_SAY("configs in [" << config_file << "]:" << std::endl
+	CS_SAY(
+		"configs in [" << config_file.string() << "]:" << std::endl
 		_JEBE_OUT_CONFIG_PROPERTY(program_name)
 		_JEBE_OUT_CONFIG_PROPERTY(as_daemon)
 		_JEBE_OUT_CONFIG_PROPERTY(pidfile)
@@ -223,9 +231,11 @@ void Config::load()
 		_JEBE_OUT_CONFIG_PROPERTY(output_dir)
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_USV)
+		_JEBE_OUT_CONFIG_PROPERTY(store_USV_product)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_U)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_S)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_Vt)
+		_JEBE_OUT_CONFIG_PROPERTY(outfile_USV_product)
 
 		_JEBE_OUT_CONFIG_PROPERTY(store_solution)
 		_JEBE_OUT_CONFIG_PROPERTY(outfile_solution)
@@ -245,6 +255,10 @@ void Config::solve_files()
 			|| !outfile_S.empty()
 			|| !outfile_Vt.empty();
 	}
+	if (nonspecified(store_USV_product))
+	{
+		store_USV_product = !outfile_USV_product.empty();
+	}
 	// solve "outfile-solution".
 	if (nonspecified(store_solution))
 	{
@@ -258,7 +272,7 @@ void Config::solve_files()
 
 	if (!output_dir.empty())
 	{
-		// U * S * Vt
+		// U , S , Vt
 		if (outfile_U.empty())
 		{
 			outfile_U = output_dir / "U";
@@ -270,6 +284,12 @@ void Config::solve_files()
 		if (outfile_Vt.empty())
 		{
 			outfile_Vt = output_dir / "Vt";
+		}
+
+		// U * S * Vt
+		if (outfile_USV_product.empty())
+		{
+			outfile_USV_product = output_dir / "USV";
 		}
 
 		// solution
@@ -306,6 +326,10 @@ void Config::solve_files()
 	if (!outfile_Vt.has_extension())
 	{
 		outfile_Vt.replace_extension(matfile_ext);
+	}
+	if (!outfile_USV_product.has_extension())
+	{
+		outfile_USV_product.replace_extension(matfile_ext);
 	}
 	if (!outfile_solution.has_extension())
 	{

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #coding:utf-8
 
 """
@@ -30,7 +31,6 @@ class MatPets(object):
         self.out.write(self.packer_int32.pack(0))
         self.out.write(self.packer_int32.pack(self.cols))
         self.out.write(self.packer_int32.pack(0))
-
 
     def attach(self, row, length=None):
         length = len(row) if length is None else length
@@ -77,19 +77,21 @@ class MatStream(object):
 
     def __del__(self):
         self.out.seek(0, 0)
-        self.out.write(self.packer_uint64.pack(self.cols) +
-            self.packer_uint64.pack(self.curm) +
-            self.packer_uint64.pack(self.nnz)
-        )
+        if self.transpose:
+            mn = self.packer_uint64.pack(self.cols) + self.packer_uint64.pack(self.curm)
+        else:
+            mn = self.packer_uint64.pack(self.curm) + self.packer_uint64.pack(self.cols)
+        self.out.write(mn + self.packer_uint64.pack(self.nnz))
         self.out.close()
 
 if __name__ == '__main__':
     import sys
-    outfile = "/tmp/matstream-test.mtx" if len(sys.argv) < 2 else sys.argv[1]
-    stream = MatStream(outfile=outfile, cols=100, transepose=True, input_col_begins=1)
+    outfile = "data/matstream-test.mtx" if len(sys.argv) < 2 else sys.argv[1]
+    stream = MatStream(outfile=outfile, cols=12, transepose=False, input_col_begins=1)
     docs = [
-        [[1, 0.56], [32, 0.01], [13, 0.04]],
-        [[1, 0.56], [32, 0.01], [13, 0.04]],
+        [[1, 9.56], [3, 0.01], [9, 0.04]],
+        [[2, 9.56], [5, 0.01], [7, 0.04]],
+        [[2, 9.56], [8, 0.01], [11, 100.04]],
     ]
     for vec in docs:
         stream.attach(row=vec)

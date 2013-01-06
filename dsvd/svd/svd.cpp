@@ -77,6 +77,11 @@ void DSVD::build()
 	PetscInt nsv = (Aside::config->nsv > 0)
 		? std::min(std::min(m, n), static_cast<PetscInt>(Aside::config->nsv + 1))
 		: PETSC_IGNORE;
+	if (static_cast<int64_t>(Aside::config->nsv) > nsv)
+	{
+		LOG_IF(WARNING, Aside::config->loglevel > 0) << "expected nsv:" << Aside::config->ncv
+			<< ", real nsv:" << nsv << " -- according to configure and real dataset.";
+	}
 	PetscInt ncv = (Aside::config->ncv > 0) ? Aside::config->ncv : PETSC_DECIDE;
 	_DSVD_CHECKABORT(SVDSetDimensions(svd, nsv, ncv, PETSC_DECIDE));
 
@@ -126,7 +131,7 @@ void DSVD::decompose()
 
 		_DSVD_CHECKABORT(SVDGetTolerances(svd, &tolerances, &max_iter));
 		LOG_IF(INFO, Aside::config->loglevel > 0) << "stop condition: "
-			"tolerances" << tolerances << ","
+			"tolerances=" << tolerances << ","
 			"max_iter=" << max_iter;
 	}
 }
@@ -137,35 +142,28 @@ void DSVD::prepare_retrieve() throw()
 
 	if (nconved <= 1)
 	{
-		if (MPI_Abort(PETSC_COMM_WORLD, 1) != MPI_SUCCESS)
-		{
-			std::exit(CS_EXIT_STATUS_FAILED);
-			throw new int(1);
-		}
+		CS_DIE_IF(MPI_Abort(PETSC_COMM_WORLD, 1) != MPI_SUCCESS, "failed on MPI_Abort()");
 	}
 
 	if (Aside::config->store_solution)
 	{
-		out_solution = fopen(Aside::config->outfile_solution.c_str(), "wb");
-		out_solution_text = fopen(Aside::config->outfile_solution_text.c_str(), "w");
-		solution.r = r = nconved - 1;
+		out_solution = std::fopen(Aside::config->outfile_solution.c_str(), "wb");
+		out_solution_text = std::fopen(Aside::config->outfile_solution_text.c_str(), "wt");
+		solution.r = r =  nconved - (static_cast<int64_t>(Aside::config->nsv) < nconved);
 	}
 
-	if (Aside::config->store_USV || Aside::config->store_product)
+	if (Aside::config->store_USV || Aside::config->store_USV_product)
 	{
-//		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, 1, PETSC_NULL, 1, PETSC_NULL, &U));
 		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, m, r, PETSC_NULL, &U));
-		if (Aside::config->store_USV)
-		{
-			_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S));
-			_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt));
-		}
-		if (Aside::config->store_product)
-		{
+		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &S));
+		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, n, PETSC_NULL, &Vt));
+	}
+	if (Aside::config->store_product)
+	{
 #if _DSVD_USV_DENSE
-			_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &Sv));
+		_DSVD_CHECKABORT(MatCreateDense(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, m, PETSC_NULL, &Ut));
+		_DSVD_CHECKABORT(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, r, r, 1, PETSC_NULL, 0, PETSC_NULL, &Sv));
 #endif
-		}
 	}
 }
 
@@ -179,37 +177,39 @@ void DSVD::retrieve()
 	Vec u, v;
 	_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_SELF, m, &u));
 	_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_SELF, n, &v));
-	for (PetscInt i = 0, end = nconved - 1; i < end; ++i)
+	for (PetscInt i = 0; i < r; ++i)
 	{
 		_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, i, &s, u, v));
 		record(i, s, u ,v);
 	}
 
-	if (Aside::config->store_USV || Aside::config->store_product)
+	if (Aside::config->store_USV || Aside::config->store_USV_product)
 	{
 		_DSVD_CHECKABORT(MatAssemblyBegin(U, MAT_FINAL_ASSEMBLY));
 		_DSVD_CHECKABORT(MatAssemblyEnd(U, MAT_FINAL_ASSEMBLY));
-		if (Aside::config->store_USV)
-		{
-			_DSVD_CHECKABORT(MatAssemblyBegin(S, MAT_FINAL_ASSEMBLY));
-			_DSVD_CHECKABORT(MatAssemblyEnd(S, MAT_FINAL_ASSEMBLY));
-			_DSVD_CHECKABORT(MatAssemblyBegin(Vt, MAT_FINAL_ASSEMBLY));
-			_DSVD_CHECKABORT(MatAssemblyEnd(Vt, MAT_FINAL_ASSEMBLY));
-		}
-		if (Aside::config->store_product)
-		{
-			_DSVD_CHECKABORT(MatAssemblyBegin(Sv, MAT_FINAL_ASSEMBLY));
-			_DSVD_CHECKABORT(MatAssemblyEnd(Sv, MAT_FINAL_ASSEMBLY));
-		}
+		_DSVD_CHECKABORT(MatAssemblyBegin(S, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(S, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyBegin(Vt, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(Vt, MAT_FINAL_ASSEMBLY));
+	}
+	if (Aside::config->store_product)
+	{
+		_DSVD_CHECKABORT(MatAssemblyBegin(Ut, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(Ut, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyBegin(Sv, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(Sv, MAT_FINAL_ASSEMBLY));
 	}
 
-	_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, nconved - 1, &s, PETSC_NULL, PETSC_NULL));
+	if (static_cast<int64_t>(Aside::config->nsv) < nconved)
+	{
+		_DSVD_CHECKABORT(SVDGetSingularTriplet(svd, nconved - 1, &s, PETSC_NULL, PETSC_NULL));
+	}
 
 	store_USV();
 
 	if (Aside::config->store_solution)
 	{
-		solution.related_error = std::sqrt(s);
+		solution.related_error = (static_cast<int64_t>(Aside::config->nsv) < nconved) ? std::sqrt(s) : 0;
 		record_solution();
 	}
 
@@ -222,16 +222,20 @@ void DSVD::retrieve()
 
 void DSVD::store_USV()
 {
+	if (Aside::config->store_USV_product)
+	{
+		Mat US, US_dense, USV;
+		MatMatMult(U, S, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &US);
+		MatConvert(US, MATSEQDENSE, MAT_INITIAL_MATRIX, &US_dense);
+		free(US);
+		MatMatMult(US_dense, Vt, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &USV);
+		free(US_dense);
+		frozen_mat(Aside::config->outfile_USV_product, USV);
+	}
+
 	if (Aside::config->store_USV)
 	{
-		if (Aside::config->store_product)
-		{
-			store_mat(Aside::config->outfile_U, U);
-		}
-		else
-		{
-			frozen_mat(Aside::config->outfile_U, U);
-		}
+		frozen_mat(Aside::config->outfile_U, U);
 		frozen_mat(Aside::config->outfile_S, S);
 		frozen_mat(Aside::config->outfile_Vt, Vt);
 	}
@@ -242,8 +246,6 @@ void DSVD::store_USV()
 void DSVD::calc_SvUt()
 {
 //	MatMatTransposeMult(Sv, U, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
-	Mat Ut;
-	MatTranspose(U, MAT_INITIAL_MATRIX, &Ut);
 	MatMatMult(Sv, Ut, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
 	store_mat(Aside::config->outfile_SvUt, SvUt);
 }
@@ -266,9 +268,9 @@ void DSVD::record(PetscInt turn, double s, Vec u, Vec v)
 void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 {
 	// S
-	if (Aside::config->store_USV)
+	if (Aside::config->store_USV || Aside::config->store_USV_product)
 	{
-		_DSVD_CHECKABORT(MatSetValues(Sv, 1, &turn, 1, &turn, &s, INSERT_VALUES));
+		_DSVD_CHECKABORT(MatSetValues(S, 1, &turn, 1, &turn, &s, INSERT_VALUES));
 	}
 	if (Aside::config->store_product)
 	{
@@ -276,38 +278,51 @@ void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 		_DSVD_CHECKABORT(MatSetValues(Sv, 1, &turn, 1, &turn, &s_inv, INSERT_VALUES));
 	}
 
-	static double* const buf = new double[size];
+	static PetscScalar* const buf = new PetscScalar[size];
 	static PetscInt* const idxm = new PetscInt[size];
 	static PetscInt* const idxn = new PetscInt[size];
-	static bool idx_inited = false;
-	if (!idx_inited)
+	static bool idxn_inited = false;
+	if (!idxn_inited)
 	{
-		idx_inited = true;
+		idxn_inited = true;
 		for (PetscInt i = 0; i < size; ++i)
 		{
-			idxm[i] = turn;
 			idxn[i] = i;
 		}
+	}
+	for (PetscInt i = 0; i < size; ++i)
+	{
+		idxm[i] = turn;
 	}
 
 	// U
 	VecAssemblyBegin(u);
 	VecAssemblyEnd(u);
 	VecGetValues(u, size, idxn, buf);
-	MatSetValues(U, 1, idxm, size, idxn, buf, INSERT_VALUES);
+	if (Aside::config->store_USV || Aside::config->store_USV_product)
+	{
+		MatSetValues(U, size, idxn, 1, idxm, buf, INSERT_VALUES);
+	}
+	if (Aside::config->store_product)
+	{
+		MatSetValues(Ut, 1, idxm, size, idxn, buf, INSERT_VALUES);
+	}
 
 	// Vt
-	VecAssemblyBegin(v);
-	VecAssemblyEnd(v);
-	VecGetValues(v, size, idxn, buf);
-	MatSetValues(Vt, size, idxn, 1, idxm, buf, INSERT_VALUES);
+	if (Aside::config->store_USV || Aside::config->store_USV_product)
+	{
+		VecAssemblyBegin(v);
+		VecAssemblyEnd(v);
+		VecGetValues(v, size, idxn, buf);
+		MatSetValues(Vt, 1, idxm, size, idxn, buf, INSERT_VALUES);
+	}
 }
 
 void DSVD::record_solution()
 {
-	CS_DIE_IF(static_cast<PetscInt>(fwrite(&solution, sizeof(solution), 1, out_solution)) != 1, "fwrite not completely done.");
+	CS_DIE_IF(static_cast<PetscInt>(std::fwrite(&solution, sizeof(solution), 1, out_solution)) != 1, "fwrite not completely done");
 	std::string solution_text = pack_solution(solution);
-	CS_DIE_IF(fputs(solution_text.c_str(), out_solution_text) == EOF, "fputs not completely done.");
+	CS_DIE_IF(std::fputs(solution_text.c_str(), out_solution_text) == EOF, "fputs not completely done");
 }
 
 void DSVD::finalize()
@@ -317,7 +332,7 @@ void DSVD::finalize()
 	{
 		if (Aside::config->store_USV)
 		{
-			CS_DIE_IF(fclose(out_solution) != 0, "fclose failed.");
+			CS_DIE_IF(std::fclose(out_solution) != 0, "fclose failed");
 		}
 		_DSVD_CHECKABORT(SVDDestroy(&svd));
 		free(A);

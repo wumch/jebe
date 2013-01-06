@@ -62,6 +62,9 @@ public:
     boost::filesystem::path outfile_S;
     boost::filesystem::path outfile_Vt;
 
+    boost::tribool store_USV_product;		// whether store U*S*Vt or not.
+    boost::filesystem::path outfile_USV_product;
+
     boost::tribool store_solution;	// whether store the solution of the SVD problem or not.
     boost::filesystem::path outfile_solution;
     boost::filesystem::path outfile_solution_text;

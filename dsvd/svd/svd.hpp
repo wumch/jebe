@@ -6,7 +6,7 @@
 #endif
 
 #include "predef.hpp"
-#include <stdio.h>
+#include <cstdio>
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem/path.hpp>
 #include <petscmat.h>
@@ -68,6 +68,7 @@ private:
 	Mat S;
 	Mat Vt;
 
+	Mat Ut;				// transposed U.
 	Mat Sv;				// inversed S. as E/S.
 	Mat SvUt;			// (Sk ^ -1) * transposed(Uk).
 	Mat SvUtA;				// SvUt * A, the feature space.
@@ -82,8 +83,8 @@ private:
 //	char* addr_S;
 //	FILE* out_Vt;
 //	char* addr_Vt;
-	FILE* out_solution;		// fp of output-file solution -- binary format.
-	FILE* out_solution_text;	// fp of output-file solution -- plain text format.
+	std::FILE* out_solution;		// fp of output-file solution -- binary format.
+	std::FILE* out_solution_text;	// fp of output-file solution -- plain text format.
 
 	int finalized;		// flag indicates that finalized (all done and all of resouce are released) or not.
 
