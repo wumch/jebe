@@ -12,6 +12,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/logic/tribool_io.hpp>
+#include <boost/version.hpp>
 extern "C" {
 #include <sched.h>
 }
@@ -147,11 +148,11 @@ void Config::load()
 {
 	try
 	{
-		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.c_str(), desc), options);
+		boost::program_options::store(boost::program_options::parse_config_file<char>(config_file.string().c_str(), desc), options);
 	}
 	catch (const std::exception& e)
 	{
-		CS_DIE("faild on read/parse config-file: " << config_file.c_str() << "\n" << CS_OC_RED(e.what()));
+		CS_DIE("faild on read/parse config-file: " << config_file.string().c_str() << "\n" << CS_OC_RED(e.what()));
 	}
 	boost::program_options::notify(options);
 	pidfile = options["pid-file"].as<typeof(pidfile)>();
@@ -247,6 +248,15 @@ void Config::load()
 	);
 }
 
+CS_FORCE_INLINE static bool has_extension(const boost::filesystem::path& path)
+{
+#if BOOST_VERSION > 104200
+	return path.has_extension();
+#else
+	return path.extension().empty();
+#endif
+}
+
 void Config::solve_files()
 {
 	if (nonspecified(store_USV))
@@ -315,35 +325,35 @@ void Config::solve_files()
 		}
 	}
 
-	if (!outfile_U.has_extension())
+	if (!has_extension(outfile_U))
 	{
 		outfile_U.replace_extension(matfile_ext);
 	}
-	if (!outfile_S.has_extension())
+	if (!has_extension(outfile_S))
 	{
 		outfile_S.replace_extension(matfile_ext);
 	}
-	if (!outfile_Vt.has_extension())
+	if (!has_extension(outfile_Vt))
 	{
 		outfile_Vt.replace_extension(matfile_ext);
 	}
-	if (!outfile_USV_product.has_extension())
+	if (!has_extension(outfile_USV_product))
 	{
 		outfile_USV_product.replace_extension(matfile_ext);
 	}
-	if (!outfile_solution.has_extension())
+	if (!has_extension(outfile_solution))
 	{
 		outfile_solution.replace_extension(solution_file_ext);
 	}
-	if (!outfile_solution_text.has_extension())
+	if (!has_extension(outfile_solution_text))
 	{
 		outfile_solution_text.replace_extension(text_file_ext);
 	}
-	if (!outfile_SvUt.has_extension())
+	if (!has_extension(outfile_SvUt))
 	{
 		outfile_SvUt.replace_extension(matfile_ext);
 	}
-	if (!outfile_feature_space.has_extension())
+	if (!has_extension(outfile_feature_space))
 	{
 		outfile_feature_space.replace_extension(matfile_ext);
 	}
