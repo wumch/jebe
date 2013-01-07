@@ -107,7 +107,7 @@ private:
 	void store_USV();
 
 	void calc_SvUt();	// product SvUt, the transformation.
-	void calc_SvUtA();	// product SvUt, the feature_space.
+	void calc_SvUtA();	// product SvUtA, the feature_space.
 
 private:	// IO related.
 	void store_mat(const boost::filesystem::path& filename, Mat mat);
