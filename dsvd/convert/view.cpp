@@ -129,7 +129,7 @@ private:
 				}
 			}
 			fprintf(outfile, "\n");
-		}
+		};
 
 		size_t fpos = ftell(infile), fsize = staging::filesize(infile_name);
 		if (fpos != fsize)

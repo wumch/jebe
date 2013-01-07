@@ -12,7 +12,7 @@ include ${SLEPC_DIR}/conf/slepc_common
 CC			= /usr/bin/mpicxx
 CFLAGS		= -fPIC -Wall -O3
 
-INCLUDES	= -I/data/fsuggest/staging/ccpp
+INCLUDES	= -I../../staging
 CLINKER		= $(CC)
 CXXFLAGS	= $(CFLAGS)
 CLEANFILES	= $(EXENAME)
@@ -27,3 +27,4 @@ PETSC_CC_INCLUDES	+= $(INCLUDES)
 $(EXENAME): $(EXENAME).o main.o chkopts
 	-${CLINKER} -o $(EXENAME) $(EXENAME).o main.o ${SLEPC_LIB}
 	${RM} $(EXENAME).o main.o
+	g++ -I$(INCLUDES) -g3 -O3 view.cpp -o view
