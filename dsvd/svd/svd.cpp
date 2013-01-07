@@ -159,8 +159,8 @@ void DSVD::prepare_retrieve() throw()
 
 	if (Aside::config->store_solution)
 	{
-		out_solution = std::fopen(Aside::config->outfile_solution.c_str(), "wb");
-		out_solution_text = std::fopen(Aside::config->outfile_solution_text.c_str(), "wt");
+		out_solution = std::fopen(Aside::config->outfile_solution.string().c_str(), "wb");
+		out_solution_text = std::fopen(Aside::config->outfile_solution_text.string().c_str(), "wt");
 		solution.r = r =  nconved - (static_cast<int64_t>(Aside::config->nsv) < nconved);
 	}
 
