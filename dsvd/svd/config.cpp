@@ -254,7 +254,7 @@ CS_FORCE_INLINE static bool has_extension(const boost::filesystem::path& path)
 #if BOOST_VERSION > 104200
 	return path.has_extension();
 #else
-	return path.extension().empty();
+	return !path.extension().empty();
 #endif
 }
 
