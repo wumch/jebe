@@ -33,7 +33,7 @@ CS_INCLUDES	= -I../../staging
 CS_LIBS		= -lboost_system -lboost_program_options -lboost_filesystem -lglog
 CLINKER		= $(CC)
 CXXFLAGS	= $(CFLAGS)
-CLEANFILES	= $(EXENAME)
+CLEANFILES	= $(EXEFILE)
 
 PCC					= $(CC)
 #PCC_LINKER			= $(CLINKER)
