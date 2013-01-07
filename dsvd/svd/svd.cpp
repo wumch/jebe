@@ -381,16 +381,41 @@ void DSVD::store_mat(const boost::filesystem::path& filename, Mat mat)
 void DSVD::store_mat(const char* filename, Mat mat)
 {
 	PetscViewer viewer;
-	_DSVD_CHECKABORT(PetscViewerBinaryOpen(PETSC_COMM_SELF, filename, FILE_MODE_WRITE, &viewer));
+	_DSVD_CHECKABORT(PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename, FILE_MODE_WRITE, &viewer));
 	store_mat(mat, viewer);
 }
 
-void DSVD::store_mat(Mat mat, PetscViewer viewer)
+void DSVD::store_mat(Mat mat, PetscViewer viewer, PetscInt mat_n)
 {
-	_DSVD_CHECKABORT(MatAssemblyBegin(mat, MAT_FINAL_ASSEMBLY));
-	_DSVD_CHECKABORT(MatAssemblyEnd(mat, MAT_FINAL_ASSEMBLY));
-	_DSVD_CHECKABORT(MatView(mat, viewer));
+	if (mat_n == mat_n_unknown)
+	{
+		_DSVD_CHECKABORT(MatGetSize(mat, PETSC_NULL, &mat_n));
+	}
+
+	{
+		_DSVD_CHECKABORT(MatAssemblyBegin(mat, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatAssemblyEnd(mat, MAT_FINAL_ASSEMBLY));
+		_DSVD_CHECKABORT(MatView(mat, viewer));
+	}
+
+	Vec vec;
+	{
+		_DSVD_CHECKABORT(VecCreateSeq(PETSC_COMM_SELF, mat_n, &vec));
+		_DSVD_CHECKABORT(VecSetFromOptions(vec));
+
+		{
+			PetscRandom rand;
+			_DSVD_CHECKABORT(PetscRandomCreate(PETSC_COMM_SELF, &rand));
+			_DSVD_CHECKABORT(PetscRandomSetFromOptions(rand));
+			_DSVD_CHECKABORT(VecSetRandom(vec, rand));
+			_DSVD_CHECKABORT(PetscRandomDestroy(_DSVD_ARG_FOR_DESTROY(rand)));
+		}
+
+		_DSVD_CHECKABORT(VecView(vec, viewer));
+	}
+
 	_DSVD_CHECKABORT(PetscViewerDestroy(_DSVD_ARG_FOR_DESTROY(viewer)));
+	_DSVD_CHECKABORT(VecDestroy(_DSVD_ARG_FOR_DESTROY(vec)));
 }
 
 CS_FORCE_INLINE void DSVD::free(Mat& mat_)

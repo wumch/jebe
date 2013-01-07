@@ -77,16 +77,12 @@ private:
 	PetscInt nconved;		// how many triplesets are really computed.
 	size_t io_cache_elem;	// how many vectors(rows) should be cached while mmap.
 
-//	FILE* out_U;			// fp of output-file U.
-//	char* addr_U;			// mmap addr of output-file U.
-//	FILE* out_S;
-//	char* addr_S;
-//	FILE* out_Vt;
-//	char* addr_Vt;
 	std::FILE* out_solution;		// fp of output-file solution -- binary format.
 	std::FILE* out_solution_text;	// fp of output-file solution -- plain text format.
 
 	int finalized;		// flag indicates that finalized (all done and all of resouce are released) or not.
+
+	static const PetscInt mat_n_unknown = -2;
 
 private:
 	void initiate();
@@ -116,7 +112,7 @@ private:
 private:	// IO related.
 	void store_mat(const boost::filesystem::path& filename, Mat mat);
 	void store_mat(const char* filename, Mat mat);
-	void store_mat(Mat mat, PetscViewer viewer);
+	void store_mat(Mat mat, PetscViewer viewer, PetscInt mat_n = mat_n_unknown);
 	void frozen_mat(const boost::filesystem::path& filename, Mat mat);
 	void frozen_mat(const char* filename, Mat mat);		// store, then destroy matrix.
 
