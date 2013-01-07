@@ -6,7 +6,6 @@
 #include <cmath>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/static_assert.hpp>
 #include <petscversion.h>
 #include <petscmat.h>
@@ -57,8 +56,7 @@ void DSVD::initiate()
 		""
 	);
 	_DSVD_CHECKABORT(MPI_Comm_rank(PETSC_COMM_WORLD, &process_rank));
-//	BOOST_STATIC_ASSERT(boost::type_traits::is_same<typeof(process_rank), typeof(Aside::config->main_process)>::value);
-	is_main = process_rank == Aside::config->main_process;
+	is_main = process_rank == static_cast<typeof(process_rank)>(Aside::config->main_process);
 }
 
 void DSVD::build()
@@ -259,7 +257,6 @@ void DSVD::store_USV()
 // NOTE: it will change S => 1/S. so, should store S (even if need not S) before product.
 void DSVD::calc_SvUt()
 {
-//	MatMatTransposeMult(Sv, U, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
 	MatMatMult(Sv, Ut, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &SvUt);
 	store_mat(Aside::config->outfile_SvUt, SvUt);
 }
@@ -418,3 +415,4 @@ DSVD::~DSVD()
 } /* namespace jebe */
 
 #undef _DSVD_CHECKABORT
+#undef _DSVD_ARG_FOR_DESTROY
