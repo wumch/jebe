@@ -332,8 +332,7 @@ void DSVD::record(PetscInt turn, double s, Vec u, Vec v, PetscInt size)
 void DSVD::record_solution()
 {
 	CS_DIE_IF(static_cast<PetscInt>(std::fwrite(&solution, sizeof(solution), 1, out_solution)) != 1, "fwrite not completely done");
-	std::string solution_text = pack_solution(solution);
-	CS_DIE_IF(std::fputs(solution_text.c_str(), out_solution_text) == EOF, "fputs not completely done");
+	CS_DIE_IF(std::fputs(pack_solution(solution).c_str(), out_solution_text) == EOF, "fputs not completely done");
 }
 
 void DSVD::finalize()

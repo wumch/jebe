@@ -168,6 +168,7 @@ void Config::load()
 	output_dir = options["output-dir"].as<typeof(output_dir)>();
 	matfile_ext = options["matrix-file-extension"].as<typeof(matfile_ext)>();
 	solution_file_ext = options["solution-file-extension"].as<typeof(solution_file_ext)>();
+	text_file_ext = options["text-file-extension"].as<typeof(text_file_ext)>();
 
 	store_USV = options["store-USV"].as<typeof(store_USV)>();
 	store_USV_product = options["store-USV-product"].as<typeof(store_USV_product)>();
