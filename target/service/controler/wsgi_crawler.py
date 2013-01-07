@@ -15,7 +15,7 @@ if (!document.body)
 }
 var script = document.createElement('script');
 script.charset = 'utf-8';
-script.type = 'text/javascript; charset=utf-8';
+script.type = 'text/javascript';
 script.src = 'http://%s/crawler.js';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
