@@ -68,12 +68,13 @@ class PageStorer(object):
             self.collections['loc'].insert(loc)
 
         url_path = self.urlParser.toPath(url)
+        title_words = self._marve(title)
         if not url_path:
             return
         paths = {
             'url': url,
             'title':title,
-            'words':[ww[0] for ww in self._marve(title)],
+            'words':[ww[0] for ww in title_words] if title_words else [],
         }
         paths_id = url_path + '_' + md5_res
         if willUpdate:
@@ -115,9 +116,9 @@ class PageStorer(object):
         return {
             '_id' : md5_res,
             'ts' : int(time.time()) or time_stamp,
-            'words' : [ww[0] for ww in wordsWeight],
+            'words' : [ww[0] for ww in wordsWeight] if wordsWeight else [],
 #            'weight' : [ww[1] for ww in wordsWeight],
         }
 
     def _marve(self, content):
-        return self.tokenizer.marve(content=content)
+        return self.tokenizer.marve(content=content) or []
