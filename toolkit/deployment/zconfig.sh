@@ -17,7 +17,7 @@ DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x
 DEFAULT_NICE_INCR="19"
 
 # variable
-#appname="testingapp"
+appname="testingapp"
 portalfile="index.js"
 
 # auto-config
