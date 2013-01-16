@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var temp_index = 'var http = require("http"); http.createServer(function(req, res) {res.writeHead(200); res.end("hello world"); }).listen(0); setInterval(function(){console.log(+new Date)},3000)';
+var temp_index = 'var http = require("http"); http.createServer(function(req, res) {res.writeHead(200); res.end("hello world"); }).listen(0); setInterval(function(){console.log(+new Date)},3)';
  
 
 
