@@ -89,9 +89,11 @@ if __name__ == '__main__':
     outfile = "data/matstream-test.mtx" if len(sys.argv) < 2 else sys.argv[1]
     stream = MatStream(outfile=outfile, cols=12, transepose=False, input_col_begins=1)
     docs = [
-        [[1, 9.56], [3, 0.01], [9, 0.04]],
-        [[2, 9.56], [5, 0.01], [7, 0.04]],
-        [[2, 9.56], [8, 0.01], [11, 100.04]],
+        [[1, 9.56], [3, 0.01], [9, 0.04],],
+        [[2, 9.56], [5, 0.01], [7, 0.04],],
+        [[2, 9.56], [8, 0.01], [11, 1.04],],
+        [[2, 9.56], [8, 3.01], [11, 1.04],],
+        [[2, 9.56], [8, 0.01], [10, 1.04],],
     ]
     for vec in docs:
         stream.attach(row=vec)
