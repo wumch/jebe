@@ -208,9 +208,6 @@ zrun() {
         fi
     fi
     local related_path="${approot#${appchroot}}" shell=""
-#    if [ -n "${appchroot}" ]; then
-#        shell="${shell} 'su ${username} -c \""
-#    fi
     if [ -n "${related_path}" ]; then
         shell="${shell} cd ${related_path} && ";
     fi
@@ -254,28 +251,6 @@ zrun() {
     else
         return ${Z_FAIL}
     fi
-
-#    if [ -n "${appchroot}" ]; then
-#        chroot="--chroot ${appchroot}"
-#        chdir="--chdir ${related_path}"
-#    else
-#        chroot=""
-#        chdir="--chdir ${approot}"
-#    fi
-#    start-stop-daemon --start               \
-#        --background                        \
-#        --make-pidfile --pidfile ${pidfile} \
-#        --user ${username}:${usergroup}     \
-#        ${chroot} ${chdir}                  \
-#        --exec ${app_run_command}           \
-#    || return ${Z_FAIL}
-#    test -n "${old_ulimits}" && ulimit ${old_ulimits}
-#    if [ -n "${niceincr}" ]; then
-#        declare -i pid=$(zgetpid)
-#        if zis_running_pid "${pid}"; then
-#            renice -n ${niceincr} -p ${pid}
-#        fi
-#    fi
     return ${Z_SUCCESS}
 }
 
@@ -314,12 +289,6 @@ zfinish() {
     if zis_running ${pid}; then
         zdie "failed on kill process(${pid}) of app '${appname}', seems to be a defunct!"
     fi
-#    if zis_running; then
-#        start-stop-daemon --stop                \
-#            --pidfile=${pidfile}                \
-#            --retry TERM/3/KILL/3               \
-#        || return ${Z_FAIL}
-#    fi
     if [ -S "${listening}" ]; then
         if ! rm -f "${listening}" 2>/dev/null; then
             zpush_error "failed on rm sock-file '${listening}'"
@@ -429,15 +398,6 @@ zmkchroot() {
             mount --bind "${directory}" "${target}" 2>/dev/null || zdie "failed on mounting --bind '${directory}' '${target}'"
         fi
     done
-#    if [ -n "${appchroot}" ]; then
-#        mkdir -p ${appchroot}/etc
-#        cp /etc/passwd ${appchroot}/etc/
-#        if [ -d /etc/pam.d ]; then
-#            cp -r /etc/pam.d ${appchroot}/etc/
-#            chmod -R a+r ${appchroot}/etc/pam.d
-#        fi
-#        chmod a+r ${appchroot}/etc/passwd
-#    fi
     local devdir="${1}/dev"
     if [ -n "${devdir}" -a ! -d  "${devdir}" ]; then
         mkdir -p ${devdir}
