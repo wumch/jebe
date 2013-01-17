@@ -1,5 +1,7 @@
 #!/bin/sh
 
+declare -i SSA_DEBUG=1
+
 # global configs
 APPS_ROOT=/apps
 APP_USER_HOME_ROOT=/home
@@ -18,18 +20,17 @@ MOUNT_DIRECTORIES=("/usr" "/lib64" "/proc" "/var" "/bin" "/etc")
 APPS_CHROOT="${APPS_ROOT}"
 
 # limits
-#DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x 128"
-DEFAULT_ULIMITS="-n 1024"
+DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x 128"
 DEFAULT_NICE_INCR="19"
 
-# test only
-APPS_ROOT="/tmp/apps"
-#APPS_PIDFILE_DIR=/tmp/var/run/apps
-#APPS_LOG_DIR=/tmp/var/log/apps
-#ROUTER_SOCK=/tmp/router.sock
-APPS_CHROOT="${APPS_ROOT}"
+if [ -n "{$SSA_DEBUG}" -a ${SSA_DEBUG} -eq 1 ]; then
+    # test only
+    DEFAULT_ULIMITS="-n 1024"
+    APPS_ROOT="/tmp/apps"
+    APPS_CHROOT="${APPS_ROOT}"
+fi
 
-# variable
+# this variable is guaranteed to be set inside start-stop-apps.
 #appname="testingapp"
 
 # auto-config
@@ -50,6 +51,3 @@ declare -i uniqprocflag=$(date +'%s%N')
 appprocflag="--max-stack-size=${uniqprocflag}"
 assistprocflag="--max-stack-size=$((uniqprocflag+1))"
 app_run_command="$(which node) ${appprocflag} ${portalfile} | ${COMMAND_LOGLINE} ${appname} ${appstdout} ${assistprocflag}"
-
-# test only
-#appchroot="${approot}"

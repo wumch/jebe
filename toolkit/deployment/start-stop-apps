@@ -231,7 +231,7 @@ zrun() {
         fi
         comp_shell=$(printf "${comp_shell}" "${shell}")
         if [ -n "${comp_shell}" ]; then
-            ${comp_shell}
+            eval ${comp_shell}
         fi
     fi
     local procflag=$(printf "%s" "${appprocflag}" | sed 's/^-*//g')
