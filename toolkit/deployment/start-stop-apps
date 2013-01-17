@@ -1,7 +1,7 @@
 #!/bin/sh
-. ./zconfig.sh  # test only
+
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< common members <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-declare -i Z_SUCCESS=0 Z_FAIL=1 Z_ALREADY=2
+declare -i Z_SUCCESS=0 Z_FAIL=1
 notifier_size=8
 zocred="\033[32;31;5m%-${notifier_size}s\033[0m"
 zocgreen="\033[32;49;5m%-${notifier_size}s\033[0m"
@@ -143,7 +143,7 @@ zcreate_user() {
         ${username}                 \
     2>/dev/null || return ${Z_FAIL}
     passwd --lock "${username}" 1>/dev/null
-    chsh -s /bin/false "${username}"
+#    chsh -s /bin/false "${username}"
     return ${Z_SUCCESS}
 }
 
@@ -153,6 +153,17 @@ zdelete_user() {
         return ${Z_FAIL}
     fi
     userdel --force --remove ${username} 2>/dev/null && return ${Z_SUCCESS} || return ${Z_FAIL}
+}
+
+zis_dir_empty() {
+    # I'd rather die than to rm -fr /
+    test -n "${1}" -a -d "${1}" || zdie "argument#1 is wrong"
+    declare -r empty_view=". .."
+    if [ "$(ls -a ${1} | xargs)" == "${empty_view}" ]; then
+        return ${Z_SUCCESS}
+    else
+        return ${Z_FAIL}
+    fi
 }
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -166,15 +177,15 @@ zgetpid() {
         else
             pid="${1}"
         fi
-    elif [ -f "${pidfile}" ]; then
-        local pid="$(cat ${pidfile})"
+    elif [ -f "${appchroot}${pidfile}" ]; then
+        local pid="$(cat ${appchroot}${pidfile})"
     fi
     echo "${pid}"
-    test -n "${pid}" -a -d /proc/${pid} && return ${Z_SUCCESS} || return ${Z_FAIL}
+    zpid_alive "${pid}" && return ${Z_SUCCESS} || return ${Z_FAIL}
 }
 
 zis_running_pid() {
-    test -n "${1}" -a -d "/proc/${1}" && return ${Z_SUCCESS} || return ${Z_FAIL}
+    zpid_alive "${1}" && return ${Z_SUCCESS} || return ${Z_FAIL}
 }
 
 zis_running() {
@@ -196,11 +207,10 @@ zrun() {
             return ${Z_FAIL}
         fi
     fi
-    local chroot chdir related_path="${approot#${appchroot}}"
-    local shell=""
-    if [ -n "${appchroot}" ]; then
-        shell="${shell} chroot ${appchroot} && "
-    fi
+    local related_path="${approot#${appchroot}}" shell=""
+#    if [ -n "${appchroot}" ]; then
+#        shell="${shell} 'su ${username} -c \""
+#    fi
     if [ -n "${related_path}" ]; then
         shell="${shell} cd ${related_path} && ";
     fi
@@ -208,17 +218,37 @@ zrun() {
         shell="${shell} ulimit ${ulimits} && "
     fi
     if [ -n "${app_run_command}" ]; then
-        shell="${shell} nohup"
         if [ -n "${niceincr}" ]; then
             shell="${shell} nice -n ${niceincr}"
         fi
-        shell="${shell} ${app_run_command} >/dev/null 2>&1 & echo \$! >${pidfile}"
+        shell="${shell} ${app_run_command} >/dev/null 2>/dev/null &"
     fi
-    echo $shell
+
     if [ -n "${shell}" ]; then
-        su ${username} -c "${shell}"
+        local comp_shell=" %s "
+        if [ -n "${appchroot}" ]; then
+            comp_shell=$(printf "${comp_shell}" "chroot ${appchroot} /bin/bash -c ' %s ' ")
+        fi
+        if [ -n "${username}" ]; then
+            comp_shell=$(printf "${comp_shell}" "su ${username} -c \" %s \" ")
+        fi
+        comp_shell=$(printf "${comp_shell}" "${shell}")
+        if [ -n "${comp_shell}" ]; then
+            ${comp_shell}
+        fi
     fi
-    sleep 0.6
+    local procflag=$(printf "%s" "${appprocflag}" | sed 's/^-*//g')
+    local assistflag=$(printf "%s" "${assistprocflag}" | sed 's/^-*//g')
+    declare -a pids=($(ps aux | grep "${procflag}" | grep -v "${assistflag}" | grep -v grep | awk '{print $2}'))
+    if [ ${#pids[@]} -ne 1 ]; then
+        zdie "failed on picking process-id of '${appname}'"
+    fi
+    declare -i pid="${pids[0]}"
+    if [ ${pid} -eq 0 ]; then
+        zdie "pid picked by ps|aux is wrong while starting app '${appname}'"
+    fi
+    echo ${pid} > ${pidfile}
+
     if zis_running; then
         return ${Z_SUCCESS}
     else
@@ -251,16 +281,45 @@ zrun() {
 
 zfinish() {
     declare -i pid="$(zgetpid)"
+    if [ ! -n "${pid}" ]; then
+        return ${Z_SUCCESS}
+    fi
     local listening
     if [ -n "${pid}" ]; then
         listening=$(zget_listening "${pid}")
     fi
-    if zis_running; then
-        start-stop-daemon --stop                \
-            --pidfile=${pidfile}                \
-            --retry TERM/3/KILL/3               \
-        || return ${Z_FAIL}
+    declare -i tried_term=0 tried_kill=0 cur_phase=0
+    declare -ir MAX_TRY_TERM=3 MAX_TRY_KILL=3
+    while zis_running ${pid};
+    do
+        if [ ${cur_phase} -eq 0 ]; then
+            if [ ${tried_term} -lt ${MAX_TRY_TERM} ]; then
+                kill -TERM ${pid}
+                tried_term+=1
+            else
+                cur_phase+=1
+            fi
+        elif [ ${cur_phase} -eq 1 ]; then
+            if [ ${tried_kill} -lt ${MAX_TRY_KILL} ]; then
+                kill -KILL ${pid}
+                tried_kill+=1
+            else
+                cur_phase+=1
+            fi
+        else
+            break
+        fi
+        sleep 0.6
+    done
+    if zis_running ${pid}; then
+        zdie "failed on kill process(${pid}) of app '${appname}', seems to be a defunct!"
     fi
+#    if zis_running; then
+#        start-stop-daemon --stop                \
+#            --pidfile=${pidfile}                \
+#            --retry TERM/3/KILL/3               \
+#        || return ${Z_FAIL}
+#    fi
     if [ -S "${listening}" ]; then
         if ! rm -f "${listening}" 2>/dev/null; then
             zpush_error "failed on rm sock-file '${listening}'"
@@ -281,22 +340,33 @@ zinstall() {
     fi
     ${app_install_command} || zdie "failed on installing app '${appname}', command: ${app_install_command}"
     chown -R ${username}:${usergroup} ${approot} || zdie "failed on chown for app '${appname}'"
-    return ${Z_SUCCESS}
+    zmkchroot ${appchroot} && return ${Z_SUCCESS} || return ${Z_FAIL}
 }
 
 zdelete_app() {
     local directory
     if [ -n "${appchroot}" ]; then
-        cd ${appchroot}
+        cd /
         for directory in "${MOUNT_DIRECTORIES[@]}";
         do
-            umount -l ${directory}
+            if ! umount ${appchroot}${directory}; then
+                zdie "failed on 'umount ${appchroot}${directory}'"
+            else
+                sleep 0.1
+                if zis_dir_empty "${appchroot}${directory}"; then
+                    rm -fr ${appchroot}${directory}
+                fi
+            fi
+            sleep 0.2
         done
-        umount -l ${appchroot}/*
-        sleep 0.6
-    fi
-    if [ -d "${approot}" ]; then
-        \rm -fr ${approot} || zdie
+        rm -fr ${appchroot}/src ${appchroot}/dev
+        if zis_dir_empty "${appchroot}"; then
+            rm -fr ${appchroot}
+        else
+            zdie "fatal error: some directories still stay inside '${appchroot}' after app removed."
+        fi
+    elif [ -n "${approot}" ]; then
+        rm -fr ${approot}
     fi
     if ! zdelete_user ${username}; then
         zpush_error "failed on deleting user '${username}'"
@@ -337,21 +407,45 @@ zrestart() {
     return ${Z_SUCCESS}
 }
 
+zremove() {
+    zapp_exists || zdie "app '${appname}' non-exists."
+    zfinish || zdie "failed on stopping '${appname}'"
+    zdelete_app || zdie "failed on remove app '${appname}'"
+    return ${Z_SUCCESS}
+}
+
 zmkchroot() {
     test -n "${1}" || return ${Z_FAIL}
     local directory
     for directory in "${MOUNT_DIRECTORIES[@]}";
     do
-        local target="${1}/${directory}"
+        local target="${1}${directory}"
         if [ ! -d  "${target}" ]; then
             mkdir -p "${target}"
         fi
         if [ "${directory:0:4}" == "/var" -o "${directory:0:5}" == "/proc" ]; then
-            mount --bind "${directory}" "${target}" || zdie "failed on mounting --bind '${directory}' '${target}'"
+            mount --bind "${directory}" "${target}" 2>/dev/null || zdie "failed on mounting --bind '${directory}' '${target}'"
         else
-            mount --bind -o ro "${directory}" "${target}" || zdie "failed on mounting --bind '${directory}' '${target}'"
+            mount --bind "${directory}" "${target}" 2>/dev/null || zdie "failed on mounting --bind '${directory}' '${target}'"
         fi
     done
+#    if [ -n "${appchroot}" ]; then
+#        mkdir -p ${appchroot}/etc
+#        cp /etc/passwd ${appchroot}/etc/
+#        if [ -d /etc/pam.d ]; then
+#            cp -r /etc/pam.d ${appchroot}/etc/
+#            chmod -R a+r ${appchroot}/etc/pam.d
+#        fi
+#        chmod a+r ${appchroot}/etc/passwd
+#    fi
+    local devdir="${1}/dev"
+    if [ -n "${devdir}" -a ! -d  "${devdir}" ]; then
+        mkdir -p ${devdir}
+    fi
+    test -e ${devdir}/null && \rm -f ${devdir}/null
+    mknod ${devdir}/null c 1 3
+    chmod a+rw ${devdir}/null
+    return ${Z_SUCCESS}
 }
 
 zinitsys() {
@@ -360,7 +454,7 @@ zinitsys() {
     for directory in "${directories[@]}";
     do
         if [ ! -d "${directory}" ]; then
-            mkdir -p "${directory}" && chgrp ${usergroup} "${directory}" || zdie "failed on 'mkdir -p ${directory}'"
+            mkdir -p "${directory}" || zdie "failed on 'mkdir -p ${directory}'"
             chgrp ${usergroup} ${directory}
             chmod g+rw -R ${directory}
         fi
@@ -380,7 +474,7 @@ zinitsys() {
             nohup ${COMMAND_WATCH_FIFO} < ${FIFO_NAME} >/dev/null 2>&1 &
         fi
     fi
-    zmkchroot ${appchroot} && return ${Z_SUCCESS} || return ${Z_FAIL}
+    return ${Z_SUCCESS}
 }
 
 zcheck_appname() {
@@ -412,7 +506,7 @@ prepare() {
 
 usage () {
     echo "usage:"
-    printf "    %s %s %s\n" "$(zcoblue $0)" "$(zcogreen '<appname>')" "$(zcogreen '[status|start|stop|restart|install|checkname]')"
+    printf "    %s %s %s\n" "$(zcoblue $0)" "$(zcogreen '<appname>')" "$(zcogreen '[status|start|stop|restart|install|remove|checkname]')"
     printf "    default action is %s\n" "$(zcogreen 'status')"
     echo -e "or:"
     printf "    %s %s\t\t%s\n" "$(zcoblue $0)" "$(zcogreen 'initsys')"  "# initialize system."
@@ -463,6 +557,17 @@ restart() {
         return ${Z_SUCCESS}
     else
         zcored "failed on restarting ${appname}"
+        return ${Z_FAIL}
+    fi
+}
+
+remove() {
+    prepare
+    if zremove; then
+        zcogreen "${appname} removed"
+        return ${Z_SUCCESS}
+    else
+        zcored "failed on removeing ${appname}"
         return ${Z_FAIL}
     fi
 }
@@ -534,11 +639,12 @@ fi
 
 case "${act}" in
 status) status;;
-install) install;;
 initsys) initsys;;
 start)  start;;
 stop)   stop;;
 restart)    restart;;
+install) install;;
+'remove'|'uninstall') remove;;
 checkname) checkname;;
 '--help'|'-h') usage;;
 *) unknown_act ${act};;
