@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< common members <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 declare -i Z_SUCCESS=0 Z_FAIL=1
@@ -471,7 +471,6 @@ usage () {
     echo -e "or:"
     printf "    %s %s\t\t%s\n" "$(zcoblue $0)" "$(zcogreen 'initsys')"  "# initialize system."
     printf "    %s %s\t\t%s\n" "$(zcoblue $0)" "$(zcogreen '-h,--help')"  "# show this help and exit."
-    exit 0
 }
 
 status() {
