@@ -409,6 +409,7 @@ zmkchroot() {
 }
 
 zinitsys() {
+    groupadd ${usergroup} >/dev/null 2>&1
     declare -a directories=("${APPS_ROOT}" "${APPS_LOG_DIR}" "${APP_USER_HOME_ROOT}" "${APPS_PIDFILE_DIR}")
     local directory
     for directory in "${directories[@]}";
