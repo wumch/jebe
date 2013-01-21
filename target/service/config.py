@@ -194,7 +194,7 @@ class SysConfig(object):
     ERR_CODE_ERR = 'err'
     RPC_KEY_NAME = 'callback'
 
-    CRAWLER_DOMAIN = 'ad.guangao.i8.com.cn'
+    CRAWLER_DOMAIN = 'x.ad.goyoo.com'
 
     MOVE_KEY_HYPHEN = _MK_HYPHEN
 
