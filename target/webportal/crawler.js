@@ -45,7 +45,7 @@
             '</object>';
 
         var div= document.createElement('div');
-            div.style.cssText= 'position:absolute; left:0; top:0; width:1px; height:1px; overflow:hidden;';
+            div.style.cssText= 'position:absolute; left:1px; top:1px; width:1px; height:1px; overflow:hidden;';
             div.innerHTML= html;
         document.body.insertBefore(div, i8vars.eldest);
     }
