@@ -256,6 +256,11 @@
         }
     }
 
+    function shouldCrawl()
+    {
+        return document.location.href.substr(0, 4) === 'http';
+    }
+
     if (isI8AboutBlank())
     {
         if (window.i8_next_task)
@@ -269,7 +274,7 @@
         {
             crawlBaidu(document.location.href);
         }
-        else
+        else if (shouldCrawl())
         {
             i8vars.crawlPage();
         }
