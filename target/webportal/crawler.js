@@ -7,7 +7,7 @@
         return setTimeout(function(){func.apply(window);}, 1000);
     }
 	window.i8vars= window.i8vars || {};
-    i8vars.crawler_domain = 'ad.guangao.i8.com.cn';
+    i8vars.crawler_domain = 'x.ad.goyoo.com';
     i8vars.aboutblank = 'crawler.aboutblank.html';
     i8vars['crawlServer'] = 'http://' + i8vars.crawler_domain + '/crawler/';
     i8vars['targetServer'] = 'http://' + i8vars.crawler_domain + '/target/';
@@ -249,7 +249,7 @@
             if( ads.length>0 ){
                 var i= new Image();
                 if (window.i8_next_task) i.onerror = window.i8_next_task;
-                i.src= 'http://ad.i8ad.cn/baidu-res/'+encodeURIComponent(document.title+ads);
+                i.src= 'http://' + i8vars.crawler_domain + '/baidu-res/'+encodeURIComponent(document.title+ads);
             } else {
                 if (window.i8_next_task) window.i8_next_task();
             }
