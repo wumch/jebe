@@ -9,19 +9,20 @@ APP_USER_GROUP=apps
 APPS_PIDFILE_DIR=/var/run/apps
 APPS_LOG_DIR=/var/log/apps
 FIFO_NAME=""
+APPS_ASSIST_TARGET="/assist"
 ROUTER_SOCK=/var/run/router.sock
 COMMAND_WATCH_FIFO=""
 COMMAND_NC=$(which nc.openbsd 2>/dev/null) || COMMAND_NC=${COMMAND_NC:-$(which nc 2>/dev/null)} || COMMAND_NC=${COMMAND_NC:-$(which netcat 2>/dev/null)}
-COMMAND_INSTALL_APP="install.js"
-COMMAND_LOGLINE="loger.js"
+COMMAND_INSTALL_APP="./install.js"
+COMMAND_LOGLINE="${APPS_ASSIST_TARGET}/loger.js"
 RESERVED_APP_NAME=("system" "root" "initsys")
 DEPEND_UTILS=("netstat" "realpath" "node" "${COMMAND_NC}")
-MOUNT_DIRECTORIES=("/usr" "/lib64" "/proc" "/var" "/bin" "/etc")
+MOUNT_DIRECTORIES=("/usr" "/lib64" "/proc" "/var" "/bin" "/etc" "/dev")
 APPS_CHROOT="${APPS_ROOT}"
 
 # limits
 DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x 128"
-DEFAULT_NICE_INCR="19"
+DEFAULT_NICE_INCR=""
 
 if [ -n "{$SSA_DEBUG}" -a ${SSA_DEBUG} -eq 1 ]; then
     # test only
