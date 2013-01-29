@@ -1,7 +1,7 @@
 #coding:utf-8
 
 import zlib
-import urlparse
+import urlparse, urllib2
 from config import config, sysconfig, logger
 from wsgi_controler import WsgiControler
 from model.mpagestorer import PageStorer
@@ -79,7 +79,7 @@ class WsgiCrawler(WsgiControler):
 
     def detach_task(self):
         url = CrawlQueue.instance().detach()
-        return (detach_jsonp % url) if url else detach_notask_jsonp
+        return (detach_jsonp % urllib2.quote(url)) if url else detach_notask_jsonp
 
     def gen_init(self):
         return ini[CrawlQueue.instance().nonempty()]
