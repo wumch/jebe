@@ -27,7 +27,7 @@
             try{
                 var cmtor = i8vars.msie ? window[i8vars.cmtorid] : document[i8vars.cmtorid];
                 if (!cmtor) return;
-                if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
+                if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8crawlPage ? cmtor[0] : cmtor[1]);};
                 if (!cmtor.i8crawlPage) return;
                 i8vars.cmtor = cmtor;
                 setTimeout(sendText, 10);
@@ -278,7 +278,7 @@
                 try{
                     var cmtor = i8vars.msie ? window[i8vars.adcmtorid] : document[i8vars.adcmtorid];
                     if (!cmtor) return;
-                    if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
+                    if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8post ? cmtor[0] : cmtor[1]);};
                     if (!cmtor.i8post) return;
                     i8vars.adcmtor = cmtor;
                     i8vars.adcmtor_installed = true;
