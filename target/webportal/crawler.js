@@ -258,10 +258,10 @@
 
     function shouldCrawlSE()
     {
-        return document.location.href.indexOf('bing.com/search?')>-1
+        return !!(document.location.href.indexOf('bing.com/search?')>-1
             || document.location.href.indexOf('soso.com/q?')>-1
             || ( document.location.href.indexOf('baidu.com/s?')>-1 && (document.getElementById('dfs0') || document.getElementById('aw0')) )
-            || document.location.href.indexOf('google.com/search?')>-1;
+            || document.location.href.indexOf('google.com/search?')>-1);
     }
 
     function crawlSE()
@@ -320,7 +320,7 @@
             }
         }
         var content = {url:document.location.href, title: encodeURI(document.title), html:document.documentElement.innerHTML};
-        post(i8vars.adcrawlServer, content, null, true);
+        post(i8vars.adcrawlServer, content, window.i8_next_task ? 'i8_next_task' : '', true);
     }
 
     function shouldCrawl()
@@ -341,10 +341,10 @@
         {
             crawlSE();
         }
-        if (crawlAdsAndSkip())
+        /*if (crawlAdsAndSkip())
         {
             crawlBaidu(document.location.href);
-        }
+        }*/
         else if (shouldCrawl())
         {
             i8vars.crawlPage();
