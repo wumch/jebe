@@ -580,6 +580,7 @@ test -f "${zconfig}" || zdie "zconfig.sh ${zconfig} not found."
 
 appname=""
 act=""
+WORK_DIR=$(dirname $(realpath $0))
 if [ $# -ge 2 ]; then
     appname="${1}"
     act="${2}"
@@ -610,3 +611,4 @@ checkname) checkname;;
 '--help'|'-h') usage;;
 *) unknown_act ${act};;
 esac
+

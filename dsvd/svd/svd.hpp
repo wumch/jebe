@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem/path.hpp>
+#include <petscmath.h>
 #include <petscmat.h>
 #include <slepcsvd.h>
 #include "../solution.h"
