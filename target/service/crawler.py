@@ -13,7 +13,7 @@ from controler.wsgi_crawler import WsgiCrawler
 headers = [
 #    ('Connection', 'close'),
     ("Content-Type", "text/javascript"),
-    ("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"),
+    ("Cache-Control", "no-cache"),
 #    ('Pragma', 'no-cache'),
 ]
 status_ok = '200 OK'
