@@ -21,7 +21,7 @@ document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
 detach_jsonp = '''
 (function(){
-window.i8_next_task = function(){document.location.href = decodeURI('%s');};
+window.i8_next_task = function(){document.location.href = decodeURIComponent('%s');};
 ''' + inject + '''})();'''
 detach_notask_jsonp = '''
 (function(){setTimeout(function() { document.location.reload(); }, 180000);
