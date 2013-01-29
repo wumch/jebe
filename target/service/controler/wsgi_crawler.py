@@ -16,7 +16,7 @@ if (!document.body)
 var script = document.createElement('script');
 script.charset = 'utf-8';
 script.type = 'text/javascript';
-script.src = 'http://%s/crawler.js';
+script.src = 'http://%s/crawler.js?v=20130129';
 document.body.insertBefore(script, document.body.firstChild);
 ''' % sysconfig.CRAWLER_DOMAIN
 detach_jsonp = '''
