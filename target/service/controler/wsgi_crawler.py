@@ -79,7 +79,7 @@ class WsgiCrawler(WsgiControler):
 
     def detach_task(self):
         url = CrawlQueue.instance().detach()
-        return (detach_jsonp % urllib2.quote(url)) if url else detach_notask_jsonp
+        return (detach_jsonp % urllib2.quote(url.encode('utf-8') if isinstance(url, unicode) else url)) if url else detach_notask_jsonp
 
     def gen_init(self):
         return ini[CrawlQueue.instance().nonempty()]
