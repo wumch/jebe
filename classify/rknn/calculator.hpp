@@ -1,45 +1,40 @@
 
-/**
-Vector v;
-SampleGroups sgs;
-
-Knn knn(30);
-knn.deliver(Aside::samples);
-knn.classify(v, sgs);
- */
-
 #pragma once
 
 #include "predef.hpp"
 #include <vector>
-#include "vector.hpp"
+#include "knn.hpp"
 #include "vecs.hpp"
 
 namespace jebe {
 namespace classify {
 namespace rknn {
 
-class Knn
+// do KNN, with Rocchio optimization in <Calculator>.
+class Calculator
 {
+private:
+	static const int miniest_sim = -2;
 public:
-	Knn(vnum_t k_);
+	Calculator()
+		: knn(Aside::config->k),
+		  cls_ids(Aside::config->ropt_cls_num, 0),
+		  sim_top_n(Aside::config->ropt_cls_num, miniest_sim),
+		  clses(*Aside::clses)
+	{}
 
-	clsid_t classify(const Vector& v, const SampleGroups& sgs)
+	clsid_t classify(const Vector& v)
 	{
-		reset();
-		calc_top_k(v, sgs);
-		return solve_best_cls();
+		pick_clses(v);
+		return knn.classify(v, SampleGroups(*Aside::clses, cls_ids));
 	}
 
-protected:
-	void calc_top_k(const Vector& v, const SampleGroups& sgs);
+private:
+	void pick_clses(const Vector& v);
 
-	clsid_t solve_best_cls();
+	void record_clsid(clsid_t clsid, sim_t sim);
 
 private:
-	// reset `sim_top_k` and `cls_top_k`.
-	void reset();
-
 	// if need, record this (sim, cls) pair.
 	void record(sim_t sim, clsid_t cls);
 	// if need, record this (sim, cls) pair, via binary search.
@@ -54,23 +49,16 @@ private:
 	// assign (sim, cls) pair.
 	void assign(vnum_t idx, sim_t sim, clsid_t cls);
 
-	void incr_cls_num(clsid_t cls);
 
 private:
-	void init();
+	Knn knn;
 
-	const vnum_t k;
-	vnum_t recorded;
+	ClsIdList cls_ids;		// <Cls>.id of top similarity.
+	typedef std::vector<sim_t> SimTopN;
+	SimTopN sim_top_n;
+	size_t recorded;
 
-	static const sim_t miniest_sim;
-	typedef std::vector<sim_t> SimTopK;
-	SimTopK sim_top_k;
-
-	typedef std::vector<clsid_t> ClsTopK;
-	ClsTopK cls_top_k;
-
-	typedef std::vector<vnum_t> ClsNumMap;
-	ClsNumMap cls_num_map;
+	const Clses& clses;
 };
 
 } /* namespace rknn */

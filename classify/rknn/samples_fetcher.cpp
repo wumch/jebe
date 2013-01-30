@@ -1,13 +1,9 @@
 
-#include "vector.hpp"
-#include <Eigen/Core>
-#include "vector_impl.hpp"
-#include "../inputvector.hpp"
+#include "samples_fetcher.hpp"
 
 namespace jebe {
 namespace classify {
 namespace rknn {
-
 
 } /* namespace rknn */
 } /* namespace classify */

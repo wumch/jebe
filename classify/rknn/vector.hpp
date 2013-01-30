@@ -4,83 +4,87 @@
 #include "predef.hpp"
 #include <vector>
 #include <cmath>
-#include <boost/numeric/ublas/vector_sparse.hpp>
-#include <boost/numeric/ublas/io.hpp>
+#include <boost/noncopyable.hpp>
 #include <Eigen/Sparse>
 #include "hash.hpp"
 #include "math.hpp"
 #include "aside.hpp"
-#include "../document.hpp"
+#include "../inputvector.hpp"
 
 namespace jebe {
-namespace cluster {
-namespace kmeans {
+namespace classify {
+namespace rknn {
 
-typedef FeatureList InputVector;
-
-typedef boost::numeric::ublas::map_array<fid_t, fval_t> FeatureArray;
-typedef boost::numeric::ublas::mapped_vector<fval_t, FeatureArray> RawVector;
-
-class VectorMeta
-{
-public:
-	static const clsid_t unknown_cls = 0;
-	mutable clsid_t belong_cls;
-
-	VectorMeta()
-		: belong_cls(unknown_cls)
-	{}
-
-	VectorMeta(vid_t id_)
-		: belong_cls(unknown_cls)
-	{}
-
-	VectorMeta(vid_t id_, clsid_t belong_cls_)
-		: belong_cls(belong_cls_)
-	{}
-
-	VectorMeta(const VectorMeta& meta)
-		: belong_cls(meta.belong_cls)
-	{}
-};
+typedef Eigen::SparseVector<fval_t> RawVector;
 
 // wrap from RawVector, for flexible and optimization.
-class Vector: public VectorMeta
+class Vector: private boost::noncopyable
 {
 public:
 	RawVector rv;
 
 public:
 	Vector()
-		: rv(Aside::totalFeatureNum, Aside::config->reserve_fnum)
+		: rv(Aside::totalFeatureNum)
 	{}
 
 	/*
-	 * store only the result of GuiYiHua.
-	 * GuiYiHua(vector) = vector / mod(vec).
+	 * store only the normalized result.
+	 * normalize(vector) = vector / mod(vec).
 	 */
-	explicit Vector(const Document& doc)
-		: VectorMeta(doc.id), rv(Aside::totalFeatureNum, doc.flist.size())
+	explicit Vector(const InputVector& iv)
+		: rv(Aside::totalFeatureNum)
 	{
-		init_from_iv(doc.flist);
+		rv.resizeNonZeros(iv.flist.size());
+		init_rv_from_flist(iv.flist);
 	}
 
-	explicit Vector(vid_t id_, const RawVector& rv_)
-		: VectorMeta(id_), rv(rv_)
+	explicit Vector(const InputVector& iv, bool normalized)
+		: rv(Aside::totalFeatureNum)
 	{
-		rv.assign(rv_);
+		if (normalized)
+		{
+			init_rv_from_flist(iv.flist);
+		}
+		else
+		{
+			init_rv_from_flist_normalize(iv.flist);
+		}
 	}
 
-	// fix the copy-constructor of boost::mapped_vector.
-	Vector(const Vector& vec)
-		: VectorMeta(vec.belong_cls), rv(vec.rv.size(), vec.rv.nnz())
-	{
-		rv.assign(vec.rv);
-	}
+	explicit Vector(const RawVector& rv_)
+		: rv(rv_)
+	{}
 
 	void reset(const RawVector& rv_)
 	{
-		rv.assign(rv_);
+		rv = rv_;
+	}
+
+protected:
+	void init_rv_from_flist_normalize(const FeatureList& flist)
+	{
+		decimal_t square_sum;
+		for (FeatureList::const_iterator it = flist.begin(); it != flist.end(); ++it)
+		{
+			square_sum += staging::square(it->fval);
+		}
+		square_sum = std::sqrt(square_sum);
+
+		rv.resizeNonZeros(flist.size());
+		for (FeatureList::const_iterator it = flist.begin(); it != flist.end(); ++it)
+		{
+			rv.coeffRef(it->fid) = it->fval / square_sum;
+		}
+	}
+
+	void init_rv_from_flist(const FeatureList& flist)
+	{
+		rv.resizeNonZeros(flist.size());
+		for (FeatureList::const_iterator it = flist.begin(); it != flist.end(); ++it)
+		{
+			rv.coeffRef(it->fid) = it->fval;
+		}
 	}
 
 public:
@@ -106,26 +110,32 @@ public:
 	{
 		return rv;
 	}
-
-private:
-	void init_from_iv(const InputVector& vec)
-	{
-		copy_from_iv(vec);
-	}
-
-private:
-	void copy_from_iv(const InputVector& vec);
 };
 
-class VecFactory
+class SampleMeta
 {
 public:
-	static Vector* create(const Document& doc)
-	{
-		return new Vector(doc);
-	}
+	static const clsid_t unknown_cls = 0;
+	mutable clsid_t belong_cls;
+
+	SampleMeta()
+		: belong_cls(unknown_cls)
+	{}
+
+	SampleMeta(clsid_t belong_cls_)
+		: belong_cls(belong_cls_)
+	{}
 };
 
-} /* namespace kmeans */
-} /* namespace cluster */
+class Sample: public SampleMeta, public Vector
+{
+	using SampleMeta::unknown_cls;
+public:
+	Sample(const InputSample& s)
+		: SampleMeta(s.belong_cls), Vector(s, true)
+	{}
+};
+
+} /* namespace rknn */
+} /* namespace classify */
 } /* namespace jebe */
