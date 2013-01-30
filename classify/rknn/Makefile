@@ -104,10 +104,6 @@ $(OBJECT_PATH)/samples_fetcher.o: $(SOURCE_PATH)/samples_fetcher.cpp $(SOURCE_PA
 	@printf "\033[32;34;5m%s\033[0m \033[32;49;5m%s\033[0m\n" compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
 
-$(OBJECT_PATH)/samples_fetcher.o: $(SOURCE_PATH)/samples_fetcher.cpp $(SOURCE_PATH)/samples_fetcher.hpp
-	@printf "\033[32;34;5m%s\033[0m \033[32;49;5m%s\033[0m\n" compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
-
 $(OBJECT_PATH)/vector.o: $(SOURCE_PATH)/vector.cpp $(SOURCE_PATH)/vector.hpp
 	@printf "\033[32;34;5m%s\033[0m \033[32;49;5m%s\033[0m\n" compiling $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@)
 	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $(patsubst $(OBJECT_PATH)%.$(OBJ),$(SOURCE_PATH)%.$(C),$@) $(OBJFLAG) $@
