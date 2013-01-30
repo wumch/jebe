@@ -32,6 +32,7 @@ extern "C" {
 namespace jebe {
 namespace classify {
 
+typedef char			err_code_t;
 typedef double			decimal_t;
 
 typedef uint32_t		vid_t;		// vector-id type.
@@ -46,13 +47,15 @@ typedef uint32_t		clsnum_t;	// cluster-count type.
 
 enum Action {
 	wrong = 0,
-	tell_config = 1,
-	tell_total = 2,
-	send_doc = 10,
-	collected = 11,
-	calculated = 12,
-	thats_all = 3,
+	classify = 1,
 };
 
-} /* namespace cluster */
+#pragma pack(1)
+typedef struct {
+	err_code_t err_code;
+	clsid_t cls;
+} ClassifyResult;
+#pragma pack()
+
+} /* namespace classify */
 } /* namespace jebe */
