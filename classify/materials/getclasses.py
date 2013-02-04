@@ -3,87 +3,97 @@
 
 import urllib2
 import re
+import math
+
+urls = {}
 
 config = {
     'start_page': 'http://www.dmoz.org/World/Chinese_Simplified/',
 }
 
-class URLProvider(object):
+class Category(object):
+
+    def __init__(self, id=None, url=None, name=None, children=None, count=0):
+        self.id = id
+        self.url = url
+        self.name = name
+        self.children = children or []
+        self.count = count
+
+    def attach_children(self, children):
+        children = [children] if isinstance(children, Category) else children
+        self.children = list(set((self.children or []) + children))
+
+class Cats(object):
 
     def __init__(self):
-        self.prefix = 'http://www.dir001.com/list/'
-        self.cur_class_id = 0
-        self.max_class_id = 10
+        self.cats = Category()
 
-    def __iter__(self):
-        return self
+    def build(self, urls):
+        # top level
+        for info in urls.itervalues():
+            if 'parent' not in info:
+                cat = Category(id=info['id'], name=info['title'])
+                self.cats.attach_children(cat)
+        # second level
+        for info in urls.itervalues():
+            if 'parent' in info:
+                cat = Category(id=info['id'], url=info['href'], name=info['title'])
+                self.cats.children[info['parent']].attach_children(cat)
 
-    def next(self):
-        self.cur_class_id += 1
-        if self.cur_class_id > self.max_class_id:
-            raise StopIteration
-        return self._get_by_id(self.cur_class_id)
+    def attach_category(self, cat):
+        pass
 
-    def _get_by_id(self, class_id):
-        return self.prefix + str(class_id)
+    def url_to_category(self, url_info):
+        return Category(id=url_info['id'], name=url_info['title'],
+            url=url_info['href'] if 'href' in url_info else None
+        )
+
+    def all(self):
+        global urls
+        self.build(urls)
+        for cat in self.cats.children:
+            if cat.children:
+                for c in cat.children:
+                    yield c
+
+class ContentProvider(object):
+
+    def __init__(self, cat):
+        self.cat = cat
+        self.more = True
+        self.pages = range(0, int(math.ceil(self.cat.count / 10.0)))
+        self.curpage = 0
+        self.prefix = self.cat.url + '/'
+
+    def next_url(self):
+        for page in self.pages:
+            yield self.prefix + str(page)
+
+    def contents(self):
+        for url in self.next_url():
+            yield urllib2.urlopen(url).read()
 
 class Pumper(object):
 
     def __init__(self):
-        self.regexp = re.compile("")
+        self.regexp = re.compile(r'<li class="domain"><strong>.*: </strong><a href=".*" class="external" target="_blank">(.*)</a></li>')
+
+    def pump(self, content):
+        return self.regexp.findall(content)
 
 class GetClasses(object):
 
     def __init__(self):
-        pass
+        self.cats = Cats()
+        self.pumper = Pumper()
 
-if __name__ == '__main__':
-    # test URLProvider
-    for url in URLProvider():
-        print url
-
-'''
-var all = {};
-var total = 0;
-var parentid = 0;
-function fetch(dl)
-{
-    for (var i = 0; i < dl.children.length - 2; i += 2)
-    {
-        fetchArea(dl.children[i], dl.children[i+1]);
-    }
-}
-function fetchArea(dt, dd)
-{
-    var parent = {
-        id : parentid++,
-        title: dt.innerText,
-    };
-    all[parent.id] = parent;
-    var subcats = [];
-    var ul = dd.firstElementChild;
-    for (var i = 0; i < ul.children.length; ++i)
-    {
-        var li = ul.children[i];
-        var info = li.firstElementChild.href.split('/');
-        var id = parseInt(info[info.length - 1]);
-        var cat = {
-            id : id,
-            parent: parent.id,
-            href : li.firstElementChild.href,
-            title : li.firstElementChild.innerText.replace(/\(\d+\)/g, ''),
-            count : parseInt(li.firstElementChild.innerText.replace(/^.*\((\d+)\).*$/g, '$1'))
-        };
-        if (id in all)
-        {
-            console.log(id + " already exists");
-        }
-        total += 1;
-        all[id] = cat;
-    }
-}
-fetch(document.getElementsByTagName('dl')[0]);
-'''
+    def run(self):
+        for cat in self.cats.all():
+            contents = ContentProvider(cat).contents()
+            for content in contents:
+                for url in self.pumper.pump(content):
+                    print url
 
 urls = {
     "1": {"id": 0, "title": "休闲娱乐"},
@@ -315,3 +325,50 @@ urls = {
     "119": {"id": 119, "parent": 1, "href": "http://www.dir001.com/list/119"
         , "title": "团购", "count": 166}
 }
+
+if __name__ == '__main__':
+    # test URLProvider
+    GetClasses().run()
+
+"""
+var all = {};
+var total = 0;
+var parentid = 0;
+function fetch(dl)
+{
+    for (var i = 0; i < dl.children.length - 2; i += 2)
+    {
+        fetchArea(dl.children[i], dl.children[i+1]);
+    }
+}
+function fetchArea(dt, dd)
+{
+    var parent = {
+        id : parentid++,
+        title: dt.innerText,
+    };
+    all[parent.id] = parent;
+    var subcats = [];
+    var ul = dd.firstElementChild;
+    for (var i = 0; i < ul.children.length; ++i)
+    {
+        var li = ul.children[i];
+        var info = li.firstElementChild.href.split('/');
+        var id = parseInt(info[info.length - 1]);
+        var cat = {
+            id : id,
+            parent: parent.id,
+            href : li.firstElementChild.href,
+            title : li.firstElementChild.innerText.replace(/\(\d+\)/g, ''),
+            count : parseInt(li.firstElementChild.innerText.replace(/^.*\((\d+)\).*$/g, '$1'))
+        };
+        if (id in all)
+        {
+            console.log(id + " already exists");
+        }
+        total += 1;
+        all[id] = cat;
+    }
+}
+fetch(document.getElementsByTagName('dl')[0]);
+"""
