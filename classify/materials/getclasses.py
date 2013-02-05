@@ -11,6 +11,8 @@ config = {
     'start_page': 'http://www.dmoz.org/World/Chinese_Simplified/',
 }
 
+domains = []
+
 class Category(object):
 
     def __init__(self, id=None, url=None, name=None, children=None, count=0):
@@ -27,19 +29,19 @@ class Category(object):
 class Cats(object):
 
     def __init__(self):
-        self.cats = Category()
+        self.root = Category()
 
     def build(self, urls):
         # top level
         for info in urls.itervalues():
             if 'parent' not in info:
                 cat = Category(id=info['id'], name=info['title'])
-                self.cats.attach_children(cat)
+                self.root.attach_children(cat)
         # second level
         for info in urls.itervalues():
             if 'parent' in info:
-                cat = Category(id=info['id'], url=info['href'], name=info['title'])
-                self.cats.children[info['parent']].attach_children(cat)
+                cat = Category(id=info['id'], url=info['href'], name=info['title'], count=info['count'])
+                self.root.children[info['parent']].attach_children(cat)
 
     def attach_category(self, cat):
         pass
@@ -52,7 +54,7 @@ class Cats(object):
     def all(self):
         global urls
         self.build(urls)
-        for cat in self.cats.children:
+        for cat in self.root.children:
             if cat.children:
                 for c in cat.children:
                     yield c
@@ -62,7 +64,7 @@ class ContentProvider(object):
     def __init__(self, cat):
         self.cat = cat
         self.more = True
-        self.pages = range(0, int(math.ceil(self.cat.count / 10.0)))
+        self.pages = range(1, int(math.ceil(self.cat.count / 10.0)) + 1)
         self.curpage = 0
         self.prefix = self.cat.url + '/'
 
@@ -93,7 +95,7 @@ class GetClasses(object):
             contents = ContentProvider(cat).contents()
             for content in contents:
                 for url in self.pumper.pump(content):
-                    print url
+                    print "%d\t%s" % (cat.id, url)
 
 urls = {
     "1": {"id": 0, "title": "休闲娱乐"},
