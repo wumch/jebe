@@ -15,11 +15,12 @@ domains = []
 
 class Category(object):
 
-    def __init__(self, id=None, url=None, name=None, children=None, count=0):
+    def __init__(self, id=None, url=None, name=None, parent=None, children=None, count=0):
         self.id = id
         self.url = url
         self.name = name
         self.children = children or []
+        self.parent = parent
         self.count = count
 
     def attach_children(self, children):
@@ -40,7 +41,7 @@ class Cats(object):
         # second level
         for info in urls.itervalues():
             if 'parent' in info:
-                cat = Category(id=info['id'], url=info['href'], name=info['title'], count=info['count'])
+                cat = Category(id=info['id'], url=info['href'], parent=info['parent'], name=info['title'], count=info['count'])
                 self.root.children[info['parent']].attach_children(cat)
 
     def attach_category(self, cat):
@@ -95,7 +96,7 @@ class GetClasses(object):
             contents = ContentProvider(cat).contents()
             for content in contents:
                 for url in self.pumper.pump(content):
-                    print "%d\t%s" % (cat.id, url)
+                    print "%d\t%d\t%s" % (cat.parent, cat.id, url)
 
 urls = {
     "1": {"id": 0, "title": "休闲娱乐"},
