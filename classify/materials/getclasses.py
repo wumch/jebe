@@ -82,6 +82,8 @@ class ContentProvider(object):
                     return urllib2.urlopen(url)
                 except urllib2.HTTPError:
                     pass
+                except urllib2.URLError:
+                    pass
 
     def get_html(self, url):
         rep = self.request(url=url)
