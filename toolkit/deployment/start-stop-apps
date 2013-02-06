@@ -335,7 +335,7 @@ zdelete_app() {
             zrm_dir_if_empty ${appchroot}${directory}
             sleep 0.1
         done
-        rm -fr ${appchroot}/src
+        rm -fr ${appchroot}/src >/dev/null 2>&1
         if ! zrm_dir_if_empty "${appchroot}"; then
             zdie "fatal error: some directories still stay inside '${appchroot}' after app removed."
         fi
@@ -388,7 +388,7 @@ znotify_start() {
 }
 
 zstop() {
-    zapp_exists || zdie "app '${appname}' non-exists."
+#    zapp_exists || zdie "app '${appname}' non-exists."
     zfinish || zdie "failed on stopping '${appname}'"
     zdelete_app || zdie "failed on remove app '${appname}'"
     znotify_stop
