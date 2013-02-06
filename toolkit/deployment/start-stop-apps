@@ -1,5 +1,5 @@
 #!/bin/bash
-
+source /etc/profile
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< common members <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 declare -i Z_SUCCESS=0 Z_FAIL=1
 notifier_size=8
@@ -49,6 +49,7 @@ zdie() {
         zpaint "${zocblue}" "Die:"
         zcored "${@}"
     fi
+    znotify
     exit ${Z_FAIL}
 }
 
@@ -154,9 +155,19 @@ zdelete_user() {
     userdel --force --remove ${username} 2>/dev/null && return ${Z_SUCCESS} || return ${Z_FAIL}
 }
 
+zrm_dir_if_empty() {
+    test -n "${1}" || zdie "argument#1 is not a directory"
+    test -d "${1}" || return ${Z_SUCCESS}
+    if zis_dir_empty "${1}"; then
+        rm -fr ${1} && return ${Z_SUCCESS} || ${Z_FAIL}
+    fi
+    zpush_error "can not rm non-empty directory '${1}'!"
+    return ${Z_FAIL}
+}
+
 zis_dir_empty() {
     # I'd rather die than to rm -fr /
-    test -n "${1}" -a -d "${1}" || zdie "argument#1 is wrong"
+    test -n "${1}" -a -d "${1}" || zdie "argument#1 '${1}' is not a directory"
     declare -r empty_view=". .."
     if [ "$(ls -a ${1} | xargs)" == "${empty_view}" ]; then
         return ${Z_SUCCESS}
@@ -275,7 +286,7 @@ zfinish() {
             fi
         elif [ ${cur_phase} -eq 1 ]; then
             if [ ${tried_kill} -lt ${MAX_TRY_KILL} ]; then
-                kill -KILL ${pid}
+                kill -9 ${pid}
                 tried_kill+=1
             else
                 cur_phase+=1
@@ -283,7 +294,7 @@ zfinish() {
         else
             break
         fi
-        sleep 0.6
+        sleep 0.1
     done
     if zis_running ${pid}; then
         zdie "failed on kill process(${pid}) of app '${appname}', seems to be a defunct!"
@@ -318,23 +329,19 @@ zdelete_app() {
         for directory in $(echo "${APPS_ASSIST_TARGET}" "${MOUNT_DIRECTORIES[@]}");
         do
             if ! umount ${appchroot}${directory}; then
-                zdie "failed on 'umount ${appchroot}${directory}'"
-            else
-                sleep 0.1
-                if zis_dir_empty "${appchroot}${directory}"; then
-                    rm -fr ${appchroot}${directory}
-                fi
+                zpush_error "failed on 'umount ${appchroot}${directory}'"
             fi
-            sleep 0.2
+            sleep 0.1
+            zrm_dir_if_empty ${appchroot}${directory}
+            sleep 0.1
         done
         rm -fr ${appchroot}/src
-        if zis_dir_empty "${appchroot}"; then
-            rm -fr ${appchroot}
-        else
+        if ! zrm_dir_if_empty "${appchroot}"; then
             zdie "fatal error: some directories still stay inside '${appchroot}' after app removed."
         fi
-    elif [ -n "${approot}" ]; then
-        rm -fr ${approot}
+    elif [ -n "${approot}" -a -d "${approot}" ]; then
+        zdie "currently only 'chroot' is supported!"
+#        rm -fr ${approot}
     fi
     if ! zdelete_user ${username}; then
         zpush_error "failed on deleting user '${username}'"
@@ -350,23 +357,50 @@ zadjust() {
     return ${Z_SUCCESS}
 }
 
+znotify() {
+    case "${act}" in
+    start) znotify_start;;
+    stop) znotify_stop;;
+    esac;
+}
+
+znotify_stop() {
+    if [ -S ${ROUTER_SOCK} ]; then
+        declare -i res=$(zapp_exists && echo "1" || echo "0")
+        echo -e "on$(echo ${act} | sed 's/^[a-z]/\U&/')\n${appname}\n${res}" | ${COMMAND_NC} -U ${ROUTER_SOCK}
+        sleep 0.1
+    fi
+}
+
+znotify_start() {
+    if [ -S ${ROUTER_SOCK} ]; then
+        declare -i res=$(zis_running && echo "1" || echo "0")
+        if [ ${res} -eq 1 ]; then
+            declare -i pid=$(zgetpid)
+            sleep 0.5
+            local port="$(zget_listening ${pid})"
+            echo -e "on$(echo ${act} | sed 's/^[a-z]/\U&/')\n${appname}\n${res}\n${port}\n${pid}" | ${COMMAND_NC} -U ${ROUTER_SOCK}
+        else
+            echo -e "on$(echo ${act} | sed 's/^[a-z]/\U&/')\n${appname}\n${res}" | ${COMMAND_NC} -U ${ROUTER_SOCK}
+        fi
+        sleep 0.1
+    fi
+}
+
 zstop() {
     zapp_exists || zdie "app '${appname}' non-exists."
     zfinish || zdie "failed on stopping '${appname}'"
     zdelete_app || zdie "failed on remove app '${appname}'"
+    znotify_stop
     return ${Z_SUCCESS}
 }
 
 zstart() {
-    zis_running && return ${Z_SUCCESS}      # bug...
+    zis_running && zdie "app '${appname}' is already running."      # bug...
     zinstall || zdie
     zrun || zdie
     zadjust || zdie
-    if [ -S ${ROUTER_SOCK} ]; then
-        declare -i pid=$(zgetpid)
-        local port="$(zget_listening ${pid})"
-        echo -e "on$(echo ${act} | sed 's/^[a-z]/\U&/')\n${appname}\n${port}\n${pid}" | ${COMMAND_NC} -U ${ROUTER_SOCK}
-    fi
+    znotify_start
     return ${Z_SUCCESS}
 }
 

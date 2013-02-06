@@ -22,7 +22,7 @@ MOUNT_DIRECTORIES=("/usr" "/lib64" "/proc" "/var" "/bin" "/etc" "/dev")
 APPS_CHROOT="${APPS_ROOT}"
 
 # limits
-DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x 128"
+#DEFAULT_ULIMITS="-u 1 -n 512 -v 131072 -m 131072 -i 1024 -f 0 -t 10 -q 128000 -x 128"
 DEFAULT_NICE_INCR="19"
 
 if [ -n "{$SSA_DEBUG}" -a ${SSA_DEBUG} -eq 1 ]; then
