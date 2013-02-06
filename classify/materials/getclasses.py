@@ -73,9 +73,23 @@ class ContentProvider(object):
         for page in self.pages:
             yield self.prefix + str(page)
 
+    def request(self, url):
+        try:
+            return urllib2.urlopen(url)
+        except urllib2.HTTPError:
+            for i in range(0, 3):
+                try:
+                    return urllib2.urlopen(url)
+                except urllib2.HTTPError:
+                    pass
+
+    def get_html(self, url):
+        rep = self.request(url=url)
+        return rep.read() if rep else ''
+
     def contents(self):
         for url in self.next_url():
-            yield urllib2.urlopen(url).read()
+            yield self.get_html(url=url)
 
 class Pumper(object):
 
