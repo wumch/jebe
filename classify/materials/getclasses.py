@@ -76,13 +76,11 @@ class ContentProvider(object):
     def request(self, url):
         try:
             return urllib2.urlopen(url)
-        except urllib2.HTTPError:
+        except:
             for i in range(0, 3):
                 try:
                     return urllib2.urlopen(url)
-                except urllib2.HTTPError:
-                    pass
-                except urllib2.URLError:
+                except:
                     pass
 
     def get_html(self, url):
