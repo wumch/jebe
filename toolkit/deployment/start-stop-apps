@@ -181,7 +181,7 @@ zis_dir_empty() {
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<< run-related functions <<<<<<<<<<<<<<<<<<<<<<<<<<<<
 zgetpid() {
     declare -i pid
-    if [ $# -ge 1 ]; then
+    if [ $# -ge 1 ] && [ -n "${1}" ]; then
         if [ -f "${1}" ]; then
             pid="$(cat ${1})"
         else
@@ -199,7 +199,11 @@ zis_running_pid() {
 }
 
 zis_running() {
-    declare pid=$(zgetpid "${@}")
+    if [ $# -ge 1 ]; then
+        declare -i pid=$(zgetpid "${@}")
+    else
+        declare -i pid=$(zgetpid)
+    fi
     zis_running_pid "${pid}" && return ${Z_SUCCESS} || return ${Z_FAIL}
 }
 
@@ -328,7 +332,7 @@ zdelete_app() {
         cd /
         for directory in $(echo "${APPS_ASSIST_TARGET}" "${MOUNT_DIRECTORIES[@]}");
         do
-            if ! umount ${appchroot}${directory}; then
+            if ! umount -l ${appchroot}${directory}; then
                 zpush_error "failed on 'umount ${appchroot}${directory}'"
             fi
             sleep 0.1
