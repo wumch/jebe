@@ -7,10 +7,10 @@
 #	define CS_USE_WCS	1
 #endif
 
-#define _JEBE_WORD_MAX_LEN				5
+#define _JEBE_WORD_MAX_LEN				7
 #define _JEBE_LATIN_MAX_LEN				20
 #define _JEBE_LATIN_MIN_LEN				3
-#define _JEBE_WORD_MIN_ATIMES			10
+#define _JEBE_WORD_MIN_ATIMES			5
 #define _JEBE_PROCESS_STEP				(2 << 20)
 
 #include "meta.hpp"

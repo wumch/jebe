@@ -1,4 +1,6 @@
 COMPILER=G++
+GCC=g++
+CLANG=clang++
 
 # todo: object files into output path, processing c / c++ files in the same time (?), nested directories for source files (?)
 C = cpp
@@ -9,6 +11,14 @@ EXE = $(OUTPUT_PATH)/cws
 DEBUG = 0
 
 ifeq ($(COMPILER), G++)
+  CCMD = $(CLANG)
+
+  ifeq ($(CCMD), $(GCC))
+	EXT_PARAM = -mcx16 -msahf --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144
+  else
+    EXT_PARAM = 
+  endif
+
   ifeq ($(OS),Windows_NT)
     OBJ = obj
   else
@@ -19,10 +29,9 @@ ifeq ($(COMPILER), G++)
   LDOPT = -g -rdynamic
   else
 # -fno-rtti is no useable since boost::program_options...
-  COPT = -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -mcx16 -msahf -maes -mpclmul -mpopcnt -mavx --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=6144 -mtune=generic
+  COPT = -DNDEBUG -march=core2 -O3 -fomit-frame-pointer -pipe -Wall -fno-strict-aliasing -m64 -fno-threadsafe-statics -D_FORTIFY_SOURCE=2 -maes -mpclmul -mpopcnt -mavx $(EXT_PARAM) -mtune=generic
   LDOPT = $(COPT)
   endif
-  CCMD = g++
   OBJFLAG = -o
   EXEFLAG = -o
  INCLUDES = 

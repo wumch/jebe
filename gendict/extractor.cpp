@@ -91,7 +91,7 @@ void Extractor::scanPara(CharType* const str, String::size_type len)
 		{
 			if (CS_BLIKELY(hasChs))
 			{
-				CS_SAY("i: " << i << ", chkPoint: " << chkPoint);
+				//CS_SAY("i: " << i << ", chkPoint: " << chkPoint);
 				addSentence(str + chkPoint, i - chkPoint);
 				hasChs = false;
 			}
@@ -248,7 +248,12 @@ void Extractor::scan(const PathList& contentfiles)
 			memset(content, 0, _JEBE_PROCESS_STEP + 1);
 			file.getline(content, _JEBE_PROCESS_STEP);
 			CS_SAY("content readed: " << static_cast<std::streamoff>(file.tellg()));
-			scanPara(content, static_cast<std::streamoff>(file.tellg()) - cur);
+            ssize_t size = static_cast<std::streamoff>(file.tellg()) - cur;
+            if (size < 0)
+            {
+                break;
+            }
+			scanPara(content, size);
 			cur = static_cast<std::streamoff>(file.tellg());
 		}
 		file.close();

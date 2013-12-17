@@ -46,9 +46,9 @@ int main(int argc, char* argv[])
     //*
     using namespace std;
     cout << "Here is the matrix m:" << endl << m.rows() << endl;
-    cout << "Its singular values are:" << endl << svd.singularValues().rows() << endl;
-    cout << "Its left singular vectors are the columns of the thin U matrix:" << endl << svd.matrixU().rows() << endl;
-    cout << "Its right singular vectors are the columns of the thin V matrix:" << endl << svd.matrixV().rows() << endl;
+    cout << "Its singular values are:" << endl << svd.singularValues() << endl;
+    cout << "Its left singular vectors are the columns of the thin U matrix:" << endl << svd.matrixU() << endl;
+    cout << "Its right singular vectors are the columns of the thin V matrix:" << endl << svd.matrixV() << endl;
 //    cout << "U * V:" << endl << svd.singularValues().dot(svd.matrixV().transpose()) << endl;
 
 
